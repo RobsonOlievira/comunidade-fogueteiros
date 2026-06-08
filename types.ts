@@ -35,6 +35,9 @@ export interface Perfil {
   cargo: string
   criado_em: string
   atualizado_em: string
+  origem?: string
+  app_b_id?: string
+  vinculado_app_b?: boolean
 }
 
 export interface Voto {
