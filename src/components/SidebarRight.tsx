@@ -1,37 +1,55 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { supabase } from '@/src/services/supabaseClient';
 
 interface SidebarRightProps {
   isHidden: boolean;
 }
 
-export default function SidebarRight({ isHidden }: SidebarRightProps) {
-  const onlineMembers = [
-    {
-      avatar: "A",
-      name: "Arthur Silva",
-      badge: "Staff",
-      statusText: "Criando Prompts mágicos 🧠",
-      avatarClass: "avatar-admin"
-    },
-    {
-      avatar: "M",
-      name: "Mariana Costa",
-      badge: "Mod",
-      statusText: "Codando em Python... 🐍",
-      avatarClass: "avatar-mod"
-    },
-    {
-      avatar: "F",
-      name: "Felipe Netto",
-      statusText: "Disponível",
-      avatarClass: "avatar-user"
-    }
-  ];
+interface PerfilSidebar {
+  id: string
+  nome: string
+  cargo: string
+  avatar_url: string | null
+  bio: string | null
+  ultimo_acesso_em: string | null
+}
 
-  const offlineMembers = [
-    { avatar: "G", name: "Gabriel Ramos" },
-    { avatar: "L", name: "Lucas M." }
-  ];
+export default function SidebarRight({ isHidden }: SidebarRightProps) {
+  const [perfis, setPerfis] = useState<PerfilSidebar[]>([]);
+
+  useEffect(() => {
+    carregar();
+    const canal = supabase
+      .channel('sidebar-perfis')
+      .on('postgres_changes', { event: '*', schema: 'fogueteiros', table: 'perfis' }, () => {
+        carregar();
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(canal) };
+  }, []);
+
+  const carregar = async () => {
+    const { data } = await supabase
+      .from('perfis')
+      .select('id, nome, cargo, avatar_url, bio, ultimo_acesso_em')
+      .order('ultimo_acesso_em', { ascending: false, nullsLast: true });
+    setPerfis(data || []);
+  };
+
+  const isOnline = (p: PerfilSidebar) => {
+    if (!p.ultimo_acesso_em) return false;
+    return Date.now() - new Date(p.ultimo_acesso_em).getTime() < 5 * 60 * 1000;
+  };
+
+  const avatarClass = (cargo: string) => {
+    if (cargo === 'admin') return 'avatar-admin';
+    if (cargo === 'mod') return 'avatar-mod';
+    return 'avatar-user';
+  };
+
+  const online = perfis.filter(isOnline);
+  const offline = perfis.filter(p => !isOnline(p));
 
   return (
     <aside className={`sidebar-right ${isHidden ? 'hidden' : ''}`}>
@@ -55,26 +73,26 @@ export default function SidebarRight({ isHidden }: SidebarRightProps) {
 
       <div className="members-container">
         <div className="members-group">
-          <span className="members-group-title">DISPONÍVEIS — {onlineMembers.length}</span>
+          <span className="members-group-title">DISPONÍVEIS — {online.length}</span>
           <ul className="members-list">
-            {onlineMembers.map((member, idx) => (
-              <li className="member-item" key={idx}>
+            {online.map((p) => (
+              <li className="member-item" key={p.id}>
                 <div className="member-avatar-wrapper">
-                  <div className={`member-avatar ${member.avatarClass}`}>
-                    {member.avatar}
+                  <div className={`member-avatar ${avatarClass(p.cargo)}`}>
+                    {p.nome.charAt(0).toUpperCase()}
                   </div>
                   <div className="member-status-dot online"></div>
                 </div>
                 <div className="member-info">
                   <div className="member-name-row">
-                    <span className="member-name">{member.name}</span>
-                    {member.badge && (
-                      <span className={`member-badge badge-${member.badge.toLowerCase()}`}>
-                        {member.badge}
+                    <span className="member-name">{p.nome}</span>
+                    {p.cargo !== 'membro' && (
+                      <span className={`member-badge badge-${p.cargo}`}>
+                        {p.cargo === 'admin' ? 'Staff' : 'Mod'}
                       </span>
                     )}
                   </div>
-                  <span className="member-status-text">{member.statusText}</span>
+                  <span className="member-status-text">{p.bio || 'Disponível'}</span>
                 </div>
               </li>
             ))}
@@ -82,19 +100,19 @@ export default function SidebarRight({ isHidden }: SidebarRightProps) {
         </div>
 
         <div className="members-group">
-          <span className="members-group-title">INDISPONÍVEIS — {offlineMembers.length}</span>
+          <span className="members-group-title">INDISPONÍVEIS — {offline.length}</span>
           <ul className="members-list">
-            {offlineMembers.map((member, idx) => (
-              <li className="member-item offline" key={idx}>
+            {offline.map((p) => (
+              <li className="member-item offline" key={p.id}>
                 <div className="member-avatar-wrapper">
-                  <div className="member-avatar">
-                    {member.avatar}
+                  <div className={`member-avatar ${avatarClass(p.cargo)}`}>
+                    {p.nome.charAt(0).toUpperCase()}
                   </div>
                   <div className="member-status-dot offline"></div>
                 </div>
                 <div className="member-info">
                   <div className="member-name-row">
-                    <span className="member-name">{member.name}</span>
+                    <span className="member-name">{p.nome}</span>
                   </div>
                   <span className="member-status-text">Offline</span>
                 </div>

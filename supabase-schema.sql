@@ -1,77 +1,263 @@
 -- =====================================================
--- SCHEMA: Comunidade Fogueteiros
+-- SCHEMA: fogueteiros (Comunidade Fogueteiros)
 -- =====================================================
 
+-- =====================================================
 -- 1. CANAIS
-CREATE TABLE IF NOT EXISTS channels (
+-- =====================================================
+CREATE TABLE IF NOT EXISTS fogueteiros.canais (
   id TEXT PRIMARY KEY,
-  title TEXT NOT NULL,
-  description TEXT NOT NULL,
-  category TEXT NOT NULL DEFAULT 'conversas',
-  created_at TIMESTAMPTZ DEFAULT NOW()
+  titulo TEXT NOT NULL,
+  descricao TEXT NOT NULL,
+  categoria TEXT NOT NULL DEFAULT 'conversas',
+  tipo TEXT DEFAULT 'chat',
+  icone TEXT DEFAULT 'hash',
+  ordem INTEGER DEFAULT 0,
+  criado_em TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- =====================================================
 -- 2. MENSAGENS
-CREATE TABLE IF NOT EXISTS messages (
+-- =====================================================
+CREATE TABLE IF NOT EXISTS fogueteiros.mensagens (
   id BIGSERIAL PRIMARY KEY,
-  channel_id TEXT REFERENCES channels(id) ON DELETE CASCADE NOT NULL,
-  author TEXT NOT NULL,
+  canal_id TEXT NOT NULL REFERENCES fogueteiros.canais(id) ON DELETE CASCADE,
+  perfil_id UUID REFERENCES fogueteiros.perfis(id) ON DELETE SET NULL,
+  autor TEXT NOT NULL,
   avatar TEXT NOT NULL DEFAULT '?',
-  avatar_color TEXT NOT NULL DEFAULT 'color-4',
-  badge TEXT DEFAULT '',
-  text TEXT NOT NULL,
-  time TEXT NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW()
+  cor_avatar TEXT NOT NULL DEFAULT 'color-4',
+  cracha TEXT DEFAULT '',
+  texto TEXT NOT NULL,
+  horario TEXT NOT NULL,
+  criado_em TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 3. MEMBROS
-CREATE TABLE IF NOT EXISTS members (
+CREATE INDEX IF NOT EXISTS idx_mensagens_canal_id ON fogueteiros.mensagens(canal_id);
+CREATE INDEX IF NOT EXISTS idx_mensagens_criado_em ON fogueteiros.mensagens(criado_em DESC);
+
+-- =====================================================
+-- 3. PERFIS
+-- =====================================================
+CREATE TABLE IF NOT EXISTS fogueteiros.perfis (
+  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  nome TEXT NOT NULL,
+  email TEXT UNIQUE,
+  apelido TEXT UNIQUE,
+  cargo TEXT DEFAULT 'membro',
+  status TEXT NOT NULL DEFAULT 'ativo',
+  xp INTEGER DEFAULT 0,
+  nivel INTEGER DEFAULT 1,
+  cor_avatar TEXT DEFAULT 'color-2',
+  cracha TEXT DEFAULT '',
+  bio TEXT DEFAULT '',
+  avatar_url TEXT DEFAULT '',
+  tech_stack TEXT[] DEFAULT '{}',
+  telefone TEXT NOT NULL DEFAULT '',
+  karma_points INTEGER DEFAULT 0,
+  origem TEXT,
+  ultimo_acesso_em TIMESTAMPTZ,
+  app_b_id TEXT,
+  vinculado_app_b BOOLEAN DEFAULT FALSE,
+  criado_em TIMESTAMPTZ DEFAULT NOW(),
+  atualizado_em TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE fogueteiros.perfis ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "perfis_select_all" ON fogueteiros.perfis
+  FOR SELECT TO authenticated USING (true);
+
+CREATE POLICY "perfis_insert_service_role" ON fogueteiros.perfis
+  FOR INSERT TO service_role WITH CHECK (true);
+
+-- 5. Usuário atualiza próprio perfil
+CREATE POLICY "perfis_update_own" ON fogueteiros.perfis
+  FOR UPDATE TO authenticated
+  USING (auth.uid() = id)
+  WITH CHECK (auth.uid() = id);
+
+-- 6. Admin atualiza qualquer perfil
+CREATE POLICY "perfis_update_admin" ON fogueteiros.perfis
+  FOR UPDATE TO authenticated
+  USING (EXISTS (
+    SELECT 1 FROM fogueteiros.perfis
+    WHERE id = auth.uid() AND cargo = 'admin'
+  ))
+  WITH CHECK (true);
+
+-- =====================================================
+-- 4. MEMBROS (legado online/offline)
+-- =====================================================
+CREATE TABLE IF NOT EXISTS fogueteiros.membros (
   id SERIAL PRIMARY KEY,
+  nome TEXT NOT NULL,
   avatar TEXT NOT NULL DEFAULT '?',
-  name TEXT NOT NULL,
-  badge TEXT DEFAULT '',
-  status_text TEXT DEFAULT 'Disponível',
-  avatar_class TEXT DEFAULT 'avatar-user',
-  is_online BOOLEAN DEFAULT true,
-  created_at TIMESTAMPTZ DEFAULT NOW()
+  cracha TEXT DEFAULT '',
+  texto_status TEXT DEFAULT 'Disponivel',
+  classe_avatar TEXT DEFAULT 'avatar-user',
+  esta_online BOOLEAN DEFAULT TRUE,
+  criado_em TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Índices
-CREATE INDEX IF NOT EXISTS idx_messages_channel_id ON messages(channel_id);
-CREATE INDEX IF NOT EXISTS idx_messages_created_at ON messages(created_at DESC);
+-- =====================================================
+-- 5. THREADS (fórum)
+-- =====================================================
+CREATE TABLE IF NOT EXISTS fogueteiros.threads (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  titulo TEXT NOT NULL,
+  conteudo TEXT NOT NULL,
+  autor TEXT NOT NULL,
+  avatar TEXT DEFAULT 'R',
+  cor_avatar TEXT DEFAULT 'color-2',
+  upvotes INTEGER DEFAULT 0,
+  num_comentarios INTEGER DEFAULT 0,
+  tags TEXT[] DEFAULT '{}',
+  criado_em TIMESTAMPTZ DEFAULT NOW(),
+  perfil_id UUID REFERENCES fogueteiros.perfis(id) ON DELETE SET NULL
+);
 
 -- =====================================================
--- SEED: Dados iniciais
+-- 6. COMENTARIOS (fórum)
 -- =====================================================
+CREATE TABLE IF NOT EXISTS fogueteiros.comentarios (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  thread_id UUID REFERENCES fogueteiros.threads(id) ON DELETE CASCADE,
+  autor TEXT NOT NULL,
+  avatar TEXT DEFAULT 'R',
+  cor_avatar TEXT DEFAULT 'color-2',
+  conteudo TEXT NOT NULL,
+  upvotes INTEGER DEFAULT 0,
+  criado_em TIMESTAMPTZ DEFAULT NOW(),
+  perfil_id UUID REFERENCES fogueteiros.perfis(id) ON DELETE SET NULL
+);
 
-INSERT INTO channels (id, title, description, category) VALUES
-  ('geral', 'geral', 'Bate-papo geral da Comunidade Fogueteiros. Sejam bem-vindos!', 'inicio'),
-  ('avisos', 'avisos-oficiais', 'Comunicados importantes, lançamentos e atualizações da comunidade.', 'inicio'),
-  ('ideias', 'brainstorm-ideias', 'Tem uma ideia inovadora de aplicativo ou IA? Compartilhe aqui!', 'conversas'),
-  ('projetos', 'projetos-ia', 'Espaço para você postar o link dos seus aplicativos e projetos prontos.', 'conversas'),
-  ('recursos', 'recursos-uteis', 'Prompts, tutoriais, links de ferramentas e códigos úteis.', 'conversas'),
-  ('duvidas', 'tirar-duvidas', 'Está travado em alguma parte do código ou no app? Pergunte aqui!', 'suporte'),
-  ('networking', 'networking', 'Conecte-se com outros criadores, encontre parceiros de projetos e negócios.', 'suporte')
+CREATE INDEX IF NOT EXISTS idx_comentarios_thread_id ON fogueteiros.comentarios(thread_id);
+
+-- =====================================================
+-- 7. VOTOS
+-- =====================================================
+CREATE TABLE IF NOT EXISTS fogueteiros.votos (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  perfil_id UUID NOT NULL REFERENCES fogueteiros.perfis(id) ON DELETE CASCADE,
+  alvo_id UUID NOT NULL,
+  tipo_alvo TEXT NOT NULL,
+  valor INTEGER NOT NULL DEFAULT 1,
+  criado_em TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE (perfil_id, alvo_id, tipo_alvo)
+);
+
+CREATE INDEX IF NOT EXISTS idx_votos_alvo ON fogueteiros.votos(alvo_id, tipo_alvo);
+
+-- =====================================================
+-- 8. CONQUISTAS
+-- =====================================================
+CREATE TABLE IF NOT EXISTS fogueteiros.conquistas (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  nome TEXT NOT NULL,
+  descricao TEXT DEFAULT '',
+  icone TEXT DEFAULT 'award',
+  tipo TEXT NOT NULL,
+  requisito INTEGER NOT NULL DEFAULT 1,
+  ordem INTEGER DEFAULT 0,
+  criado_em TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- =====================================================
+-- 9. PERFIS_CONQUISTAS
+-- =====================================================
+CREATE TABLE IF NOT EXISTS fogueteiros.perfis_conquistas (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  perfil_id UUID NOT NULL REFERENCES fogueteiros.perfis(id) ON DELETE CASCADE,
+  conquista_id UUID NOT NULL REFERENCES fogueteiros.conquistas(id) ON DELETE CASCADE,
+  criado_em TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE (perfil_id, conquista_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_perfis_conquistas_perfil ON fogueteiros.perfis_conquistas(perfil_id);
+
+-- =====================================================
+-- 10. NOTIFICAÇÕES
+-- =====================================================
+CREATE TABLE IF NOT EXISTS fogueteiros.notificacoes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  perfil_id UUID NOT NULL REFERENCES fogueteiros.perfis(id) ON DELETE CASCADE,
+  tipo TEXT NOT NULL,
+  titulo TEXT NOT NULL,
+  conteudo TEXT DEFAULT '',
+  lida BOOLEAN DEFAULT FALSE,
+  link TEXT DEFAULT '',
+  criado_em TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_notificacoes_perfil ON fogueteiros.notificacoes(perfil_id, lida);
+
+-- =====================================================
+-- 11. ESTATÍSTICAS_USUARIO
+-- =====================================================
+CREATE TABLE IF NOT EXISTS fogueteiros.estatisticas_usuario (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  perfil_id UUID NOT NULL UNIQUE REFERENCES fogueteiros.perfis(id) ON DELETE CASCADE,
+  total_threads INTEGER DEFAULT 0,
+  total_comentarios INTEGER DEFAULT 0,
+  total_mensagens INTEGER DEFAULT 0,
+  total_upvotes_recebidos INTEGER DEFAULT 0,
+  total_downvotes_recebidos INTEGER DEFAULT 0,
+  total_upvotes_dados INTEGER DEFAULT 0,
+  ultima_atualizacao TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- =====================================================
+-- 12. EVENTOS_GAMIFICACAO
+-- =====================================================
+CREATE TABLE IF NOT EXISTS fogueteiros.eventos_gamificacao (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tipo TEXT NOT NULL UNIQUE,
+  descricao TEXT DEFAULT '',
+  xp_recompensa INTEGER NOT NULL DEFAULT 0,
+  karma_recompensa INTEGER DEFAULT 0,
+  limite_intervalo INTEGER DEFAULT 0,
+  ativo BOOLEAN DEFAULT TRUE,
+  criado_em TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- =====================================================
+-- 13. FILA_GAMIFICACAO
+-- =====================================================
+CREATE TABLE IF NOT EXISTS fogueteiros.fila_gamificacao (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  perfil_id UUID NOT NULL REFERENCES fogueteiros.perfis(id) ON DELETE CASCADE,
+  tipo_evento TEXT NOT NULL,
+  alvo_id TEXT,
+  alvo_tipo TEXT,
+  processado BOOLEAN DEFAULT FALSE,
+  criado_em TIMESTAMPTZ DEFAULT NOW(),
+  processado_em TIMESTAMPTZ
+);
+
+CREATE INDEX IF NOT EXISTS idx_fila_nao_processado ON fogueteiros.fila_gamificacao(processado, criado_em);
+
+-- =====================================================
+-- 14. PREMIOS_POST
+-- =====================================================
+CREATE TABLE IF NOT EXISTS fogueteiros.premios_post (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  perfil_id_origem UUID NOT NULL REFERENCES fogueteiros.perfis(id) ON DELETE CASCADE,
+  perfil_id_destino UUID NOT NULL REFERENCES fogueteiros.perfis(id) ON DELETE CASCADE,
+  alvo_tipo TEXT NOT NULL,
+  alvo_id TEXT NOT NULL,
+  premio_tipo TEXT NOT NULL,
+  criado_em TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- =====================================================
+-- SEED: Canais iniciais
+-- =====================================================
+INSERT INTO fogueteiros.canais (id, titulo, descricao, categoria, tipo, icone, ordem) VALUES
+  ('geral', 'Geral', 'Bate-papo geral da Comunidade Fogueteiros. Sejam bem-vindos!', 'inicio', 'chat', 'hash', 1),
+  ('avisos', 'Avisos Oficiais', 'Comunicados importantes, lançamentos e atualizações da comunidade.', 'inicio', 'chat', 'megaphone', 2),
+  ('ideias', 'Brainstorm de Ideias', 'Tem uma ideia inovadora de aplicativo ou IA? Compartilhe aqui!', 'conversas', 'chat', 'lightbulb', 3),
+  ('projetos', 'Projetos & IA', 'Espaço para você postar o link dos seus aplicativos e projetos prontos.', 'conversas', 'chat', 'code', 4),
+  ('recursos', 'Recursos Úteis', 'Prompts, tutoriais, links de ferramentas e códigos úteis.', 'conversas', 'chat', 'book', 5),
+  ('duvidas', 'Tirar Dúvidas', 'Está travado em alguma parte do código ou no app? Pergunte aqui!', 'suporte', 'chat', 'question', 6),
+  ('networking', 'Networking', 'Conecte-se com outros criadores, encontre parceiros de projetos e negócios.', 'suporte', 'chat', 'users', 7)
 ON CONFLICT (id) DO NOTHING;
-
-INSERT INTO messages (channel_id, author, avatar, avatar_color, badge, text, time) VALUES
-  ('geral', 'Arthur Silva', 'A', 'color-1', 'Staff', 'Fala Fogueteiros! Sejam muito bem-vindos à nossa nova base de operações espacial. 🚀', '2024-01-01T14:32:00'),
-  ('geral', 'Mariana Costa', 'M', 'color-2', 'Mod', 'Ficou sensacional esse design! O efeito vidro neon deu um toque super premium.', '2024-01-01T14:35:00'),
-  ('geral', 'Felipe Netto', 'F', 'color-3', '', 'Que massa! Finalmente um chat limpo, rápido e que funciona perfeitamente.', '2024-01-01T14:40:00'),
-  ('avisos', 'Arthur Silva', 'A', 'color-1', 'Staff', 'ATENÇÃO: Nossa primeira Masterclass sobre Criação de Apps com Inteligência Artificial será nesta quinta-feira às 20h!', '2024-01-01T10:00:00'),
-  ('avisos', 'Mariana Costa', 'M', 'color-2', 'Mod', 'Estarei lá na primeira fila anotando tudo!', '2024-01-01T10:15:00'),
-  ('ideias', 'Felipe Netto', 'F', 'color-3', '', 'Estou pensando em criar um assistente de IA para planejar viagens com base no clima e orçamento.', '2024-01-01T09:12:00'),
-  ('ideias', 'Arthur Silva', 'A', 'color-1', 'Staff', 'Ideia fantástica, Felipe! Se precisar de ajuda para conectar APIs, avisa a gente.', '2024-01-01T11:30:00'),
-  ('projetos', 'Mariana Costa', 'M', 'color-2', 'Mod', 'Acabei de publicar meu primeiro bot integrado com o WhatsApp para agendamento de consultas. 100% no-code!', '2024-01-01T08:00:00'),
-  ('projetos', 'Felipe Netto', 'F', 'color-3', '', 'Parabéns Mari! Sensacional! 🚀', '2024-01-01T08:05:00'),
-  ('recursos', 'Arthur Silva', 'A', 'color-1', 'Staff', 'Deixei fixado no drive a lista de 50 Prompts essenciais para acelerar o desenvolvimento.', '2024-01-01T09:00:00'),
-  ('duvidas', 'Felipe Netto', 'F', 'color-3', '', 'Qual o melhor modelo de IA custo-benefício para tradução de textos longos hoje em dia?', '2024-01-01T15:00:00'),
-  ('networking', 'Mariana Costa', 'M', 'color-2', 'Mod', 'Olá Fogueteiros! Sou especialista em design de interfaces e automação. Se alguém precisar de parceria, mande DM!', '2024-01-01T18:22:00');
-
-INSERT INTO members (avatar, name, badge, status_text, avatar_class, is_online) VALUES
-  ('A', 'Arthur Silva', 'Staff', 'Criando Prompts mágicos 🧠', 'avatar-admin', true),
-  ('M', 'Mariana Costa', 'Mod', 'Codando em Python... 🐍', 'avatar-mod', true),
-  ('F', 'Felipe Netto', '', 'Disponível', 'avatar-user', true),
-  ('G', 'Gabriel Ramos', '', 'Offline', 'avatar-user', false),
-  ('L', 'Lucas M.', '', 'Offline', 'avatar-user', false)
-ON CONFLICT DO NOTHING;

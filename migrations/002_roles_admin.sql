@@ -2,13 +2,12 @@
 -- MIGRATION 002: Roles (Admin/Mod/User) + Admin Panel
 -- Schema: fogueteiros
 -- =====================================================
-
--- 1. Add CHECK constraint for cargo column
-ALTER TABLE perfis ADD CONSTRAINT perfis_cargo_check
-  CHECK (cargo IN ('admin', 'mod', 'membro'));
-
--- 2. Promote a user to admin (run with the target user's UUID)
+-- NOTA: A tabela perfis com a constraint cargo_check
+-- já foi criada na migration create_perfis_table.
+-- Este arquivo é mantido apenas como referência.
+--
+-- Promover um usuário a admin (rodar com o UUID alvo):
 -- UPDATE perfis SET cargo = 'admin' WHERE id = 'SEU_UUID_AQUI';
-
--- 3. Verify
+--
+-- Verificar:
 -- SELECT id, nome, cargo FROM perfis;
