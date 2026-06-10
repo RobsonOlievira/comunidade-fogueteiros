@@ -1,7 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/src/context/AuthContext';
-import { Rocket, Mail, Lock, ArrowRight } from 'lucide-react';
+import { supabase } from '@/src/services/supabaseClient';
+import { SSO_TESSERACT_URL } from '@/src/services/appBIntegration';
+import { Rocket, Mail, Lock, ArrowRight, GraduationCap, X } from 'lucide-react';
 
 export default function Login() {
   const { signIn, signInWithGoogle } = useAuth();
@@ -10,6 +12,38 @@ export default function Login() {
   const [error, setError] = React.useState('');
   const [submitting, setSubmitting] = React.useState(false);
   const [googleLoading, setGoogleLoading] = React.useState(false);
+  const [ssoEmail, setSsoEmail] = React.useState('');
+  const [showSsoModal, setShowSsoModal] = React.useState(false);
+  const [ssoLoading, setSsoLoading] = React.useState(false);
+  const [ssoError, setSsoError] = React.useState('');
+
+  const handleSso = async () => {
+    setSsoError('');
+    setSsoLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(SSO_TESSERACT_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session?.access_token || ''}`,
+        },
+        body: JSON.stringify({ email: ssoEmail }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setSsoError(data.error || 'Erro ao conectar');
+        setSsoLoading(false);
+        return;
+      }
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch (e: any) {
+      setSsoError(e?.message || 'Erro de conexão');
+      setSsoLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,6 +95,57 @@ export default function Login() {
           </svg>
           {googleLoading ? 'Abrindo Google...' : 'Entrar com Google'}
         </button>
+
+        <button
+          onClick={() => { setSsoEmail(''); setSsoError(''); setShowSsoModal(true); }}
+          className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl border border-glass-border bg-glass hover:bg-white/10 transition-all text-white font-medium mb-3"
+        >
+          <GraduationCap className="w-5 h-5 text-accent-cyan" />
+          Entrar com Tesseract
+        </button>
+
+        {showSsoModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+            <div className="w-full max-w-md bg-[#0c0a1a] border border-glass-border rounded-2xl p-6 relative">
+              <button
+                onClick={() => setShowSsoModal(false)}
+                className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-accent-cyan/20">
+                  <GraduationCap className="w-5 h-5 text-accent-cyan" />
+                </div>
+                <div>
+                  <h3 className="text-white font-semibold">Entrar com Tesseract</h3>
+                  <p className="text-gray-400 text-sm">Digite seu email da Tesseract</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 bg-glass border border-glass-border rounded-xl px-4 py-3 focus-within:border-accent-cyan transition-colors mb-3">
+                <Mail className="w-5 h-5 text-gray-500" />
+                <input
+                  type="email"
+                  value={ssoEmail}
+                  onChange={e => setSsoEmail(e.target.value)}
+                  placeholder="seu@email.com"
+                  className="bg-transparent border-none outline-none text-white w-full placeholder:text-gray-600"
+                  onKeyDown={e => { if (e.key === 'Enter' && !ssoLoading) handleSso(); }}
+                  autoFocus
+                />
+              </div>
+              {ssoError && <p className="text-red-400 text-sm mb-3">{ssoError}</p>}
+              <button
+                onClick={handleSso}
+                disabled={ssoLoading || !ssoEmail}
+                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-gradient-to-r from-accent-cyan to-primary text-white font-semibold hover:opacity-90 transition-all disabled:opacity-60"
+              >
+                {ssoLoading ? 'Verificando...' : 'Entrar'}
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="relative my-6">
           <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-glass-border"></div></div>

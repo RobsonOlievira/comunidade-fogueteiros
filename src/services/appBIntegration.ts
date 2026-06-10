@@ -1,5 +1,6 @@
 const APP_B_URL = 'https://bgpygirvzfjvfathywjb.supabase.co'
 const APP_B_BASE = 'https://appbplatform.vercel.app'
+const COMUNIDADE_FUNCTIONS_URL = 'https://ghdpmlmescgdhvrdqfiz.supabase.co/functions/v1'
 
 export interface AppBCourse {
   id: string
@@ -26,6 +27,8 @@ export function getAppBCheckoutUrl(courseExternalId: string, email?: string): st
   if (email) url.searchParams.set('email', email)
   return url.toString()
 }
+
+export const SSO_TESSERACT_URL = `${COMUNIDADE_FUNCTIONS_URL}/sso-tesseract`
 
 export function getStudentCourseBadge(courseIds: string[]): string {
   if (!courseIds || courseIds.length === 0) return ''
