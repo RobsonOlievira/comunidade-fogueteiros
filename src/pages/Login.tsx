@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/src/context/AuthContext';
-import { supabase } from '@/src/services/supabaseClient';
 import { SSO_TESSERACT_URL } from '@/src/services/appBIntegration';
 import { Rocket, Mail, Lock, ArrowRight, GraduationCap, X } from 'lucide-react';
 
@@ -21,13 +20,9 @@ export default function Login() {
     setSsoError('');
     setSsoLoading(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
       const res = await fetch(SSO_TESSERACT_URL, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session?.access_token || ''}`,
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: ssoEmail }),
       });
       const data = await res.json();
