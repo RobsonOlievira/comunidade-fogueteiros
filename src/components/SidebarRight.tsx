@@ -12,6 +12,7 @@ interface PerfilSidebar {
   avatar_url: string | null
   bio: string | null
   ultimo_acesso_em: string | null
+  pro: boolean
 }
 
 export default function SidebarRight({ isHidden }: SidebarRightProps) {
@@ -32,7 +33,7 @@ export default function SidebarRight({ isHidden }: SidebarRightProps) {
   const carregar = async () => {
     const { data } = await supabase
       .from('perfis')
-      .select('id, nome, cargo, avatar_url, bio, ultimo_acesso_em')
+      .select('id, nome, cargo, avatar_url, bio, ultimo_acesso_em, pro')
       .order('ultimo_acesso_em', { ascending: false, nullsLast: true });
     setPerfis(data || []);
   };
@@ -86,7 +87,8 @@ export default function SidebarRight({ isHidden }: SidebarRightProps) {
                 <div className="member-info">
                   <div className="member-name-row">
                     <span className="member-name">{p.nome}</span>
-                    {p.cargo !== 'membro' && (
+                    {p.pro && <span className="member-badge badge-pro" title="Pro">👑</span>}
+                    {!p.pro && p.cargo !== 'membro' && (
                       <span className={`member-badge badge-${p.cargo}`}>
                         {p.cargo === 'admin' ? 'Staff' : 'Mod'}
                       </span>

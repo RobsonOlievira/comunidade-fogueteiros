@@ -34,6 +34,7 @@ interface AuthContextType {
   loading: boolean;
   cargo: string | null;
   cargoLoaded: boolean;
+  isPro: boolean;
   appBStatus: AppBStatus | null;
   signUp: (data: SignUpData) => Promise<string | null>;
   signIn: (email: string, password: string) => Promise<string | null>;
@@ -46,6 +47,7 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
   cargo: null,
   cargoLoaded: false,
+  isPro: false,
   appBStatus: null,
   signUp: async () => null,
   signIn: async () => null,
@@ -158,6 +160,7 @@ const syncAppBToProfile = async (userId: string, status: AppBStatus) => {
     app_b_id: status.appBUserId,
     vinculado_app_b: true,
     origem: 'app_b',
+    pro: true,
   }).eq('id', userId)
 }
 
@@ -180,20 +183,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [cargo, setCargo] = useState<string | null>(null);
   const [cargoLoaded, setCargoLoaded] = useState(false);
+  const [isPro, setIsPro] = useState(false);
   const [appBStatus, setAppBStatus] = useState<AppBStatus | null>(null);
 
-  const fetchCargo = (userId: string) => {
+  const fetchPerfil = (userId: string) => {
     supabase
       .from('perfis')
-      .select('cargo')
+      .select('cargo, pro')
       .eq('id', userId)
       .maybeSingle()
       .then(({ data }) => {
         setCargo(data?.cargo || null);
+        setIsPro(data?.pro === true);
         setCargoLoaded(true);
       })
       .catch(() => {
         setCargo(null);
+        setIsPro(false);
         setCargoLoaded(true);
       });
   };
@@ -210,7 +216,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           await ensurePerfil(session.user);
           if (cancelled) return;
           setUser(buildUser(session.user));
-          fetchCargo(session.user.id);
+          fetchPerfil(session.user.id);
 
           const status = await checkAppBStudent(session.user.email || '')
           if (!cancelled && status?.isStudent) {
@@ -237,7 +243,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         ensurePerfil(session.user).then(() => {
           if (!cancelled) {
             setUser(buildUser(session.user!));
-            fetchCargo(session.user!.id);
+            fetchPerfil(session.user!.id);
           }
         });
         if (_event === 'SIGNED_IN') {
@@ -344,7 +350,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, cargo, cargoLoaded, appBStatus, signUp, signIn, signInWithGoogle, signOut }}>
+      <AuthContext.Provider value={{ user, loading, cargo, cargoLoaded, isPro, appBStatus, signUp, signIn, signInWithGoogle, signOut }}>
       {children}
     </AuthContext.Provider>
   );

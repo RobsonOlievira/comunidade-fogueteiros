@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, Hash, Bell, Lightbulb, Code2, FolderOpen, HelpCircle, Users, Mic, Settings, LogOut } from 'lucide-react';
+import { Search, Hash, Bell, Lightbulb, Code2, FolderOpen, HelpCircle, Users, Crown, Mic, Settings, LogOut } from 'lucide-react';
 import { useAuth } from '@/src/context/AuthContext';
 import type { ChannelItem } from '@/types';
 
@@ -21,7 +21,7 @@ export default function SidebarLeft({
   isMobileOpen,
   setIsMobileOpen
 }: SidebarLeftProps) {
-  const { user, signOut } = useAuth();
+  const { user, signOut, isPro } = useAuth();
 
   const getChannelIcon = (id: string) => {
     switch (id) {
@@ -32,6 +32,7 @@ export default function SidebarLeft({
       case 'recursos': return <FolderOpen />;
       case 'duvidas': return <HelpCircle />;
       case 'networking': return <Users />;
+      case 'pro': return <Crown className="text-yellow-400" />;
       default: return <Hash />;
     }
   };
@@ -58,7 +59,13 @@ export default function SidebarLeft({
         { id: 'duvidas', name: 'tirar-duvidas' },
         { id: 'networking', name: 'networking' }
       ]
-    }
+    },
+    ...(isPro ? [{
+      title: "👑 EXCLUSIVO PRO",
+      items: [
+        { id: 'pro', name: 'comunidade-pro' }
+      ]
+    }] : [])
   ];
 
   const handleLogout = async () => {
@@ -115,12 +122,13 @@ export default function SidebarLeft({
       </nav>
 
       <div className="user-profile">
-        <div className="user-avatar-wrapper">
-          <div className="user-avatar">
-            {user?.name?.charAt(0).toUpperCase() || 'U'}
+          <div className="user-avatar-wrapper">
+            <div className="user-avatar">
+              {user?.name?.charAt(0).toUpperCase() || 'U'}
+            </div>
+            <div className="user-status-dot online"></div>
+            {isPro && <span className="user-pro-badge" title="Pro">👑</span>}
           </div>
-          <div className="user-status-dot online"></div>
-        </div>
         <div className="user-info">
           <span className="user-name">{user?.name || 'Usuário'}</span>
           <span className="user-tag">{user?.email}</span>

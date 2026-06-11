@@ -38,6 +38,7 @@ export interface Perfil {
   origem?: string
   app_b_id?: string
   vinculado_app_b?: boolean
+  pro?: boolean
 }
 
 export interface Voto {

@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS fogueteiros.canais (
   tipo TEXT DEFAULT 'chat',
   icone TEXT DEFAULT 'hash',
   ordem INTEGER DEFAULT 0,
+  pro_only BOOLEAN DEFAULT FALSE,
   criado_em TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -55,6 +56,7 @@ CREATE TABLE IF NOT EXISTS fogueteiros.perfis (
   telefone TEXT NOT NULL DEFAULT '',
   karma_points INTEGER DEFAULT 0,
   origem TEXT,
+  pro BOOLEAN DEFAULT FALSE,
   ultimo_acesso_em TIMESTAMPTZ,
   app_b_id TEXT,
   vinculado_app_b BOOLEAN DEFAULT FALSE,
@@ -252,12 +254,13 @@ CREATE TABLE IF NOT EXISTS fogueteiros.premios_post (
 -- =====================================================
 -- SEED: Canais iniciais
 -- =====================================================
-INSERT INTO fogueteiros.canais (id, titulo, descricao, categoria, tipo, icone, ordem) VALUES
-  ('geral', 'Geral', 'Bate-papo geral da Comunidade Fogueteiros. Sejam bem-vindos!', 'inicio', 'chat', 'hash', 1),
-  ('avisos', 'Avisos Oficiais', 'Comunicados importantes, lançamentos e atualizações da comunidade.', 'inicio', 'chat', 'megaphone', 2),
-  ('ideias', 'Brainstorm de Ideias', 'Tem uma ideia inovadora de aplicativo ou IA? Compartilhe aqui!', 'conversas', 'chat', 'lightbulb', 3),
-  ('projetos', 'Projetos & IA', 'Espaço para você postar o link dos seus aplicativos e projetos prontos.', 'conversas', 'chat', 'code', 4),
-  ('recursos', 'Recursos Úteis', 'Prompts, tutoriais, links de ferramentas e códigos úteis.', 'conversas', 'chat', 'book', 5),
-  ('duvidas', 'Tirar Dúvidas', 'Está travado em alguma parte do código ou no app? Pergunte aqui!', 'suporte', 'chat', 'question', 6),
-  ('networking', 'Networking', 'Conecte-se com outros criadores, encontre parceiros de projetos e negócios.', 'suporte', 'chat', 'users', 7)
+INSERT INTO fogueteiros.canais (id, titulo, descricao, categoria, tipo, icone, ordem, pro_only) VALUES
+  ('geral', 'Geral', 'Bate-papo geral da Comunidade Fogueteiros. Sejam bem-vindos!', 'inicio', 'chat', 'hash', 1, false),
+  ('avisos', 'Avisos Oficiais', 'Comunicados importantes, lançamentos e atualizações da comunidade.', 'inicio', 'chat', 'megaphone', 2, false),
+  ('ideias', 'Brainstorm de Ideias', 'Tem uma ideia inovadora de aplicativo ou IA? Compartilhe aqui!', 'conversas', 'chat', 'lightbulb', 3, false),
+  ('projetos', 'Projetos & IA', 'Espaço para você postar o link dos seus aplicativos e projetos prontos.', 'conversas', 'chat', 'code', 4, false),
+  ('recursos', 'Recursos Úteis', 'Prompts, tutoriais, links de ferramentas e códigos úteis.', 'conversas', 'chat', 'book', 5, false),
+  ('duvidas', 'Tirar Dúvidas', 'Está travado em alguma parte do código ou no app? Pergunte aqui!', 'suporte', 'chat', 'question', 6, false),
+  ('networking', 'Networking', 'Conecte-se com outros criadores, encontre parceiros de projetos e negócios.', 'suporte', 'chat', 'users', 7, false),
+  ('pro', 'Comunidade Pro', 'Espaço exclusivo para alunos com cursos ativos. Conteúdos avançados, mentorias e networking premium.', 'exclusivo', 'chat', 'crown', 99, true)
 ON CONFLICT (id) DO NOTHING;
