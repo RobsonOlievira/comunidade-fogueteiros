@@ -53,9 +53,9 @@ export default function MainLayout() {
           </div>
         </Link>
 
-        <div className="flex items-center gap-1">
-          {/* Desktop Nav - right side */}
-          <nav className="hidden md:flex items-center gap-1">
+        <div className="flex items-center gap-1 min-w-0">
+          {/* Nav - visible on all sizes */}
+          <nav className="flex items-center gap-0.5 overflow-x-auto">
             {navItems.map(item => {
               const isActive = location.pathname.startsWith(item.path);
               const Icon = item.icon;
@@ -64,13 +64,14 @@ export default function MainLayout() {
                   <Link
                     key={item.path}
                     to={item.path}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-display font-bold tracking-wide transition-all border ${
+                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-display font-bold tracking-wide transition-all border shrink-0 ${
                       isActive
                         ? 'bg-primary text-white border-primary shadow-lg shadow-primary/30'
                         : 'bg-primary/10 text-primary border-primary/30 hover:bg-primary/20 hover:border-primary/50'
                     }`}
                   >
-                    <Icon className="w-4 h-4" /> {item.label}
+                    <Icon className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">{item.label}</span>
                   </Link>
                 );
               }
@@ -78,13 +79,14 @@ export default function MainLayout() {
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-base font-display font-semibold tracking-wide transition-all ${
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-display font-semibold tracking-wide transition-all shrink-0 ${
                     isActive
                       ? 'bg-primary/15 text-white'
                       : 'text-gray-400 hover:text-white hover:bg-white/[0.03]'
                   }`}
                 >
-                  {item.label}
+                  <Icon className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">{item.label}</span>
                 </Link>
               );
             })}
