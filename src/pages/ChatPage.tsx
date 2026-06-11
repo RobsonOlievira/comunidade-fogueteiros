@@ -18,7 +18,7 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [channelDetails, setChannelDetails] = useState<ChannelItem | null>(null);
-  const [isSidebarRightHidden, setIsSidebarRightHidden] = useState(false);
+  const [isSidebarRightHidden, setIsSidebarRightHidden] = useState(true);
   const [isSidebarLeftMobileOpen, setIsSidebarLeftMobileOpen] = useState(false);
 
   useEffect(() => {
