@@ -316,11 +316,10 @@ export default function CourseDetailPage() {
 
       {showCheckout && course.produto_id && user && (
         <CheckoutModal
-          isOpen={showCheckout}
+          isOpen={true}
           onClose={() => setShowCheckout(false)}
-          cursoId={course.produto_id}
-          perfilId={user.id}
           onSuccess={handleBuySuccess}
+          cursoId={course.produto_id}
         />
       )}
     </div>

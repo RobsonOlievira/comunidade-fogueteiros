@@ -2,10 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabasePublic as supabase } from '@/src/services/supabaseClient';
 import { useAuth } from '@/src/context/AuthContext';
+import { DatabaseService } from '@/src/services/database';
 import {
   BookOpen, ChevronRight, Hash, Loader2, Sparkles, AlertCircle,
   ShoppingCart, Edit2, X, Check
 } from 'lucide-react';
+import CheckoutModal from '@/src/components/CheckoutModal';
 
 interface Course {
   id: string;
@@ -18,6 +20,7 @@ interface Course {
   duration: string;
   tags: string[];
   order_index: number;
+  produto_id: string;
   created_at: string;
 }
 
@@ -271,30 +274,17 @@ export default function CoursesPage() {
         </div>
       )}
 
-      {buyModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-surface border border-glass-border rounded-2xl w-full max-w-md">
-            <div className="flex items-center justify-between p-5 border-b border-glass-border">
-              <h2 className="font-display text-lg font-semibold text-white">{buyModal.name}</h2>
-              <button onClick={() => setBuyModal(null)} className="text-gray-400 hover:text-white">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="p-5 text-center">
-              <ShoppingCart className="w-12 h-12 text-accent-lilac mx-auto mb-4" />
-              <p className="text-gray-300 font-medium mb-1">Em breve voce podera adquirir este curso.</p>
-              <p className="text-sm text-gray-500">A funcionalidade de pagamento sera integrada em breve.</p>
-            </div>
-            <div className="p-5 pt-0 flex justify-center">
-              <button
-                onClick={() => setBuyModal(null)}
-                className="px-6 py-2.5 rounded-lg bg-gradient-to-r from-primary to-accent-cyan text-white text-sm font-semibold hover:opacity-90 transition-all"
-              >
-                Fechar
-              </button>
-            </div>
-          </div>
-        </div>
+      {buyModal && user && buyModal.produto_id && (
+        <CheckoutModal
+          isOpen={true}
+          onClose={() => setBuyModal(null)}
+          onSuccess={async () => {
+            const expira = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString();
+            await DatabaseService.grantAcesso(user.id, buyModal.produto_id, expira);
+            setBuyModal(null);
+          }}
+          cursoId={buyModal.produto_id}
+        />
       )}
     </div>
   );
