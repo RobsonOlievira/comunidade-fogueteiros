@@ -3,7 +3,7 @@ import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/src/context/AuthContext';
 import { useTheme } from '@/src/context/ThemeContext';
 import {
-  Rocket, MessageCircle, MessageSquare, User, LogOut,
+  MessageCircle, MessageSquare, User, LogOut,
   Sun, Moon, Menu, X, Shield, Settings, BookOpen, Download
 } from 'lucide-react';
 
@@ -44,9 +44,7 @@ export default function MainLayout() {
       {/* Top Header Bar */}
       <header className="flex items-center justify-between px-4 h-14 bg-surface border-b border-glass-border flex-shrink-0">
         <Link to="/labs" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-accent-cyan flex items-center justify-center shadow-lg shadow-primary/30">
-            <Rocket className="w-4 h-4 text-white" />
-          </div>
+          <img src="/logo.svg" alt="Logo" className="w-8 h-8" />
           <div className="flex items-center gap-1.5">
             <span className="font-display text-base font-bold text-white tracking-wide hidden sm:inline">Olha o Foguete!</span>
             <span className="hidden sm:inline px-1.5 py-0.5 rounded text-[0.6rem] font-bold bg-gradient-to-r from-amber-400 to-yellow-500 text-black opacity-0">PRO</span>

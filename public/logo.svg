@@ -1,0 +1,8 @@
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 595.3 595.3">
+  <radialGradient id="logoGrad" cx="297.6422" cy="297.6289" r="153.5704" gradientTransform="matrix(1 0 0 -1 0 595.2756)" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#00A79D"/>
+    <stop offset="1" stop-color="#1C75BC"/>
+  </radialGradient>
+  <polygon fill="url(#logoGrad)" points="297.6,461.8 439.8,379.7 439.8,215.6 297.6,133.5 155.5,215.6 295.4,297.6"/>
+  <path fill="#FFF" d="M297.6,5L44.2,151.3V444l253.5,146.3l253.5-146.3V151.3L297.6,5z M436.9,203.9l-130.6-75.4V30l215.2,124.2 L436.9,203.9z M289,283.8l-116.3-68.2L289,148.5V283.8z M286.9,311.9l2.1,150v103.4L70.2,439L286.9,311.9z M306.3,300.5l124.9-73.2 v147.4l-124.8,72.1L306.3,300.5z M306.3,280.4V148.5l113.3,65.4L306.3,280.4z M289,30v98.4l-150.8,87l139.4,81.8L61.5,424V161.3 L289,30z M306.3,565.3v-98.4l142.2-82.1V217.2l85.3-50V434L306.3,565.3z"/>
+</svg>
