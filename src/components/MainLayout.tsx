@@ -262,8 +262,10 @@ export default function MainLayout() {
 
       {/* Page Content */}
       <main
-        className={`flex-1 flex flex-col overflow-y-auto ${
-          isLabsPage ? 'pt-[50px] md:pt-14' : 'pt-14 md:pt-14'
+        className={`flex-1 flex flex-col ${
+          isLabsPage
+            ? 'overflow-hidden md:overflow-y-auto md:pt-14'
+            : 'overflow-y-auto pt-14 md:pt-14'
         }`}
       >
         <Outlet />

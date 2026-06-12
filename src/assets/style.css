@@ -368,17 +368,22 @@ body {
 }
 
 @media (max-width: 768px) {
-    /* No mobile, o header do canal rola junto com a página (não fica sticky),
-       para não conflitar com o header fixo do MainLayout. O <main> do
-       MainLayout já tem pt-14 (56px) e overflow-y-auto, então o conteúdo
-       aparece logo abaixo do header fixo e rola naturalmente. */
+    /* No mobile, o .chat-area ocupa exatamente o viewport menos o header
+       fixo do MainLayout (56px). Isso impede que o <main> do MainLayout
+       (que está com overflow-hidden no /labs) precise rolar — o scroll
+       fica isolado dentro do .chat-messages. O .chat-header (70px) fica
+       sempre visível no topo do .chat-area, logo abaixo do header fixo. */
     .chat-area {
-        height: auto;
-        min-height: 0;
+        height: calc(100vh - 56px);
+        min-height: calc(100vh - 56px);
+    }
+    .app-container {
+        height: calc(100vh - 56px);
+        min-height: calc(100vh - 56px);
     }
     .chat-messages {
-        overflow-y: visible;
-        flex: none;
+        overflow-y: auto;
+        flex: 1;
     }
     .chat-input-wrapper {
         position: sticky;
