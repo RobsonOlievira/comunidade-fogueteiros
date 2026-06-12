@@ -148,6 +148,7 @@ export default function ChatPage() {
         onUnlikeMessage={handleUnlikeMessage}
         onDeleteMessage={handleDeleteMessage}
         cargo={cargo}
+        perfilId={perfilId}
       />
       <SidebarRight isHidden={isSidebarRightHidden} />
       {isSidebarLeftMobileOpen && (

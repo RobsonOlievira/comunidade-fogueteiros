@@ -12,6 +12,7 @@ interface ChatAreaProps {
   onUnlikeMessage: (messageId: string) => void;
   onDeleteMessage: (messageId: string) => void;
   cargo?: string;
+  perfilId?: string;
 }
 
 export default function ChatArea({
@@ -24,6 +25,7 @@ export default function ChatArea({
   onUnlikeMessage,
   onDeleteMessage,
   cargo,
+  perfilId,
 }: ChatAreaProps) {
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -86,7 +88,7 @@ export default function ChatArea({
         {messages.map((msg) => {
           const badgeClass = msg.badge ? `badge-${msg.badge.toLowerCase()}` : '';
           return (
-            <div className="message-card" key={msg.id}>
+            <div className="message-card group" key={msg.id}>
               <div className={`msg-avatar ${getAvatarColorClass(msg.avatarColor)}`}>
                 {msg.avatar}
               </div>
@@ -114,7 +116,7 @@ export default function ChatArea({
                     <Heart className={`w-3.5 h-3.5 ${msg.likedByMe ? 'fill-accent-lilac' : ''}`} />
                     {msg.likesCount ? <span>{msg.likesCount}</span> : null}
                   </button>
-                  {isAdmin && (
+                  {(isAdmin || msg.perfilId === perfilId) && (
                     <button
                       onClick={() => onDeleteMessage(msg.id)}
                       className="flex items-center gap-1 text-xs text-gray-600 hover:text-red-400 transition-all opacity-0 group-hover:opacity-100"
