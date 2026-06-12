@@ -40,9 +40,9 @@ export default function MainLayout() {
   ];
 
   return (
-    <div className="flex flex-col h-screen w-full bg-background overflow-hidden">
+    <div className="flex flex-col h-screen w-full bg-background">
       {/* Top Header Bar */}
-      <header className="flex items-center justify-between px-4 h-14 bg-surface border-b border-glass-border flex-shrink-0 relative z-30">
+      <header className="flex items-center justify-between px-4 h-14 bg-surface border-b border-glass-border flex-shrink-0 sticky top-0 z-40">
         <Link to="/labs" className="flex items-center gap-2">
           <img src="/logo.svg" alt="Logo" className="w-8 h-8" />
           <div className="flex items-center gap-1.5">
@@ -53,7 +53,7 @@ export default function MainLayout() {
 
         <div className="flex items-center gap-1 min-w-0">
           {/* Nav - visible on all sizes */}
-          <nav className="flex items-center gap-0.5 overflow-x-auto">
+          <nav className="flex items-center gap-1 sm:gap-0.5 overflow-x-auto">
             {navItems.map(item => {
               const isActive = location.pathname.startsWith(item.path);
               const Icon = item.icon;
@@ -62,13 +62,13 @@ export default function MainLayout() {
                   <Link
                     key={item.path}
                     to={item.path}
-                    className={`flex items-center gap-1.5 px-1.5 sm:px-2.5 py-1.5 rounded-lg text-sm font-display font-bold tracking-wide transition-all border shrink-0 ${
+                    className={`flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-lg text-sm font-display font-bold tracking-wide transition-all border shrink-0 ${
                       isActive
                         ? 'bg-accent-lilac text-white border-accent-lilac shadow-lg shadow-primary/30'
                         : 'bg-accent-lilac/10 text-accent-lilac border-accent-lilac/30 hover:bg-accent-lilac/20 hover:border-accent-lilac/50'
                     }`}
                   >
-                    <Icon className="w-4 h-4" />
+                    <Icon className="w-5 h-5 sm:w-4 sm:h-4" />
                     <span className="hidden sm:inline">{item.label}</span>
                   </Link>
                 );
@@ -77,13 +77,13 @@ export default function MainLayout() {
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`flex items-center gap-1.5 px-1.5 sm:px-2.5 py-1.5 rounded-lg text-sm font-display font-semibold tracking-wide transition-all shrink-0 ${
+                  className={`flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-lg text-sm font-display font-semibold tracking-wide transition-all shrink-0 ${
                     isActive
                       ? 'bg-accent-lilac/15 text-white'
                       : 'text-gray-400 hover:text-white hover:bg-white/[0.03]'
                   }`}
                 >
-                  <Icon className="w-4 h-4" />
+                  <Icon className="w-5 h-5 sm:w-4 sm:h-4" />
                   <span className="hidden sm:inline">{item.label}</span>
                 </Link>
               );
@@ -174,7 +174,7 @@ export default function MainLayout() {
           </div>
 
           <button onClick={() => setMobileOpen(!mobileOpen)} className="md:hidden p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/[0.05] transition-all">
-            {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
         </div>
       </header>
@@ -207,7 +207,7 @@ export default function MainLayout() {
             </div>
 
             {/* Nav Items */}
-            <nav className="space-y-1 flex-1 overflow-y-auto">
+            <nav className="flex flex-col gap-1.5 flex-1 overflow-y-auto">
               {navItems.map(item => {
                 const Icon = item.icon;
                 const isActive = location.pathname.startsWith(item.path);
@@ -216,11 +216,11 @@ export default function MainLayout() {
                     key={item.path}
                     to={item.path}
                     onClick={() => setMobileOpen(false)}
-                    className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-base font-display font-semibold transition-all ${
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl text-lg font-display font-semibold transition-all ${
                       isActive ? 'bg-accent-lilac/15 text-white' : 'text-gray-200 hover:text-white hover:bg-white/[0.03]'
                     }`}
                   >
-                    <Icon className="w-5 h-5" />
+                    <Icon className="w-6 h-6" />
                     {item.label}
                   </Link>
                 );
@@ -228,12 +228,12 @@ export default function MainLayout() {
             </nav>
 
             {/* Theme Toggle - bottom section */}
-            <div className="border-t border-glass-border pt-2 mt-2 space-y-1">
+            <div className="border-t border-glass-border pt-3 mt-3 flex flex-col gap-1.5">
               <button
                 onClick={() => { toggleTheme(); setMobileOpen(false); }}
-                className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-base font-semibold text-gray-200 hover:text-white hover:bg-white/[0.03] w-full"
+                className="flex items-center gap-3 px-4 py-3 rounded-xl text-lg font-semibold text-gray-200 hover:text-white hover:bg-white/[0.03] w-full"
               >
-                {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                {darkMode ? <Sun className="w-6 h-6" /> : <Moon className="w-6 h-6" />}
                 {darkMode ? 'Modo Claro' : 'Modo Escuro'}
               </button>
 
@@ -242,16 +242,16 @@ export default function MainLayout() {
                 <Link
                   to="/admin"
                   onClick={() => setMobileOpen(false)}
-                  className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-base font-semibold text-accent-lilac bg-accent-lilac/10 border border-accent-lilac/20 hover:bg-accent-lilac/20 transition-all w-full"
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl text-lg font-semibold text-accent-lilac bg-accent-lilac/10 border border-accent-lilac/20 hover:bg-accent-lilac/20 transition-all w-full"
                 >
-                  <Shield className="w-5 h-5" />
+                  <Shield className="w-6 h-6" />
                   Painel Admin
                 </Link>
               )}
 
               {/* Logout */}
-              <button onClick={handleLogout} className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-base text-red-400 hover:bg-red-500/10 w-full">
-                <LogOut className="w-5 h-5" />
+              <button onClick={handleLogout} className="flex items-center gap-3 px-4 py-3 rounded-xl text-lg text-red-400 hover:bg-red-500/10 w-full">
+                <LogOut className="w-6 h-6" />
                 Sair
               </button>
             </div>
