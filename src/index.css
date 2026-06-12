@@ -1,3 +1,32 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --bg-color: #070314;
+  --bg-app: #070314;
+  --bg-card: rgba(18, 10, 41, 0.45);
+  --bg-sidebar: #0b0520;
+  --bg-chat: #0e0728;
+  --bg-input: rgba(22, 13, 56, 0.6);
+
+  --accent-glow: #339c81;
+  --accent-cyan: #35acb9;
+  --accent-lilac: #c09fff;
+  --accent-pink: #ff007f;
+  --accent-green: #39ff14;
+
+  --text-primary: #f5f3ff;
+  --text-secondary: #a39cb5;
+  --text-muted: #6e6782;
+
+  --border-light: rgba(255, 255, 255, 0.05);
+  --border-glow: rgba(192, 159, 255, 0.25);
+
+  --sidebar-left-width: 260px;
+  --sidebar-right-width: 280px;
+  --transition-smooth: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  --border-radius-lg: 16px;
+  --border-radius-md: 10px;
+  --border-radius-sm: 6px;
+}

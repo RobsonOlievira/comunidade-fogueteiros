@@ -8,7 +8,6 @@ import { useAuth } from '@/src/context/AuthContext';
 import { GamificationService } from '@/src/services/gamificationService';
 import { DatabaseService } from '@/src/services/database';
 import type { ChannelItem, Message } from '@/types';
-import '@/src/assets/style.css';
 
 export default function ChatPage() {
   const { channelId } = useParams();
