@@ -368,18 +368,19 @@ body {
 }
 
 @media (max-width: 768px) {
-    /* No mobile, o .chat-area ocupa exatamente o viewport menos o header
-       fixo do MainLayout (56px). Isso impede que o <main> do MainLayout
-       (que está com overflow-hidden no /labs) precise rolar — o scroll
-       fica isolado dentro do .chat-messages. O .chat-header (70px) fica
-       sempre visível no topo do .chat-area, logo abaixo do header fixo. */
+    /* No mobile do /labs, o <main> do MainLayout tem overflow-hidden e
+       ocupa exatamente o espaço que sobra abaixo do header fixo (57px =
+       h-14 56px + border-b 1px). O .app-container e o .chat-area usam
+       height:100% para preencher o <main> (não 100vh) — assim ficam
+       sempre alinhados ao último pixel do header fixo, sem depender
+       de cálculo de viewport que pode falhar em prod. */
     .chat-area {
-        height: calc(100vh - 56px);
-        min-height: calc(100vh - 56px);
+        height: 100%;
+        min-height: 0;
     }
     .app-container {
-        height: calc(100vh - 56px);
-        min-height: calc(100vh - 56px);
+        height: 100%;
+        min-height: 0;
     }
     .chat-messages {
         overflow-y: auto;
