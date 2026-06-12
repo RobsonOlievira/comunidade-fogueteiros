@@ -158,7 +158,7 @@ export default function ThreadPage() {
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center bg-background">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-primary" />
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-accent-lilac" />
       </div>
     );
   }
@@ -194,11 +194,11 @@ export default function ThreadPage() {
             <div className="flex flex-col items-center gap-1 min-w-[48px]">
               <button
                 onClick={handleUpvote}
-                className="p-1.5 rounded-lg hover:bg-primary/10 transition-colors"
+                className="p-1.5 rounded-lg hover:bg-accent-lilac/10 transition-colors"
               >
                 <ArrowUp
                   className={`w-5 h-5 transition-colors ${
-                    voted ? 'text-primary' : 'text-gray-500 hover:text-primary'
+                    voted ? 'text-accent-lilac' : 'text-gray-500 hover:text-accent-lilac'
                   }`}
                 />
               </button>
@@ -277,7 +277,7 @@ export default function ThreadPage() {
           <button
             type="submit"
             disabled={sendingComment || !newComment.trim()}
-            className="p-2 rounded-lg bg-primary hover:bg-primary-hover transition-colors disabled:opacity-50"
+            className="p-2 rounded-lg bg-accent-lilac hover:bg-accent-lilac-hover transition-colors disabled:opacity-50"
           >
             {sendingComment ? (
               <Loader2 className="w-4 h-4 text-white animate-spin" />

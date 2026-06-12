@@ -141,7 +141,7 @@ export default function Feed() {
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center bg-background">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-accent-lilac"></div>
       </div>
     );
   }
@@ -171,7 +171,7 @@ export default function Feed() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Buscar por termo no titulo, conteudo, autor ou tag..."
-              className="w-full pl-9 pr-9 py-2.5 rounded-lg bg-white/[0.03] border border-glass-border text-white placeholder:text-gray-600 outline-none focus:border-primary transition-colors text-sm"
+              className="w-full pl-9 pr-9 py-2.5 rounded-lg bg-white/[0.03] border border-glass-border text-white placeholder:text-gray-600 outline-none focus:border-accent-lilac transition-colors text-sm"
             />
             {searchQuery && (
               <button
@@ -195,7 +195,7 @@ export default function Feed() {
                   className={
                     'flex-shrink-0 px-3 py-1.5 rounded-full border text-xs font-medium transition-all ' +
                     (active
-                      ? 'bg-primary/20 border-primary text-primary'
+                      ? 'bg-accent-lilac/20 border-accent-lilac text-accent-lilac'
                       : 'bg-white/[0.03] border-glass-border text-gray-400 hover:text-white hover:border-white/20')
                   }
                 >
@@ -210,7 +210,7 @@ export default function Feed() {
               <span>
                 {filteredThreads.length} resultado{filteredThreads.length !== 1 ? 's' : ''} de {threads.length}
               </span>
-              <button onClick={clearFilters} className="text-primary hover:underline">
+              <button onClick={clearFilters} className="text-accent-lilac hover:underline">
                 Limpar filtros
               </button>
             </div>
@@ -239,7 +239,7 @@ export default function Feed() {
               </p>
               <button
                 onClick={clearFilters}
-                className="mt-2 text-primary hover:underline text-sm"
+                className="mt-2 text-accent-lilac hover:underline text-sm"
               >
                 Limpar filtros
               </button>
@@ -255,20 +255,20 @@ export default function Feed() {
                 <div className="flex flex-col items-center gap-1 min-w-[48px]">
                   <button
                     onClick={(e) => handleUpvote(thread.id, e)}
-                    className="p-1.5 rounded-lg hover:bg-primary/10 transition-colors"
+                    className="p-1.5 rounded-lg hover:bg-accent-lilac/10 transition-colors"
                   >
                     <ArrowUp
                       className={`w-4 h-4 transition-colors ${
                         votedThreads.has(thread.id)
-                          ? 'text-primary'
-                          : 'text-gray-500 group-hover:text-primary'
+                          ? 'text-accent-lilac'
+                          : 'text-gray-500 group-hover:text-accent-lilac'
                       }`}
                     />
                   </button>
                   <span className="text-sm font-semibold text-gray-300">{thread.upvotes || 0}</span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h2 className="font-display text-lg font-semibold text-white group-hover:text-primary transition-colors truncate">
+                  <h2 className="font-display text-lg font-semibold text-white group-hover:text-accent-lilac transition-colors truncate">
                     {thread.titulo}
                   </h2>
                   <p className="text-sm text-gray-500 mt-1 line-clamp-2">{thread.conteudo}</p>
@@ -310,8 +310,8 @@ export default function Feed() {
                                 className={
                                   'text-xs px-2 py-0.5 rounded-full cursor-pointer transition-colors ' +
                                   (isActive
-                                    ? 'bg-primary/30 text-primary'
-                                    : 'bg-primary/10 text-primary hover:bg-primary/20')
+                                    ? 'bg-accent-lilac/30 text-accent-lilac'
+                                    : 'bg-accent-lilac/10 text-accent-lilac hover:bg-accent-lilac/20')
                                 }
                               >
                                 {tag}

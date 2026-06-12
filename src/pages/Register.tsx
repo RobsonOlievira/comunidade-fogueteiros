@@ -145,7 +145,7 @@ export default function Register() {
       style={{ backgroundImage: 'radial-gradient(at 10% 10%, rgba(138,43,226,0.15) 0px, transparent 40%), radial-gradient(at 90% 90%, rgba(0,229,255,0.1) 0px, transparent 40%)' }}>
 
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-primary/10 rounded-full blur-[150px]" />
+        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-accent-lilac/10 rounded-full blur-[150px]" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-accent-lilac/10 rounded-full blur-[150px]" />
       </div>
 
@@ -154,8 +154,8 @@ export default function Register() {
 
         <div className="p-8 pb-0 text-center">
           <div className="flex justify-center mb-4">
-            <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center shadow-inner">
-              <Rocket className="w-8 h-8 text-primary" />
+            <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-accent-lilac/20 flex items-center justify-center shadow-inner">
+              <Rocket className="w-8 h-8 text-accent-lilac" />
             </div>
           </div>
           <h1 className="font-display text-3xl font-bold text-white mb-2 uppercase tracking-tight">
@@ -199,12 +199,12 @@ export default function Register() {
               <div>
                 <label className="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wider">E-mail</label>
                 <div className="relative group">
-                  <Mail className="h-5 w-5 text-gray-500 absolute left-3 top-3 pointer-events-none group-focus-within:text-primary" />
+                  <Mail className="h-5 w-5 text-gray-500 absolute left-3 top-3 pointer-events-none group-focus-within:text-accent-lilac" />
                   <input
                     type="email"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="block w-full pl-10 pr-3 py-3 bg-white/[0.03] border border-glass-border rounded-lg focus:border-primary outline-none text-white transition-all focus:ring-1 focus:ring-primary text-sm placeholder:text-gray-600"
+                    className="block w-full pl-10 pr-3 py-3 bg-white/[0.03] border border-glass-border rounded-lg focus:border-accent-lilac outline-none text-white transition-all focus:ring-1 focus:ring-primary text-sm placeholder:text-gray-600"
                     placeholder="seu@email.com"
                     required
                   />
@@ -214,12 +214,12 @@ export default function Register() {
               <div>
                 <label className="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wider">Nome Completo</label>
                 <div className="relative group">
-                  <UserIcon className="h-5 w-5 text-gray-500 absolute left-3 top-3 pointer-events-none group-focus-within:text-primary" />
+                  <UserIcon className="h-5 w-5 text-gray-500 absolute left-3 top-3 pointer-events-none group-focus-within:text-accent-lilac" />
                   <input
                     type="text"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="block w-full pl-10 pr-3 py-3 bg-white/[0.03] border border-glass-border rounded-lg focus:border-primary outline-none text-white transition-all focus:ring-1 focus:ring-primary text-sm placeholder:text-gray-600"
+                    className="block w-full pl-10 pr-3 py-3 bg-white/[0.03] border border-glass-border rounded-lg focus:border-accent-lilac outline-none text-white transition-all focus:ring-1 focus:ring-primary text-sm placeholder:text-gray-600"
                     placeholder="Seu nome completo"
                     required
                   />
@@ -233,12 +233,12 @@ export default function Register() {
                   WhatsApp <span className="text-gray-600 normal-case">(opcional)</span>
                 </label>
                 <div className="relative group">
-                  <Phone className="h-5 w-5 text-gray-500 absolute left-3 top-3 pointer-events-none group-focus-within:text-primary" />
+                  <Phone className="h-5 w-5 text-gray-500 absolute left-3 top-3 pointer-events-none group-focus-within:text-accent-lilac" />
                   <input
                     type="text"
                     value={formData.phone}
                     onChange={handlePhoneChange}
-                    className="block w-full pl-10 pr-3 py-3 bg-white/[0.03] border border-glass-border rounded-lg focus:border-primary outline-none text-white transition-all focus:ring-1 focus:ring-primary text-sm placeholder:text-gray-600"
+                    className="block w-full pl-10 pr-3 py-3 bg-white/[0.03] border border-glass-border rounded-lg focus:border-accent-lilac outline-none text-white transition-all focus:ring-1 focus:ring-primary text-sm placeholder:text-gray-600"
                     placeholder="(11) 9 9999-9999"
                   />
                 </div>
@@ -247,12 +247,12 @@ export default function Register() {
               <div>
                 <label className="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wider">Usuário</label>
                 <div className="relative group">
-                  <span className="absolute left-3 top-3 text-gray-500 font-medium pointer-events-none group-focus-within:text-primary">@</span>
+                  <span className="absolute left-3 top-3 text-gray-500 font-medium pointer-events-none group-focus-within:text-accent-lilac">@</span>
                   <input
                     type="text"
                     value={formData.username}
                     onChange={handleUsernameChange}
-                    className="block w-full pl-8 pr-3 py-3 bg-white/[0.03] border border-glass-border rounded-lg focus:border-primary outline-none text-white transition-all focus:ring-1 focus:ring-primary text-sm placeholder:text-gray-600"
+                    className="block w-full pl-8 pr-3 py-3 bg-white/[0.03] border border-glass-border rounded-lg focus:border-accent-lilac outline-none text-white transition-all focus:ring-1 focus:ring-primary text-sm placeholder:text-gray-600"
                     placeholder="seunome"
                     required
                   />
@@ -270,14 +270,14 @@ export default function Register() {
                   type={showPass ? 'text' : 'password'}
                   value={formData.pass}
                   onChange={(e) => setFormData({ ...formData, pass: e.target.value })}
-                  className="block w-full px-3 py-3 bg-white/[0.03] border border-glass-border rounded-lg focus:border-primary outline-none text-white transition-all focus:ring-1 focus:ring-primary text-sm placeholder:text-gray-600"
+                  className="block w-full px-3 py-3 bg-white/[0.03] border border-glass-border rounded-lg focus:border-accent-lilac outline-none text-white transition-all focus:ring-1 focus:ring-primary text-sm placeholder:text-gray-600"
                   placeholder="Mínimo 6 caracteres"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPass(!showPass)}
-                  className="absolute right-3 top-9 text-gray-500 hover:text-primary transition-colors"
+                  className="absolute right-3 top-9 text-gray-500 hover:text-accent-lilac transition-colors"
                   tabIndex={-1}
                 >
                   {showPass ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
@@ -290,14 +290,14 @@ export default function Register() {
                   type={showConfirmPass ? 'text' : 'password'}
                   value={formData.confirmPass}
                   onChange={(e) => setFormData({ ...formData, confirmPass: e.target.value })}
-                  className="block w-full px-3 py-3 bg-white/[0.03] border border-glass-border rounded-lg focus:border-primary outline-none text-white transition-all focus:ring-1 focus:ring-primary text-sm placeholder:text-gray-600"
+                  className="block w-full px-3 py-3 bg-white/[0.03] border border-glass-border rounded-lg focus:border-accent-lilac outline-none text-white transition-all focus:ring-1 focus:ring-primary text-sm placeholder:text-gray-600"
                   placeholder="Repita sua senha"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPass(!showConfirmPass)}
-                  className="absolute right-3 top-9 text-gray-500 hover:text-primary transition-colors"
+                  className="absolute right-3 top-9 text-gray-500 hover:text-accent-lilac transition-colors"
                   tabIndex={-1}
                 >
                   {showConfirmPass ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
@@ -321,7 +321,7 @@ export default function Register() {
                       onClick={() => toggleInterest(tag)}
                       className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
                         active
-                          ? 'bg-primary/20 text-primary border-primary/40 shadow-sm shadow-primary/20'
+                          ? 'bg-accent-lilac/20 text-accent-lilac border-accent-lilac/40 shadow-sm shadow-primary/20'
                           : 'bg-white/[0.02] text-gray-400 border-glass-border hover:text-white hover:border-white/20'
                       }`}
                     >
@@ -349,7 +349,7 @@ export default function Register() {
 
           <p className="mt-6 text-center text-sm text-gray-500">
             Já tem uma conta?{' '}
-            <Link to="/login" className="text-primary hover:underline font-medium">
+            <Link to="/login" className="text-accent-lilac hover:underline font-medium">
               Faça login
             </Link>
           </p>

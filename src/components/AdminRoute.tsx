@@ -8,7 +8,7 @@ export default function AdminRoute({ children }: { children: React.ReactNode }) 
   if (loading || !cargoLoaded) {
     return (
       <div className="flex-1 flex items-center justify-center bg-background">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-primary" />
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-accent-lilac" />
       </div>
     );
   }

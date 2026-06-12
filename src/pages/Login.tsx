@@ -150,7 +150,7 @@ export default function Login() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm text-gray-400 mb-1.5">Email</label>
-            <div className="flex items-center gap-3 bg-glass border border-glass-border rounded-xl px-4 py-3 focus-within:border-primary transition-colors">
+            <div className="flex items-center gap-3 bg-glass border border-glass-border rounded-xl px-4 py-3 focus-within:border-accent-lilac transition-colors">
               <Mail className="w-5 h-5 text-gray-500" />
               <input
                 type="email"
@@ -164,7 +164,7 @@ export default function Login() {
           </div>
           <div>
             <label className="block text-sm text-gray-400 mb-1.5">Senha</label>
-            <div className="flex items-center gap-3 bg-glass border border-glass-border rounded-xl px-4 py-3 focus-within:border-primary transition-colors">
+            <div className="flex items-center gap-3 bg-glass border border-glass-border rounded-xl px-4 py-3 focus-within:border-accent-lilac transition-colors">
               <Lock className="w-5 h-5 text-gray-500" />
               <input
                 type="password"
@@ -188,7 +188,7 @@ export default function Login() {
         </form>
 
         <p className="text-center mt-6">
-          <Link to="/registrar" className="text-sm text-gray-500 hover:text-primary transition-colors">
+          <Link to="/registrar" className="text-sm text-gray-500 hover:text-accent-lilac transition-colors">
             Não tem conta? Cadastre-se
           </Link>
         </p>

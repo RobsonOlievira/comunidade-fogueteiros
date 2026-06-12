@@ -71,7 +71,7 @@ export default function CoursesPage() {
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center bg-background">
-        <Loader2 className="w-6 h-6 text-primary animate-spin" />
+        <Loader2 className="w-6 h-6 text-accent-lilac animate-spin" />
       </div>
     );
   }
@@ -81,7 +81,7 @@ export default function CoursesPage() {
       <div className="max-w-5xl mx-auto p-6">
         <div className="mb-8">
           <h1 className="font-display text-2xl font-bold text-white flex items-center gap-3">
-            <BookOpen className="w-6 h-6 text-primary" />
+            <BookOpen className="w-6 h-6 text-accent-lilac" />
             Cursos
           </h1>
           <p className="text-gray-400 text-sm mt-1">
@@ -109,7 +109,7 @@ export default function CoursesPage() {
                 <Link
                   key={course.id}
                   to={`/cursos/${course.id}`}
-                  className="group flex flex-col rounded-2xl overflow-hidden border border-glass-border bg-glass hover:border-primary/40 transition-all"
+                  className="group flex flex-col rounded-2xl overflow-hidden border border-glass-border bg-glass hover:border-accent-lilac/40 transition-all"
                 >
                   <div
                     className={`relative aspect-[16/9] bg-gradient-to-br ${paletteFor(
@@ -139,7 +139,7 @@ export default function CoursesPage() {
                   </div>
 
                   <div className="p-5 flex-1 flex flex-col">
-                    <h3 className="font-display text-lg font-semibold text-white group-hover:text-primary transition-colors">
+                    <h3 className="font-display text-lg font-semibold text-white group-hover:text-accent-lilac transition-colors">
                       {course.name}
                     </h3>
                     <p className="text-sm text-gray-400 mt-2 line-clamp-2 leading-relaxed">
@@ -152,7 +152,7 @@ export default function CoursesPage() {
                         {course.tags.slice(0, 3).map((tag, i) => (
                           <span
                             key={i}
-                            className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary"
+                            className="text-[10px] px-2 py-0.5 rounded-full bg-accent-lilac/10 text-accent-lilac"
                           >
                             {tag}
                           </span>
@@ -164,7 +164,7 @@ export default function CoursesPage() {
                       <span className="text-gray-500">
                         {count} {count === 1 ? 'modulo' : 'modulos'}
                       </span>
-                      <span className="text-primary flex items-center gap-1 group-hover:gap-2 transition-all">
+                      <span className="text-accent-lilac flex items-center gap-1 group-hover:gap-2 transition-all">
                         Abrir <ChevronRight className="w-3 h-3" />
                       </span>
                     </div>

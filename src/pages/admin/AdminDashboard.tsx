@@ -160,7 +160,7 @@ export default function AdminDashboard() {
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-primary" />
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-accent-lilac" />
       </div>
     );
   }
@@ -176,7 +176,7 @@ export default function AdminDashboard() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <h1 className="font-display text-2xl font-bold text-white flex items-center gap-3">
-              <Activity className="w-6 h-6 text-primary" />
+              <Activity className="w-6 h-6 text-accent-lilac" />
               Dashboard
             </h1>
             <p className="text-sm text-gray-500 mt-1 capitalize">{monthName}</p>
@@ -185,7 +185,7 @@ export default function AdminDashboard() {
             <select
               value={month}
               onChange={(e) => setMonth(parseInt(e.target.value))}
-              className="px-3 py-2 rounded-lg border border-glass-border bg-glass text-white text-sm outline-none focus:border-primary/50"
+              className="px-3 py-2 rounded-lg border border-glass-border bg-glass text-white text-sm outline-none focus:border-accent-lilac/50"
             >
               {MONTHS_PT.map((m, i) => (
                 <option key={i} value={i + 1}>{m}</option>
@@ -194,7 +194,7 @@ export default function AdminDashboard() {
             <select
               value={year}
               onChange={(e) => setYear(parseInt(e.target.value))}
-              className="px-3 py-2 rounded-lg border border-glass-border bg-glass text-white text-sm outline-none focus:border-primary/50"
+              className="px-3 py-2 rounded-lg border border-glass-border bg-glass text-white text-sm outline-none focus:border-accent-lilac/50"
             >
               {years.map((y) => (
                 <option key={y} value={y}>{y}</option>
@@ -205,7 +205,7 @@ export default function AdminDashboard() {
 
         {/* Top metric cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <MetricCard icon={Users} label="Total de Membros" value={metrics.total} sub={`${metrics.ativos} ativos`} color="text-primary" bg="bg-primary/10" />
+          <MetricCard icon={Users} label="Total de Membros" value={metrics.total} sub={`${metrics.ativos} ativos`} color="text-accent-lilac" bg="bg-accent-lilac/10" />
           <MetricCard icon={UserPlus} label="Novos no Mês" value={metrics.novos} sub="entradas" color="text-accent-lilac" bg="bg-accent-lilac/10" />
           <MetricCard icon={Clock} label="Acessaram no Mês" value={metrics.acessaram} sub="último login" color="text-green-400" bg="bg-green-400/10" />
           <MetricCard icon={Sparkles} label="Média de XP" value={metrics.avgXp} sub={`${metrics.totalXp.toLocaleString('pt-BR')} total`} color="text-amber-400" bg="bg-amber-400/10" />
@@ -222,7 +222,7 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <div className="lg:col-span-2 p-5 rounded-xl border border-glass-border bg-glass">
             <div className="flex items-center gap-2 mb-4">
-              <TrendingUp className="w-5 h-5 text-primary" />
+              <TrendingUp className="w-5 h-5 text-accent-lilac" />
               <h2 className="font-display text-lg font-semibold text-white">Crescimento de Membros</h2>
               <span className="text-xs text-gray-500 ml-auto">últimos 6 meses</span>
             </div>
@@ -254,7 +254,7 @@ export default function AdminDashboard() {
             <h2 className="font-display text-lg font-semibold text-white mb-4">Distribuição por Cargo</h2>
             <div className="space-y-3">
               {[
-                { key: 'admin', label: 'Admins', color: 'bg-primary', text: 'text-primary' },
+                { key: 'admin', label: 'Admins', color: 'bg-accent-lilac', text: 'text-accent-lilac' },
                 { key: 'mod', label: 'Moderadores', color: 'bg-green-400', text: 'text-green-400' },
                 { key: 'membro', label: 'Membros', color: 'bg-accent-lilac', text: 'text-accent-lilac' },
               ].map((row) => {

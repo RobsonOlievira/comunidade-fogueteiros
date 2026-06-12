@@ -162,7 +162,7 @@ export default function AdminUsers() {
 
   const cargoBadge = (cargo: string) => {
     const map: Record<string, { class: string; icon: any }> = {
-      admin: { class: 'bg-primary/15 text-primary border-primary/30', icon: Crown },
+      admin: { class: 'bg-accent-lilac/15 text-accent-lilac border-accent-lilac/30', icon: Crown },
       mod: { class: 'bg-green-400/10 text-green-400 border-green-400/20', icon: ShieldCheck },
     };
     const cfg = map[cargo] || { class: 'bg-white/5 text-gray-400 border-white/10', icon: User };
@@ -186,7 +186,7 @@ export default function AdminUsers() {
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-primary" />
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-accent-lilac" />
       </div>
     );
   }
@@ -196,7 +196,7 @@ export default function AdminUsers() {
       <div className="max-w-6xl mx-auto space-y-6">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-3">
-            <User className="w-6 h-6 text-primary" />
+            <User className="w-6 h-6 text-accent-lilac" />
             <h1 className="font-display text-2xl font-bold text-white">Membros</h1>
             <span className="text-sm text-gray-500">({filtered.length} de {perfis.length})</span>
           </div>
@@ -211,14 +211,14 @@ export default function AdminUsers() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Buscar por nome, @apelido, email, telefone, origem ou ID..."
-              className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-glass-border bg-white/[0.02] text-white placeholder:text-gray-600 outline-none focus:border-primary/50 transition-colors text-sm"
+              className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-glass-border bg-white/[0.02] text-white placeholder:text-gray-600 outline-none focus:border-accent-lilac/50 transition-colors text-sm"
             />
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-[10px] uppercase tracking-wider text-gray-500 font-bold mr-1">Cargo rápido:</span>
             {[
               { v: 'all', label: 'Todos', icon: User, active: 'bg-white/10 text-white border-white/20' },
-              { v: 'admin', label: 'Admins', icon: Crown, active: 'bg-primary/15 text-primary border-primary/30' },
+              { v: 'admin', label: 'Admins', icon: Crown, active: 'bg-accent-lilac/15 text-accent-lilac border-accent-lilac/30' },
               { v: 'mod', label: 'Moderadores', icon: ShieldCheck, active: 'bg-green-400/15 text-green-400 border-green-400/30' },
               { v: 'membro', label: 'Membros', icon: User, active: 'bg-accent-lilac/10 text-accent-lilac border-accent-lilac/20' },
             ].map((chip) => {
@@ -284,7 +284,7 @@ export default function AdminUsers() {
                       onClick={() => setSelected(u)}
                       className={`cursor-pointer transition-colors group ${
                         isAdmin
-                          ? 'bg-primary/[0.04] hover:bg-primary/[0.07] border-l-2 border-l-primary'
+                          ? 'bg-accent-lilac/[0.04] hover:bg-accent-lilac/[0.07] border-l-2 border-l-primary'
                           : isMod
                             ? 'hover:bg-white/[0.02] border-l-2 border-l-transparent'
                             : 'hover:bg-white/[0.02] border-l-2 border-l-transparent'
@@ -301,7 +301,7 @@ export default function AdminUsers() {
                           </div>
                           <div className="min-w-0">
                             <p className="text-sm text-white font-medium truncate flex items-center gap-1.5">
-                              {isAdmin && <Crown className="w-3.5 h-3.5 text-primary flex-shrink-0" />}
+                              {isAdmin && <Crown className="w-3.5 h-3.5 text-accent-lilac flex-shrink-0" />}
                               {isMod && <ShieldCheck className="w-3.5 h-3.5 text-green-400 flex-shrink-0" />}
                               {u.nome}
                             </p>
@@ -339,7 +339,7 @@ export default function AdminUsers() {
                       <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
                         <button
                           onClick={() => openEdit(u)}
-                          className="text-xs font-bold text-primary hover:text-primary-hover flex items-center gap-1 ml-auto transition-colors"
+                          className="text-xs font-bold text-accent-lilac hover:text-accent-lilac-hover flex items-center gap-1 ml-auto transition-colors"
                         >
                           <Edit2 className="w-3 h-3" /> Editar
                         </button>
@@ -395,7 +395,7 @@ function FilterSelect({ label, icon: Icon, value, onChange, children }: any) {
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full px-3 py-2 rounded-lg border border-glass-border bg-white/[0.02] text-white text-sm outline-none focus:border-primary/50"
+        className="w-full px-3 py-2 rounded-lg border border-glass-border bg-white/[0.02] text-white text-sm outline-none focus:border-accent-lilac/50"
       >
         {children}
       </select>
@@ -471,7 +471,7 @@ function MemberDetailModal({ member, onClose, onEdit }: { member: Perfil; onClos
           {/* Badges */}
           <div className="flex flex-wrap items-center gap-2">
             <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
-              member.cargo === 'admin' ? 'bg-primary/10 text-primary border-primary/20' :
+              member.cargo === 'admin' ? 'bg-accent-lilac/10 text-accent-lilac border-accent-lilac/20' :
               member.cargo === 'mod' ? 'bg-green-400/10 text-green-400 border-green-400/20' :
               'bg-white/5 text-gray-400 border-white/10'
             }`}>{member.cargo || 'membro'}</span>
@@ -510,7 +510,7 @@ function MemberDetailModal({ member, onClose, onEdit }: { member: Perfil; onClos
             <h4 className="font-display text-sm font-semibold text-white mb-3">Atividade na comunidade</h4>
             {activity.loading ? (
               <div className="flex justify-center py-6">
-                <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                <Loader2 className="w-5 h-5 animate-spin text-accent-lilac" />
               </div>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -557,7 +557,7 @@ function MemberDetailModal({ member, onClose, onEdit }: { member: Perfil; onClos
 }
 
 function EditMemberModal({ member, onChange, onClose, onSave, saving, error }: any) {
-  const inputClass = "w-full px-3 py-2 rounded-lg bg-white/[0.03] border border-glass-border text-white placeholder:text-gray-600 outline-none focus:border-primary transition-colors text-sm";
+  const inputClass = "w-full px-3 py-2 rounded-lg bg-white/[0.03] border border-glass-border text-white placeholder:text-gray-600 outline-none focus:border-accent-lilac transition-colors text-sm";
   const labelClass = "block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1";
 
   return (

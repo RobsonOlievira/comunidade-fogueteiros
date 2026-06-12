@@ -53,7 +53,7 @@ export default function AdminContent() {
                 onClick={() => setTab(t.key)}
                 className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm transition-all ${
                   tab === t.key
-                    ? 'bg-primary/10 text-primary font-medium border border-primary/20'
+                    ? 'bg-accent-lilac/10 text-accent-lilac font-medium border border-accent-lilac/20'
                     : 'text-gray-400 hover:text-white border border-transparent'
                 }`}
               >
@@ -66,7 +66,7 @@ export default function AdminContent() {
 
         {loading ? (
           <div className="flex justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-primary" />
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-accent-lilac" />
           </div>
         ) : (
           <div className="space-y-2">

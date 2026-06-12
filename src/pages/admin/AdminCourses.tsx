@@ -210,13 +210,13 @@ export default function AdminCourses() {
   };
 
   const inputClass =
-    'w-full px-3 py-2 rounded-lg bg-white/[0.03] border border-glass-border text-white placeholder:text-gray-600 outline-none focus:border-primary transition-colors text-sm';
+    'w-full px-3 py-2 rounded-lg bg-white/[0.03] border border-glass-border text-white placeholder:text-gray-600 outline-none focus:border-accent-lilac transition-colors text-sm';
   const labelClass = 'block text-xs font-bold text-gray-400 mb-1 uppercase tracking-wider';
 
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <Loader2 className="w-6 h-6 text-primary animate-spin" />
+        <Loader2 className="w-6 h-6 text-accent-lilac animate-spin" />
       </div>
     );
   }
@@ -226,7 +226,7 @@ export default function AdminCourses() {
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <BookOpen className="w-6 h-6 text-primary" />
+            <BookOpen className="w-6 h-6 text-accent-lilac" />
             <h1 className="font-display text-2xl font-bold text-white">Cursos</h1>
             <span className="text-sm text-gray-500">({courses.length})</span>
           </div>
@@ -251,7 +251,7 @@ export default function AdminCourses() {
             <p className="text-gray-500">Nenhum curso cadastrado.</p>
             <button
               onClick={openCreate}
-              className="mt-4 inline-flex items-center gap-2 text-primary hover:underline text-sm"
+              className="mt-4 inline-flex items-center gap-2 text-accent-lilac hover:underline text-sm"
             >
               <Plus className="w-4 h-4" /> Criar o primeiro curso
             </button>
@@ -261,7 +261,7 @@ export default function AdminCourses() {
             {courses.map((course, idx) => (
               <div
                 key={course.id}
-                className="relative rounded-2xl overflow-hidden flex flex-col border border-glass-border bg-glass hover:border-primary/40 transition-all group"
+                className="relative rounded-2xl overflow-hidden flex flex-col border border-glass-border bg-glass hover:border-accent-lilac/40 transition-all group"
               >
                 <div
                   className={`relative aspect-[16/10] bg-gradient-to-br ${paletteFor(
@@ -310,7 +310,7 @@ export default function AdminCourses() {
                       {course.tags.slice(0, 3).map((t) => (
                         <span
                           key={t}
-                          className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary"
+                          className="text-[10px] px-1.5 py-0.5 rounded-full bg-accent-lilac/10 text-accent-lilac"
                         >
                           {t}
                         </span>
@@ -337,7 +337,7 @@ export default function AdminCourses() {
                     </div>
                     <button
                       onClick={() => openEdit(course)}
-                      className="text-[11px] font-bold text-primary hover:text-primary-hover transition-colors flex items-center gap-1 px-2 py-1 rounded hover:bg-primary/10"
+                      className="text-[11px] font-bold text-accent-lilac hover:text-accent-lilac-hover transition-colors flex items-center gap-1 px-2 py-1 rounded hover:bg-accent-lilac/10"
                     >
                       <Edit2 className="w-3 h-3" /> Editar
                     </button>
@@ -348,7 +348,7 @@ export default function AdminCourses() {
                   <button
                     onClick={() => reorder(course, 'up')}
                     disabled={idx === 0}
-                    className="bg-black/70 hover:bg-primary text-white p-1.5 rounded disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    className="bg-black/70 hover:bg-accent-lilac text-white p-1.5 rounded disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                     title="Mover para Cima"
                   >
                     <ChevronUp className="w-3 h-3" />
@@ -356,7 +356,7 @@ export default function AdminCourses() {
                   <button
                     onClick={() => reorder(course, 'down')}
                     disabled={idx === courses.length - 1}
-                    className="bg-black/70 hover:bg-primary text-white p-1.5 rounded disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    className="bg-black/70 hover:bg-accent-lilac text-white p-1.5 rounded disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                     title="Mover para Baixo"
                   >
                     <ChevronDown className="w-3 h-3" />
@@ -485,7 +485,7 @@ export default function AdminCourses() {
                     {form.tags.map((tag) => (
                       <span
                         key={tag}
-                        className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 flex items-center gap-1"
+                        className="text-xs px-2 py-1 rounded-full bg-accent-lilac/10 text-accent-lilac border border-accent-lilac/20 flex items-center gap-1"
                       >
                         {tag}
                         <button

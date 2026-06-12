@@ -92,7 +92,7 @@ export default function NewThread() {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="De um nome ao seu topico..."
-              className="w-full px-4 py-3 rounded-xl bg-glass border border-glass-border text-white placeholder:text-gray-600 outline-none focus:border-primary transition-colors"
+              className="w-full px-4 py-3 rounded-xl bg-glass border border-glass-border text-white placeholder:text-gray-600 outline-none focus:border-accent-lilac transition-colors"
               required
             />
           </div>
@@ -104,7 +104,7 @@ export default function NewThread() {
               onChange={(e) => setContent(e.target.value)}
               placeholder="Compartilhe sua ideia, duvida ou descoberta..."
               rows={8}
-              className="w-full px-4 py-3 rounded-xl bg-glass border border-glass-border text-white placeholder:text-gray-600 outline-none focus:border-primary transition-colors resize-none"
+              className="w-full px-4 py-3 rounded-xl bg-glass border border-glass-border text-white placeholder:text-gray-600 outline-none focus:border-accent-lilac transition-colors resize-none"
               required
             />
           </div>
@@ -112,7 +112,7 @@ export default function NewThread() {
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="block text-sm text-gray-400">
-                Tags <span className="text-primary">*</span>
+                Tags <span className="text-accent-lilac">*</span>
               </label>
               <span className="text-xs text-gray-500">
                 {selectedTags.length === 0
@@ -131,7 +131,7 @@ export default function NewThread() {
                     className={
                       'flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-medium transition-all ' +
                       (selected
-                        ? 'bg-primary/20 border-primary text-primary shadow-sm shadow-primary/20'
+                        ? 'bg-accent-lilac/20 border-accent-lilac text-accent-lilac shadow-sm shadow-primary/20'
                         : 'bg-glass border-glass-border text-gray-400 hover:text-white hover:border-white/20')
                     }
                   >
@@ -146,7 +146,7 @@ export default function NewThread() {
                 {selectedTags.map((tag) => (
                   <span
                     key={tag}
-                    className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20"
+                    className="text-[10px] px-2 py-0.5 rounded-full bg-accent-lilac/10 text-accent-lilac border border-accent-lilac/20"
                   >
                     #{tag}
                   </span>

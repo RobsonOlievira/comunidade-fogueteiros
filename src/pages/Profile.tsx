@@ -80,7 +80,7 @@ export default function Profile() {
                 <span className="text-xl font-bold text-white">{stats.total_mensagens}</span>
               </div>
               <div className="p-3 rounded-lg bg-white/[0.02] border border-glass-border">
-                <div className="flex items-center gap-2 text-primary text-sm mb-1"><FileText className="w-4 h-4" /> Threads</div>
+                <div className="flex items-center gap-2 text-accent-lilac text-sm mb-1"><FileText className="w-4 h-4" /> Threads</div>
                 <span className="text-xl font-bold text-white">{stats.total_threads}</span>
               </div>
               <div className="p-3 rounded-lg bg-white/[0.02] border border-glass-border">
@@ -97,12 +97,12 @@ export default function Profile() {
 
         <div className="p-5 rounded-xl border border-glass-border bg-glass mb-4">
           <div className="flex items-center gap-3 mb-3">
-            <Code className="w-5 h-5 text-primary" />
+            <Code className="w-5 h-5 text-accent-lilac" />
             <h2 className="font-display text-lg font-semibold text-white">Tech Stack</h2>
           </div>
           <div className="flex flex-wrap gap-2">
             {techStack.map((tool: string) => (
-              <span key={tool} className="px-3 py-1 rounded-full bg-primary/10 text-primary text-sm border border-primary/20">
+              <span key={tool} className="px-3 py-1 rounded-full bg-accent-lilac/10 text-accent-lilac text-sm border border-accent-lilac/20">
                 {tool}
               </span>
             ))}

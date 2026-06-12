@@ -106,7 +106,7 @@ export default function CourseDetailPage() {
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center bg-background">
-        <Loader2 className="w-6 h-6 text-primary animate-spin" />
+        <Loader2 className="w-6 h-6 text-accent-lilac animate-spin" />
       </div>
     );
   }
@@ -117,7 +117,7 @@ export default function CourseDetailPage() {
         <div className="text-center">
           <AlertCircle className="w-10 h-10 text-red-400 mx-auto mb-3" />
           <p className="text-gray-400">{error || 'Curso nao encontrado.'}</p>
-          <Link to="/cursos" className="mt-3 inline-block text-primary hover:underline text-sm">
+          <Link to="/cursos" className="mt-3 inline-block text-accent-lilac hover:underline text-sm">
             Voltar aos cursos
           </Link>
         </div>
@@ -183,7 +183,7 @@ export default function CourseDetailPage() {
             {course.tags.map((tag, i) => (
               <span
                 key={i}
-                className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary"
+                className="text-xs px-2 py-0.5 rounded-full bg-accent-lilac/10 text-accent-lilac"
               >
                 {tag}
               </span>

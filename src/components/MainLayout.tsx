@@ -66,8 +66,8 @@ export default function MainLayout() {
                     to={item.path}
                     className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-display font-bold tracking-wide transition-all border shrink-0 ${
                       isActive
-                        ? 'bg-primary text-white border-primary shadow-lg shadow-primary/30'
-                        : 'bg-primary/10 text-primary border-primary/30 hover:bg-primary/20 hover:border-primary/50'
+                        ? 'bg-accent-lilac text-white border-accent-lilac shadow-lg shadow-primary/30'
+                        : 'bg-accent-lilac/10 text-accent-lilac border-accent-lilac/30 hover:bg-accent-lilac/20 hover:border-accent-lilac/50'
                     }`}
                   >
                     <Icon className="w-4 h-4" />
@@ -81,7 +81,7 @@ export default function MainLayout() {
                   to={item.path}
                   className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-display font-semibold tracking-wide transition-all shrink-0 ${
                     isActive
-                      ? 'bg-primary/15 text-white'
+                      ? 'bg-accent-lilac/15 text-white'
                       : 'text-gray-400 hover:text-white hover:bg-white/[0.03]'
                   }`}
                 >
@@ -106,7 +106,7 @@ export default function MainLayout() {
               >
                 {user?.name?.charAt(0).toUpperCase() || 'U'}
                 {isAdmin && (
-                  <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-primary border-2 border-surface flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-accent-lilac border-2 border-surface flex items-center justify-center">
                     <Shield className="w-2 h-2 text-white" />
                   </span>
                 )}
@@ -122,7 +122,7 @@ export default function MainLayout() {
                       <div className="flex items-center gap-2">
                         <p className="text-sm font-medium text-white truncate">{user?.name || 'Usuário'}</p>
                         {isAdmin ? (
-                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[0.6rem] font-bold bg-primary/15 text-primary border border-primary/30">
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[0.6rem] font-bold bg-accent-lilac/15 text-accent-lilac border border-accent-lilac/30">
                             <Shield className="w-2.5 h-2.5" /> {cargo?.toUpperCase()}
                           </span>
                         ) : (
@@ -137,7 +137,7 @@ export default function MainLayout() {
                     <Link
                       to="/admin"
                       onClick={() => setProfileOpen(false)}
-                      className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-semibold text-primary bg-primary/10 border border-primary/20 hover:bg-primary/20 transition-all mb-1"
+                      className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-semibold text-accent-lilac bg-accent-lilac/10 border border-accent-lilac/20 hover:bg-accent-lilac/20 transition-all mb-1"
                     >
                       <Shield className="w-4 h-4" />
                       Painel Admin
@@ -187,7 +187,7 @@ export default function MainLayout() {
                   <p className="text-base font-medium text-white truncate">{user?.name || 'Usuário'}</p>
                   {isPro && <span title="Pro">👑</span>}
                   {isAdmin && (
-                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[0.7rem] font-bold bg-primary/15 text-primary border border-primary/30">
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[0.7rem] font-bold bg-accent-lilac/15 text-accent-lilac border border-accent-lilac/30">
                       <Shield className="w-2.5 h-2.5" /> {cargo?.toUpperCase()}
                     </span>
                   )}
@@ -207,7 +207,7 @@ export default function MainLayout() {
                     to={item.path}
                     onClick={() => setMobileOpen(false)}
                     className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-base font-display font-semibold transition-all ${
-                      isActive ? 'bg-primary/15 text-white' : 'text-gray-200 hover:text-white hover:bg-white/[0.03]'
+                      isActive ? 'bg-accent-lilac/15 text-white' : 'text-gray-200 hover:text-white hover:bg-white/[0.03]'
                     }`}
                   >
                     <Icon className="w-5 h-5" />
@@ -232,7 +232,7 @@ export default function MainLayout() {
                 <Link
                   to="/admin"
                   onClick={() => setMobileOpen(false)}
-                  className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-base font-semibold text-primary bg-primary/10 border border-primary/20 hover:bg-primary/20 transition-all w-full"
+                  className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-base font-semibold text-accent-lilac bg-accent-lilac/10 border border-accent-lilac/20 hover:bg-accent-lilac/20 transition-all w-full"
                 >
                   <Shield className="w-5 h-5" />
                   Painel Admin
