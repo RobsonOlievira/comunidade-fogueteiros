@@ -42,7 +42,7 @@ export default function MainLayout() {
   return (
     <div className="flex flex-col h-screen w-full bg-background overflow-hidden">
       {/* Top Header Bar */}
-      <header className="flex items-center justify-between px-4 h-14 bg-surface border-b border-glass-border flex-shrink-0">
+      <header className="flex items-center justify-between px-4 h-14 bg-surface border-b border-glass-border flex-shrink-0 relative z-30">
         <Link to="/labs" className="flex items-center gap-2">
           <img src="/logo.svg" alt="Logo" className="w-8 h-8" />
           <div className="flex items-center gap-1.5">
@@ -62,7 +62,7 @@ export default function MainLayout() {
                   <Link
                     key={item.path}
                     to={item.path}
-                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-display font-bold tracking-wide transition-all border shrink-0 ${
+                    className={`flex items-center gap-1.5 px-1.5 sm:px-2.5 py-1.5 rounded-lg text-sm font-display font-bold tracking-wide transition-all border shrink-0 ${
                       isActive
                         ? 'bg-accent-lilac text-white border-accent-lilac shadow-lg shadow-primary/30'
                         : 'bg-accent-lilac/10 text-accent-lilac border-accent-lilac/30 hover:bg-accent-lilac/20 hover:border-accent-lilac/50'
@@ -77,7 +77,7 @@ export default function MainLayout() {
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-display font-semibold tracking-wide transition-all shrink-0 ${
+                  className={`flex items-center gap-1.5 px-1.5 sm:px-2.5 py-1.5 rounded-lg text-sm font-display font-semibold tracking-wide transition-all shrink-0 ${
                     isActive
                       ? 'bg-accent-lilac/15 text-white'
                       : 'text-gray-400 hover:text-white hover:bg-white/[0.03]'
