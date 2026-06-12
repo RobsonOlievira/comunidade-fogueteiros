@@ -29,10 +29,17 @@ export default function ChatArea({
 }: ChatAreaProps) {
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const isAdmin = cargo === 'admin' || cargo === 'mod';
 
+  // Scrola APENAS o container .chat-messages (não o <main> externo).
+  // scrollIntoView rolava todos os ancestrais, arrastando o .chat-header
+  // pra trás do header fixo do MainLayout no mobile.
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const container = messagesContainerRef.current;
+    if (container) {
+      container.scrollTop = container.scrollHeight;
+    }
   };
 
   useEffect(() => {
@@ -53,7 +60,38 @@ export default function ChatArea({
 
   return (
     <main className="chat-area">
-      <div className="chat-messages">
+      <header className="chat-header">
+        <div className="chat-header-info">
+          <button
+            className="mobile-toggle-btn"
+            onClick={onOpenSidebarLeft}
+            title="Abrir menu"
+          >
+            <Menu />
+          </button>
+          <div className="channel-header-title">
+            <Hash className="header-icon-hash" />
+            <h1>{channelDetails?.title || 'carregando...'}</h1>
+          </div>
+          <span className="channel-description-text">
+            {channelDetails?.desc || ''}
+          </span>
+        </div>
+        <div className="chat-header-actions">
+          <button
+            className="header-btn"
+            onClick={onToggleMembers}
+            title="Mostrar/Ocultar membros"
+          >
+            <Users />
+          </button>
+          <button className="header-btn" title="Fixar mensagens">
+            <Pin />
+          </button>
+        </div>
+      </header>
+
+      <div className="chat-messages" ref={messagesContainerRef}>
         {messages.map((msg) => {
           const badgeClass = msg.badge ? `badge-${msg.badge.toLowerCase()}` : '';
           return (
@@ -124,37 +162,6 @@ export default function ChatArea({
           </div>
         </form>
       </div>
-
-      <header className="chat-header">
-        <div className="chat-header-info">
-          <button
-            className="mobile-toggle-btn"
-            onClick={onOpenSidebarLeft}
-            title="Abrir menu"
-          >
-            <Menu />
-          </button>
-          <div className="channel-header-title">
-            <Hash className="header-icon-hash" />
-            <h1>{channelDetails?.title || 'carregando...'}</h1>
-          </div>
-          <span className="channel-description-text">
-            {channelDetails?.desc || ''}
-          </span>
-        </div>
-        <div className="chat-header-actions">
-          <button
-            className="header-btn"
-            onClick={onToggleMembers}
-            title="Mostrar/Ocultar membros"
-          >
-            <Users />
-          </button>
-          <button className="header-btn" title="Fixar mensagens">
-            <Pin />
-          </button>
-        </div>
-      </header>
     </main>
   );
 }
