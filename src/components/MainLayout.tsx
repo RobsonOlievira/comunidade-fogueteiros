@@ -64,13 +64,13 @@ export default function MainLayout() {
                   <Link
                     key={item.path}
                     to={item.path}
-                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-display font-bold tracking-wide transition-all border shrink-0 ${
+                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-display font-bold tracking-wide transition-all border shrink-0 ${
                       isActive
                         ? 'bg-primary text-white border-primary shadow-lg shadow-primary/30'
                         : 'bg-primary/10 text-primary border-primary/30 hover:bg-primary/20 hover:border-primary/50'
                     }`}
                   >
-                    <Icon className="w-3.5 h-3.5" />
+                    <Icon className="w-4 h-4" />
                     <span className="hidden sm:inline">{item.label}</span>
                   </Link>
                 );
@@ -79,13 +79,13 @@ export default function MainLayout() {
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-display font-semibold tracking-wide transition-all shrink-0 ${
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-display font-semibold tracking-wide transition-all shrink-0 ${
                     isActive
                       ? 'bg-primary/15 text-white'
                       : 'text-gray-400 hover:text-white hover:bg-white/[0.03]'
                   }`}
                 >
-                  <Icon className="w-3.5 h-3.5" />
+                  <Icon className="w-4 h-4" />
                   <span className="hidden sm:inline">{item.label}</span>
                 </Link>
               );
@@ -176,30 +176,30 @@ export default function MainLayout() {
       {/* Mobile Menu Overlay */}
       {mobileOpen && (
         <div className="md:hidden fixed inset-0 z-20 bg-black/60 backdrop-blur-sm" onClick={() => setMobileOpen(false)}>
-          <div className="fixed left-0 top-14 bottom-0 w-72 bg-surface border-r border-glass-border p-4 flex flex-col" onClick={e => e.stopPropagation()}>
+          <div className="fixed right-0 top-14 bottom-0 w-72 bg-surface border-l border-glass-border p-4 flex flex-col" onClick={e => e.stopPropagation()}>
             {/* Profile Section */}
             <div className="flex items-center gap-3 mb-5 pb-4 border-b border-glass-border">
-              <div className="w-11 h-11 rounded-full bg-gradient-to-br from-accent-cyan to-primary flex items-center justify-center text-sm font-bold text-white flex-shrink-0">
+              <div className="w-11 h-11 rounded-full bg-gradient-to-br from-accent-cyan to-primary flex items-center justify-center text-base font-bold text-white flex-shrink-0">
                 {user?.name?.charAt(0).toUpperCase() || 'U'}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <p className="text-sm font-medium text-white truncate">{user?.name || 'Usuário'}</p>
+                  <p className="text-base font-medium text-white truncate">{user?.name || 'Usuário'}</p>
                   {isPro && <span title="Pro">👑</span>}
                   {isAdmin && (
-                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[0.6rem] font-bold bg-primary/15 text-primary border border-primary/30">
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[0.7rem] font-bold bg-primary/15 text-primary border border-primary/30">
                       <Shield className="w-2.5 h-2.5" /> {cargo?.toUpperCase()}
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+                <p className="text-sm text-gray-500 truncate">{user?.email}</p>
               </div>
             </div>
 
             {/* Theme Toggle */}
             <button
               onClick={() => { toggleTheme(); setMobileOpen(false); }}
-              className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-gray-400 hover:text-white hover:bg-white/[0.03] w-full mb-2"
+              className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-base text-gray-400 hover:text-white hover:bg-white/[0.03] w-full mb-2"
             >
               {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
               {darkMode ? 'Modo Claro' : 'Modo Escuro'}
@@ -215,7 +215,7 @@ export default function MainLayout() {
                     key={item.path}
                     to={item.path}
                     onClick={() => setMobileOpen(false)}
-                    className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-display font-medium transition-all ${
+                    className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-base font-display font-medium transition-all ${
                       isActive ? 'bg-primary/15 text-white' : 'text-gray-400 hover:text-white hover:bg-white/[0.03]'
                     }`}
                   >
@@ -231,7 +231,7 @@ export default function MainLayout() {
               <Link
                 to="/admin"
                 onClick={() => setMobileOpen(false)}
-                className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold text-primary bg-primary/10 border border-primary/20 hover:bg-primary/20 transition-all mb-1"
+                className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-base font-semibold text-primary bg-primary/10 border border-primary/20 hover:bg-primary/20 transition-all mb-1"
               >
                 <Shield className="w-5 h-5" />
                 Painel Admin
@@ -239,7 +239,7 @@ export default function MainLayout() {
             )}
 
             {/* Logout */}
-            <button onClick={handleLogout} className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-red-400 hover:bg-red-500/10 w-full mt-auto">
+            <button onClick={handleLogout} className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-base text-red-400 hover:bg-red-500/10 w-full mt-auto">
               <LogOut className="w-5 h-5" />
               Sair
             </button>
