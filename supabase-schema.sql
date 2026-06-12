@@ -36,6 +36,69 @@ CREATE TABLE IF NOT EXISTS fogueteiros.mensagens (
 CREATE INDEX IF NOT EXISTS idx_mensagens_canal_id ON fogueteiros.mensagens(canal_id);
 CREATE INDEX IF NOT EXISTS idx_mensagens_criado_em ON fogueteiros.mensagens(criado_em DESC);
 
+ALTER TABLE fogueteiros.mensagens ADD COLUMN IF NOT EXISTS likes_count INTEGER DEFAULT 0;
+
+-- =====================================================
+-- 2B. MENSAGENS LIKES
+-- =====================================================
+CREATE TABLE IF NOT EXISTS fogueteiros.mensagens_likes (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  mensagem_id BIGINT NOT NULL REFERENCES fogueteiros.mensagens(id) ON DELETE CASCADE,
+  perfil_id UUID NOT NULL REFERENCES fogueteiros.perfis(id) ON DELETE CASCADE,
+  criado_em TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(mensagem_id, perfil_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_mensagens_likes_mensagem_id ON fogueteiros.mensagens_likes(mensagem_id);
+CREATE INDEX IF NOT EXISTS idx_mensagens_likes_perfil_id ON fogueteiros.mensagens_likes(perfil_id);
+
+ALTER TABLE fogueteiros.mensagens_likes ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY IF NOT EXISTS select_own ON fogueteiros.mensagens_likes
+  FOR SELECT USING (auth.role() = 'authenticated');
+CREATE POLICY IF NOT EXISTS insert_own ON fogueteiros.mensagens_likes
+  FOR INSERT WITH CHECK (auth.uid() = perfil_id AND auth.role() = 'authenticated');
+CREATE POLICY IF NOT EXISTS delete_own ON fogueteiros.mensagens_likes
+  FOR DELETE USING (auth.uid() = perfil_id AND auth.role() = 'authenticated');
+
+CREATE OR REPLACE FUNCTION fogueteiros.incrementar_likes_message()
+RETURNS TRIGGER AS $$
+BEGIN
+  UPDATE fogueteiros.mensagens SET likes_count = likes_count + 1 WHERE id = NEW.mensagem_id;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION fogueteiros.decrementar_likes_message()
+RETURNS TRIGGER AS $$
+BEGIN
+  UPDATE fogueteiros.mensagens SET likes_count = GREATEST(likes_count - 1, 0) WHERE id = OLD.mensagem_id;
+  RETURN OLD;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_like_insert ON fogueteiros.mensagens_likes;
+CREATE TRIGGER on_like_insert
+  AFTER INSERT ON fogueteiros.mensagens_likes
+  FOR EACH ROW EXECUTE FUNCTION fogueteiros.incrementar_likes_message();
+
+DROP TRIGGER IF EXISTS on_like_delete ON fogueteiros.mensagens_likes;
+CREATE TRIGGER on_like_delete
+  AFTER DELETE ON fogueteiros.mensagens_likes
+  FOR EACH ROW EXECUTE FUNCTION fogueteiros.decrementar_likes_message();
+
+ALTER TABLE fogueteiros.mensagens ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY IF NOT EXISTS mensagens_delete ON fogueteiros.mensagens
+  FOR DELETE USING (
+    auth.role() = 'authenticated' AND (
+      perfil_id = auth.uid()
+      OR auth.uid() IN (
+        SELECT id FROM fogueteiros.perfis WHERE id = auth.uid() AND cargo IN ('admin', 'mod')
+      )
+    )
+  );
+
 -- =====================================================
 -- 3. PERFIS
 -- =====================================================
