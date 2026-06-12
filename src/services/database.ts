@@ -1,5 +1,5 @@
 import { supabase } from './supabaseClient';
-import type { ChannelItem, Message } from '@/types';
+import type { ChannelItem, Message, Download } from '@/types';
 
 const formatTime = () => {
   const now = new Date();
@@ -202,6 +202,57 @@ export const DatabaseService = {
 
     if (error) {
       console.error('Erro ao deletar canal:', error);
+      return false;
+    }
+    return true;
+  },
+
+  async getDownloads(): Promise<Download[]> {
+    const { data, error } = await supabase
+      .from('downloads')
+      .select('*')
+      .order('ordem', { ascending: true });
+
+    if (error) {
+      console.error('Erro ao buscar downloads:', error);
+      return [];
+    }
+    return data || [];
+  },
+
+  async createDownload(item: Omit<Download, 'id' | 'criado_em'>): Promise<boolean> {
+    const { error } = await supabase
+      .from('downloads')
+      .insert(item);
+
+    if (error) {
+      console.error('Erro ao criar download:', error);
+      return false;
+    }
+    return true;
+  },
+
+  async updateDownload(id: string, updates: Partial<Omit<Download, 'id' | 'criado_em'>>): Promise<boolean> {
+    const { error } = await supabase
+      .from('downloads')
+      .update(updates)
+      .eq('id', id);
+
+    if (error) {
+      console.error('Erro ao atualizar download:', error);
+      return false;
+    }
+    return true;
+  },
+
+  async deleteDownload(id: string): Promise<boolean> {
+    const { error } = await supabase
+      .from('downloads')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Erro ao deletar download:', error);
       return false;
     }
     return true;

@@ -1,12 +1,13 @@
 import React from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
-import { LayoutDashboard, Users, FileText, BookOpen, Hash, ArrowLeft } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, BookOpen, Hash, Download, ArrowLeft } from 'lucide-react';
 
 const adminLinks = [
   { to: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/admin/usuarios', icon: Users, label: 'Membros' },
   { to: '/admin/canais', icon: Hash, label: 'Canais' },
   { to: '/admin/cursos', icon: BookOpen, label: 'Cursos' },
+  { to: '/admin/downloads', icon: Download, label: 'Downloads' },
   { to: '/admin/conteudo', icon: FileText, label: 'Conteúdo' },
 ];
 

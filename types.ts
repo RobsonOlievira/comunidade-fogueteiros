@@ -106,6 +106,17 @@ export interface Comentario {
   criado_em: string
 }
 
+export interface Download {
+  id: string
+  titulo: string
+  descricao: string
+  youtube_url: string
+  deliverable_type: 'link' | 'file'
+  deliverable_url: string
+  ordem: number
+  criado_em: string
+}
+
 export interface UserProfile {
   id: string
   name: string

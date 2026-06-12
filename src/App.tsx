@@ -17,6 +17,8 @@ import AdminUsers from '@/src/pages/admin/AdminUsers';
 import AdminContent from '@/src/pages/admin/AdminContent';
 import AdminCourses from '@/src/pages/admin/AdminCourses';
 import AdminChannels from '@/src/pages/admin/AdminChannels';
+import AdminDownloads from '@/src/pages/admin/AdminDownloads';
+import DownloadsPage from '@/src/pages/DownloadsPage';
 import CoursesPage from '@/src/pages/CoursesPage';
 import CourseDetailPage from '@/src/pages/CourseDetailPage';
 
@@ -56,7 +58,7 @@ function AppRoutes() {
         <Route path="/nova-thread" element={<NewThread />} />
         <Route path="/cursos" element={<CoursesPage />} />
         <Route path="/cursos/:id" element={<CourseDetailPage />} />
-        <Route path="/downloads" element={<ChatPage />} />
+        <Route path="/downloads" element={<DownloadsPage />} />
         <Route path="/perfil" element={<Profile />} />
       </Route>
       <Route element={<ProtectedRoute><AdminRoute><AdminLayout /></AdminRoute></ProtectedRoute>}>
@@ -65,6 +67,7 @@ function AppRoutes() {
         <Route path="/admin/cursos" element={<AdminCourses />} />
         <Route path="/admin/conteudo" element={<AdminContent />} />
         <Route path="/admin/canais" element={<AdminChannels />} />
+        <Route path="/admin/downloads" element={<AdminDownloads />} />
       </Route>
       <Route path="*" element={<Navigate to="/labs" replace />} />
     </Routes>
