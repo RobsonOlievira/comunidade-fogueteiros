@@ -40,7 +40,7 @@ export default function MainLayout() {
   ];
 
   return (
-    <div className="flex flex-col h-screen w-full bg-background overflow-hidden pt-14">
+    <div className="flex flex-col h-screen w-full bg-background overflow-hidden">
       {/* Top Header Bar */}
       <header className="flex items-center justify-between px-4 h-14 bg-surface border-b border-glass-border flex-shrink-0 fixed top-0 left-0 right-0 z-40">
         <Link to="/labs" className="flex items-center gap-2">
@@ -260,7 +260,7 @@ export default function MainLayout() {
       )}
 
       {/* Page Content */}
-      <main className="flex-1 flex flex-col overflow-y-auto">
+      <main className="flex-1 flex flex-col overflow-y-auto pt-14">
         <Outlet />
       </main>
     </div>
