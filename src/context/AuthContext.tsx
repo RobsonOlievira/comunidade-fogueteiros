@@ -18,6 +18,7 @@ interface User {
   email: string;
   name: string;
   avatar: string;
+  avatarUrl?: string;
 }
 
 interface SignUpData {
@@ -176,6 +177,10 @@ const buildUser = (sessionUser: any): User => ({
     sessionUser.user_metadata?.avatar_url ||
     sessionUser.user_metadata?.picture ||
     '',
+  avatarUrl:
+    sessionUser.user_metadata?.avatar_url ||
+    sessionUser.user_metadata?.picture ||
+    '',
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -189,13 +194,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const fetchPerfil = (userId: string) => {
     supabase
       .from('perfis')
-      .select('cargo, pro')
+      .select('cargo, pro, avatar_url')
       .eq('id', userId)
       .maybeSingle()
       .then(({ data }) => {
         setCargo(data?.cargo || null);
         setIsPro(data?.pro === true);
         setCargoLoaded(true);
+        if (data?.avatar_url) {
+          setUser(prev => prev ? { ...prev, avatarUrl: data.avatar_url } : prev);
+        }
       })
       .catch(() => {
         setCargo(null);

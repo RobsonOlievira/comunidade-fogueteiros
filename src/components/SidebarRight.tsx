@@ -79,8 +79,12 @@ export default function SidebarRight({ isHidden }: SidebarRightProps) {
             {online.map((p) => (
               <li className="member-item" key={p.id}>
                 <div className="member-avatar-wrapper">
-                  <div className={`member-avatar ${avatarClass(p.cargo)}`}>
-                    {p.nome.charAt(0).toUpperCase()}
+                  <div className={`member-avatar ${avatarClass(p.cargo)} overflow-hidden`}>
+                    {p.avatar_url ? (
+                      <img src={p.avatar_url} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      p.nome.charAt(0).toUpperCase()
+                    )}
                   </div>
                   <div className="member-status-dot online"></div>
                 </div>
@@ -107,8 +111,12 @@ export default function SidebarRight({ isHidden }: SidebarRightProps) {
             {offline.map((p) => (
               <li className="member-item offline" key={p.id}>
                 <div className="member-avatar-wrapper">
-                  <div className={`member-avatar ${avatarClass(p.cargo)}`}>
-                    {p.nome.charAt(0).toUpperCase()}
+                  <div className={`member-avatar ${avatarClass(p.cargo)} overflow-hidden`}>
+                    {p.avatar_url ? (
+                      <img src={p.avatar_url} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      p.nome.charAt(0).toUpperCase()
+                    )}
                   </div>
                   <div className="member-status-dot offline"></div>
                 </div>

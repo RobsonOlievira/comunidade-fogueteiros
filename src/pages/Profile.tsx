@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '@/src/context/AuthContext';
-import { Rocket, Award, Code, LogOut, ThumbsUp, MessageSquare, MessageCircle, FileText, Zap, Star, User } from 'lucide-react';
+import { supabase } from '@/src/services/supabaseClient';
+import { Rocket, Award, Code, LogOut, ThumbsUp, MessageSquare, MessageCircle, FileText, Zap, Star, User, Camera } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { GamificationService } from '@/src/services/gamificationService';
 import XpBar from '@/src/components/XpBar';
@@ -19,6 +20,9 @@ export default function Profile() {
   const [perfil, setPerfil] = useState<any>(null);
   const [stats, setStats] = useState<any>(null);
   const [conquistas, setConquistas] = useState<any[]>([]);
+  const [avatarUrl, setAvatarUrl] = useState<string>('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     if (!user?.id) {
@@ -39,6 +43,57 @@ export default function Profile() {
     setPerfil(p);
     setStats(s);
     setConquistas(c || []);
+    if (p?.avatar_url) setAvatarUrl(p.avatar_url);
+  };
+
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user?.id) return;
+
+    if (file.size > 128 * 1024) {
+      alert('A imagem deve ter no máximo 128KB.');
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      alert('Selecione uma imagem válida.');
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const ext = file.name.split('.').pop() || 'png';
+      const filePath = `${user.id}/avatar.${ext}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      const publicUrl = urlData?.publicUrl || '';
+      setAvatarUrl(publicUrl);
+
+      const { error: updateError } = await supabase
+        .from('perfis')
+        .update({ avatar_url: publicUrl, atualizado_em: new Date().toISOString() })
+        .eq('id', user.id);
+
+      if (updateError) throw updateError;
+    } catch (err: any) {
+      console.error('Erro ao enviar avatar:', err);
+      alert('Erro ao enviar imagem. Tente novamente.');
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleLogout = async () => {
@@ -52,8 +107,36 @@ export default function Profile() {
     <div className="flex-1 overflow-y-auto bg-background">
       <div className="max-w-2xl mx-auto p-6">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-primary to-accent-cyan text-2xl font-bold text-white mb-4 shadow-lg shadow-primary/30">
-            {user?.name?.charAt(0).toUpperCase() || 'U'}
+          <div className="relative inline-block">
+            <button
+              onClick={handleAvatarClick}
+              disabled={uploading}
+              className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-primary to-accent-cyan text-2xl font-bold text-white mb-4 shadow-lg shadow-primary/30 overflow-hidden cursor-pointer hover:opacity-90 transition-all"
+            >
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+              ) : (
+                user?.name?.charAt(0).toUpperCase() || 'U'
+              )}
+            </button>
+            <button
+              onClick={handleAvatarClick}
+              className="absolute bottom-2 right-0 sm:bottom-1 sm:right-1 w-7 h-7 rounded-full bg-accent-lilac border-2 border-surface flex items-center justify-center hover:bg-accent-lilac-hover transition-all"
+              title="Alterar foto"
+            >
+              {uploading ? (
+                <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Camera className="w-3.5 h-3.5 text-white" />
+              )}
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleAvatarUpload}
+              className="hidden"
+            />
           </div>
           <h1 className="font-display text-2xl font-bold text-white">{perfil?.nome || user?.name || 'Usuário'}</h1>
           <p className="text-gray-400 text-sm mt-1">{user?.email}</p>

@@ -99,10 +99,14 @@ export default function MainLayout() {
             <div className="relative" ref={profileRef}>
               <button
                 onClick={() => setProfileOpen(!profileOpen)}
-                className="relative w-8 h-8 rounded-full bg-gradient-to-br from-accent-cyan to-primary flex items-center justify-center text-xs font-bold text-white hover:opacity-90 transition-all"
+                className="relative w-8 h-8 rounded-full bg-gradient-to-br from-accent-cyan to-primary flex items-center justify-center text-xs font-bold text-white hover:opacity-90 transition-all overflow-hidden"
                 title="Perfil"
               >
-                {user?.name?.charAt(0).toUpperCase() || 'U'}
+                {user?.avatarUrl ? (
+                  <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  user?.name?.charAt(0).toUpperCase() || 'U'
+                )}
                 {isAdmin && (
                   <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-accent-lilac border-2 border-surface flex items-center justify-center">
                     <Shield className="w-2 h-2 text-white" />
@@ -113,8 +117,12 @@ export default function MainLayout() {
               {profileOpen && (
                 <div className="absolute right-0 top-10 w-64 bg-surface border border-glass-border rounded-xl shadow-2xl shadow-black/40 p-4 z-50">
                   <div className="flex items-center gap-3 mb-4 pb-4 border-b border-glass-border">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-accent-cyan to-primary flex items-center justify-center text-sm font-bold text-white flex-shrink-0">
-                      {user?.name?.charAt(0).toUpperCase() || 'U'}
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-accent-cyan to-primary flex items-center justify-center text-sm font-bold text-white flex-shrink-0 overflow-hidden">
+                      {user?.avatarUrl ? (
+                        <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        user?.name?.charAt(0).toUpperCase() || 'U'
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
@@ -177,8 +185,12 @@ export default function MainLayout() {
           <div className="fixed right-0 top-14 bottom-0 w-72 bg-surface border-l border-glass-border p-4 flex flex-col" onClick={e => e.stopPropagation()}>
             {/* Profile Section */}
             <div className="flex items-center gap-3 mb-5 pb-4 border-b border-glass-border">
-              <div className="w-11 h-11 rounded-full bg-gradient-to-br from-accent-cyan to-primary flex items-center justify-center text-base font-bold text-white flex-shrink-0">
-                {user?.name?.charAt(0).toUpperCase() || 'U'}
+              <div className="w-11 h-11 rounded-full bg-gradient-to-br from-accent-cyan to-primary flex items-center justify-center text-base font-bold text-white flex-shrink-0 overflow-hidden">
+                {user?.avatarUrl ? (
+                  <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  user?.name?.charAt(0).toUpperCase() || 'U'
+                )}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
