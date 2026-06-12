@@ -73,7 +73,7 @@ export default function NewThread() {
         </Link>
 
         <h1 className="font-display text-2xl font-bold text-white mb-6 flex items-center gap-3">
-          <Sparkles className="w-6 h-6 text-accent-cyan" />
+          <Sparkles className="w-6 h-6 text-accent-lilac" />
           Novo Topico
         </h1>
 

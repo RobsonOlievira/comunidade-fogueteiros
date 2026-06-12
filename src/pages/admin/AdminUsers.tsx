@@ -220,7 +220,7 @@ export default function AdminUsers() {
               { v: 'all', label: 'Todos', icon: User, active: 'bg-white/10 text-white border-white/20' },
               { v: 'admin', label: 'Admins', icon: Crown, active: 'bg-primary/15 text-primary border-primary/30' },
               { v: 'mod', label: 'Moderadores', icon: ShieldCheck, active: 'bg-green-400/15 text-green-400 border-green-400/30' },
-              { v: 'membro', label: 'Membros', icon: User, active: 'bg-accent-cyan/10 text-accent-cyan border-accent-cyan/20' },
+              { v: 'membro', label: 'Membros', icon: User, active: 'bg-accent-lilac/10 text-accent-lilac border-accent-lilac/20' },
             ].map((chip) => {
               const Icon = chip.icon;
               const active = cargoFilter === chip.v;
@@ -333,7 +333,7 @@ export default function AdminUsers() {
                       <td className="px-4 py-3 text-xs text-gray-400">
                         {u.criado_em ? new Date(u.criado_em).toLocaleDateString('pt-BR') : '—'}
                       </td>
-                      <td className="px-4 py-3 text-right text-sm font-semibold text-accent-cyan">
+                      <td className="px-4 py-3 text-right text-sm font-semibold text-accent-lilac">
                         {(u.xp || 0).toLocaleString('pt-BR')}
                       </td>
                       <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
@@ -481,7 +481,7 @@ function MemberDetailModal({ member, onClose, onEdit }: { member: Perfil; onClos
               'bg-red-500/10 text-red-400 border-red-500/20'
             }`}>{member.status || 'ativo'}</span>
             {member.origem && (
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border bg-accent-cyan/10 text-accent-cyan border-accent-cyan/20 flex items-center gap-1">
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border bg-accent-lilac/10 text-accent-lilac border-accent-lilac/20 flex items-center gap-1">
                 <Hash className="w-2.5 h-2.5" /> {member.origem}
               </span>
             )}
@@ -490,8 +490,8 @@ function MemberDetailModal({ member, onClose, onEdit }: { member: Perfil; onClos
           {/* Email */}
           {member.email && (
             <div className="flex items-center gap-2 p-3 rounded-lg border border-glass-border bg-white/[0.02]">
-              <Mail className="w-4 h-4 text-accent-cyan flex-shrink-0" />
-              <a href={`mailto:${member.email}`} className="text-sm text-accent-cyan hover:underline truncate" title={member.email}>
+              <Mail className="w-4 h-4 text-accent-lilac flex-shrink-0" />
+              <a href={`mailto:${member.email}`} className="text-sm text-accent-lilac hover:underline truncate" title={member.email}>
                 {member.email}
               </a>
             </div>
@@ -515,7 +515,7 @@ function MemberDetailModal({ member, onClose, onEdit }: { member: Perfil; onClos
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <SmallStat icon={MessageCircle} value={activity.mensagens} label="mensagens" color="text-yellow-400" />
-                <SmallStat icon={FileText} value={activity.threads} label="tópicos" color="text-accent-cyan" />
+                <SmallStat icon={FileText} value={activity.threads} label="tópicos" color="text-accent-lilac" />
                 <SmallStat icon={MessageSquare} value={activity.comentarios} label="comentários" color="text-pink-400" />
                 <SmallStat icon={Award} value={activity.votos} label="votos dados" color="text-amber-400" />
               </div>

@@ -58,14 +58,14 @@ export default function Profile() {
           <h1 className="font-display text-2xl font-bold text-white">{perfil?.nome || user?.name || 'Usuário'}</h1>
           <p className="text-gray-400 text-sm mt-1">{user?.email}</p>
           <div className="flex items-center justify-center gap-4 mt-3 text-sm">
-            <span className="flex items-center gap-1 text-accent-cyan"><Zap className="w-4 h-4" /> Nv. {perfil?.nivel || 1}</span>
+            <span className="flex items-center gap-1 text-accent-lilac"><Zap className="w-4 h-4" /> Nv. {perfil?.nivel || 1}</span>
             <span className="flex items-center gap-1 text-yellow-400"><Star className="w-4 h-4" /> {perfil?.karma_points || 0} karma</span>
           </div>
         </div>
 
         <div className="p-5 rounded-xl border border-glass-border bg-glass mb-4">
           <div className="flex items-center gap-3 mb-3">
-            <Award className="w-5 h-5 text-accent-cyan" />
+            <Award className="w-5 h-5 text-accent-lilac" />
             <h2 className="font-display text-lg font-semibold text-white">Progresso</h2>
           </div>
           <XpBar nivel={perfil?.nivel || 1} xp={perfil?.xp || 0} showBadge conquistas={conquistas.length} />
@@ -76,7 +76,7 @@ export default function Profile() {
             <h2 className="font-display text-lg font-semibold text-white mb-3">Estatísticas</h2>
             <div className="grid grid-cols-2 gap-3">
               <div className="p-3 rounded-lg bg-white/[0.02] border border-glass-border">
-                <div className="flex items-center gap-2 text-accent-cyan text-sm mb-1"><MessageCircle className="w-4 h-4" /> Mensagens</div>
+                <div className="flex items-center gap-2 text-accent-lilac text-sm mb-1"><MessageCircle className="w-4 h-4" /> Mensagens</div>
                 <span className="text-xl font-bold text-white">{stats.total_mensagens}</span>
               </div>
               <div className="p-3 rounded-lg bg-white/[0.02] border border-glass-border">
@@ -88,7 +88,7 @@ export default function Profile() {
                 <span className="text-xl font-bold text-white">{stats.total_upvotes_recebidos}</span>
               </div>
               <div className="p-3 rounded-lg bg-white/[0.02] border border-glass-border">
-                <div className="flex items-center gap-2 text-accent-cyan text-sm mb-1"><MessageSquare className="w-4 h-4" /> Comentários</div>
+                <div className="flex items-center gap-2 text-accent-lilac text-sm mb-1"><MessageSquare className="w-4 h-4" /> Comentários</div>
                 <span className="text-xl font-bold text-white">{stats.total_comentarios}</span>
               </div>
             </div>
@@ -111,7 +111,7 @@ export default function Profile() {
 
         <div className="p-5 rounded-xl border border-glass-border bg-glass mb-4">
           <div className="flex items-center gap-3 mb-3">
-            <Rocket className="w-5 h-5 text-accent-cyan" />
+            <Rocket className="w-5 h-5 text-accent-lilac" />
             <h2 className="font-display text-lg font-semibold text-white">Conquistas ({conquistas.length})</h2>
           </div>
           {conquistas.length === 0 ? (

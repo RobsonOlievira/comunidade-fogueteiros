@@ -146,7 +146,7 @@ export default function Register() {
 
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-primary/10 rounded-full blur-[150px]" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-accent-cyan/10 rounded-full blur-[150px]" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-accent-lilac/10 rounded-full blur-[150px]" />
       </div>
 
       <div className="relative z-10 w-full max-w-2xl bg-glass backdrop-blur-xl rounded-3xl shadow-2xl border border-glass-border overflow-hidden">

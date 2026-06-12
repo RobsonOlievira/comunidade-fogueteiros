@@ -206,7 +206,7 @@ export default function AdminDashboard() {
         {/* Top metric cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <MetricCard icon={Users} label="Total de Membros" value={metrics.total} sub={`${metrics.ativos} ativos`} color="text-primary" bg="bg-primary/10" />
-          <MetricCard icon={UserPlus} label="Novos no Mês" value={metrics.novos} sub="entradas" color="text-accent-cyan" bg="bg-accent-cyan/10" />
+          <MetricCard icon={UserPlus} label="Novos no Mês" value={metrics.novos} sub="entradas" color="text-accent-lilac" bg="bg-accent-lilac/10" />
           <MetricCard icon={Clock} label="Acessaram no Mês" value={metrics.acessaram} sub="último login" color="text-green-400" bg="bg-green-400/10" />
           <MetricCard icon={Sparkles} label="Média de XP" value={metrics.avgXp} sub={`${metrics.totalXp.toLocaleString('pt-BR')} total`} color="text-amber-400" bg="bg-amber-400/10" />
         </div>
@@ -214,7 +214,7 @@ export default function AdminDashboard() {
         {/* Activity in period */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <SmallMetric icon={MessageCircle} label="Mensagens (chat)" value={metrics.mensagens} color="text-yellow-400" />
-          <SmallMetric icon={FileText} label="Tópicos no Fórum" value={metrics.threads} color="text-accent-cyan" />
+          <SmallMetric icon={FileText} label="Tópicos no Fórum" value={metrics.threads} color="text-accent-lilac" />
           <SmallMetric icon={MessageSquare} label="Comentários" value={metrics.comentarios} color="text-pink-400" />
         </div>
 
@@ -256,7 +256,7 @@ export default function AdminDashboard() {
               {[
                 { key: 'admin', label: 'Admins', color: 'bg-primary', text: 'text-primary' },
                 { key: 'mod', label: 'Moderadores', color: 'bg-green-400', text: 'text-green-400' },
-                { key: 'membro', label: 'Membros', color: 'bg-accent-cyan', text: 'text-accent-cyan' },
+                { key: 'membro', label: 'Membros', color: 'bg-accent-lilac', text: 'text-accent-lilac' },
               ].map((row) => {
                 const count = roleDistribution[row.key] || 0;
                 const pct = metrics.total > 0 ? Math.round((count / metrics.total) * 100) : 0;
@@ -280,7 +280,7 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <div className="p-5 rounded-xl border border-glass-border bg-glass">
             <div className="flex items-center gap-2 mb-4">
-              <Hash className="w-5 h-5 text-accent-cyan" />
+              <Hash className="w-5 h-5 text-accent-lilac" />
               <h2 className="font-display text-lg font-semibold text-white">Origem dos Membros</h2>
             </div>
             {origemDistribution.length === 0 ? (
@@ -296,7 +296,7 @@ export default function AdminDashboard() {
                         <span className="text-gray-400 text-xs">{count} <span className="text-gray-600">({pct}%)</span></span>
                       </div>
                       <div className="h-1.5 bg-white/[0.03] rounded-full overflow-hidden">
-                        <div className="h-full bg-accent-cyan/70" style={{ width: `${pct}%` }} />
+                        <div className="h-full bg-accent-lilac/70" style={{ width: `${pct}%` }} />
                       </div>
                     </li>
                   );
@@ -326,7 +326,7 @@ export default function AdminDashboard() {
                       <p className="text-sm text-white truncate">{u.nome}</p>
                       <p className="text-[10px] text-gray-500">Nv. {u.nivel || 1}</p>
                     </div>
-                    <span className="text-sm font-semibold text-accent-cyan">{(u.xp || 0).toLocaleString('pt-BR')} XP</span>
+                    <span className="text-sm font-semibold text-accent-lilac">{(u.xp || 0).toLocaleString('pt-BR')} XP</span>
                   </li>
                 ))}
               </ul>

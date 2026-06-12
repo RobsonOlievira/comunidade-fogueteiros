@@ -95,7 +95,7 @@ export default function Login() {
           onClick={() => { setSsoEmail(''); setSsoError(''); setShowSsoModal(true); }}
           className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl border border-glass-border bg-glass hover:bg-white/10 transition-all text-white font-medium mb-3"
         >
-          <GraduationCap className="w-5 h-5 text-accent-cyan" />
+          <GraduationCap className="w-5 h-5 text-accent-lilac" />
           Entrar com Tesseract
         </button>
 
@@ -109,15 +109,15 @@ export default function Login() {
                 <X className="w-5 h-5" />
               </button>
               <div className="flex items-center gap-3 mb-4">
-                <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-accent-cyan/20">
-                  <GraduationCap className="w-5 h-5 text-accent-cyan" />
+                <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-accent-lilac/20">
+                  <GraduationCap className="w-5 h-5 text-accent-lilac" />
                 </div>
                 <div>
                   <h3 className="text-white font-semibold">Entrar com Tesseract</h3>
                   <p className="text-gray-400 text-sm">Digite seu email da Tesseract</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3 bg-glass border border-glass-border rounded-xl px-4 py-3 focus-within:border-accent-cyan transition-colors mb-3">
+              <div className="flex items-center gap-3 bg-glass border border-glass-border rounded-xl px-4 py-3 focus-within:border-accent-lilac transition-colors mb-3">
                 <Mail className="w-5 h-5 text-gray-500" />
                 <input
                   type="email"

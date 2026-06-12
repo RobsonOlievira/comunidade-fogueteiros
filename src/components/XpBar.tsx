@@ -20,8 +20,8 @@ export default function XpBar({ nivel, xp, size = 'md', showBadge, conquistas }:
     <div className="space-y-1">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Zap className={`${size === 'sm' ? 'w-3 h-3' : 'w-4 h-4'} text-accent-cyan`} />
-          <span className={`font-semibold text-accent-cyan ${size === 'sm' ? 'text-xs' : 'text-sm'}`}>
+          <Zap className={`${size === 'sm' ? 'w-3 h-3' : 'w-4 h-4'} text-accent-lilac`} />
+          <span className={`font-semibold text-accent-lilac ${size === 'sm' ? 'text-xs' : 'text-sm'}`}>
             Nv. {nivel}
           </span>
         </div>

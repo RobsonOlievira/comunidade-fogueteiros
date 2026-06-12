@@ -13,6 +13,7 @@
     
     --accent-glow: #339c81;          /* Brilho principal (Verde Teal) */
     --accent-cyan: #35acb9;          /* Ciano Teal (Tecnologia/Foguete) */
+    --accent-lilac: #c09fff;         /* Lilás suave (Tags, contornos) */
     --accent-pink: #ff007f;          /* Pink Fúcsia (Destaques) */
     --accent-green: #39ff14;         /* Verde Neon (Status Online) */
     
@@ -21,7 +22,7 @@
     --text-muted: #6e6782;           /* Texto apagado */
     
     --border-light: rgba(255, 255, 255, 0.05); /* Borda fina quase invisível */
-    --border-glow: rgba(138, 43, 226, 0.25);   /* Borda brilhante suave */
+    --border-glow: rgba(192, 159, 255, 0.25);   /* Borda brilhante suave */
     
     --sidebar-left-width: 260px;
     --sidebar-right-width: 280px;
@@ -69,8 +70,8 @@ body {
     background-color: var(--bg-app);
     color: var(--text-primary);
     background-image: 
-        radial-gradient(at 10% 10%, rgba(138, 43, 226, 0.15) 0px, transparent 40%),
-        radial-gradient(at 90% 90%, rgba(0, 229, 255, 0.1) 0px, transparent 40%);
+        radial-gradient(at 10% 10%, rgba(192, 159, 255, 0.12) 0px, transparent 40%),
+        radial-gradient(at 90% 90%, rgba(192, 159, 255, 0.08) 0px, transparent 40%);
 }
 
 /* Estrutura Principal Flexível (Layout Grid/Flex de 3 Colunas) */
@@ -142,7 +143,7 @@ body {
     padding: 2px 6px;
     border-radius: 20px;
     letter-spacing: 0.5px;
-    box-shadow: 0 0 10px rgba(0, 229, 255, 0.3);
+    box-shadow: 0 0 10px rgba(53, 172, 185, 0.3);
 }
 
 /* Barra de Busca */
@@ -160,8 +161,8 @@ body {
     transition: var(--transition-smooth);
 }
 .search-box:focus-within {
-    border-color: var(--accent-cyan);
-    box-shadow: 0 0 10px rgba(0, 229, 255, 0.15);
+    border-color: var(--accent-lilac);
+    box-shadow: 0 0 10px rgba(192, 159, 255, 0.15);
 }
 .search-icon {
     width: 15px;
@@ -234,10 +235,10 @@ body {
 }
 .channel-item:hover i, .channel-item:hover svg {
     opacity: 1;
-    color: var(--accent-cyan);
+    color: var(--accent-lilac);
 }
 .channel-item.active {
-    background: linear-gradient(90deg, rgba(138, 43, 226, 0.15) 0%, transparent 100%);
+    background: linear-gradient(90deg, rgba(192, 159, 255, 0.12) 0%, transparent 100%);
     border-left: 3px solid var(--accent-glow);
     color: var(--text-primary);
     font-weight: 600;
@@ -500,8 +501,8 @@ body {
     border-radius: 10px;
 }
 .badge-admin { background-color: rgba(255, 0, 127, 0.15); color: var(--accent-pink); border: 1px solid rgba(255, 0, 127, 0.25); }
-.badge-mod { background-color: rgba(0, 229, 255, 0.15); color: var(--accent-cyan); border: 1px solid rgba(0, 229, 255, 0.25); }
-.badge-criador { background-color: rgba(0, 229, 255, 0.15); color: var(--accent-cyan); border: 1px solid rgba(0, 229, 255, 0.25); }
+.badge-mod { background-color: rgba(192, 159, 255, 0.15); color: var(--accent-lilac); border: 1px solid rgba(192, 159, 255, 0.25); }
+.badge-criador { background-color: rgba(192, 159, 255, 0.15); color: var(--accent-lilac); border: 1px solid rgba(192, 159, 255, 0.25); }
 .msg-time {
     font-size: 0.75rem;
     color: var(--text-muted);
@@ -596,7 +597,7 @@ body {
     margin-left: 2px;
 }
 .emoji-btn:hover {
-    color: var(--accent-cyan);
+    color: var(--accent-lilac);
 }
 
 /* ==========================================================================
@@ -629,7 +630,7 @@ body {
     background: linear-gradient(135deg, #1f074d 0%, #4c11ae 100%);
     border-radius: var(--border-radius-md);
     background-image: 
-        radial-gradient(circle at 80% 20%, rgba(0, 229, 255, 0.25) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(192, 159, 255, 0.25) 0%, transparent 50%),
         repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.02) 0px, rgba(255, 255, 255, 0.02) 2px, transparent 2px, transparent 10px);
     border: 1px solid var(--border-light);
     box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.4);
@@ -666,7 +667,7 @@ body {
     color: var(--text-secondary);
 }
 .level-val {
-    color: var(--accent-cyan);
+    color: var(--accent-lilac);
     font-weight: 700;
 }
 .progress-bar-bg {

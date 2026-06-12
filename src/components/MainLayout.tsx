@@ -126,7 +126,7 @@ export default function MainLayout() {
                             <Shield className="w-2.5 h-2.5" /> {cargo?.toUpperCase()}
                           </span>
                         ) : (
-                          <span className="px-1.5 py-0.5 rounded text-[0.6rem] font-bold bg-accent-cyan/15 text-accent-cyan border border-accent-cyan/20">Criador de Apps</span>
+                          <span className="px-1.5 py-0.5 rounded text-[0.6rem] font-bold bg-accent-lilac/15 text-accent-lilac border border-accent-lilac/20">Criador de Apps</span>
                         )}
                       </div>
                       <p className="text-xs text-gray-500 truncate">{user?.email}</p>
