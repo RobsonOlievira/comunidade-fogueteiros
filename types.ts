@@ -19,6 +19,8 @@ export interface Message {
   text: string
   time: string
   perfilId?: string
+  likesCount?: number
+  likedByMe?: boolean
 }
 
 export interface Perfil {

@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { Menu, Hash, Users, Pin, Plus, Smile, Send } from 'lucide-react';
+import { Menu, Hash, Users, Pin, Plus, Smile, Send, Heart, Trash2 } from 'lucide-react';
 import type { ChannelItem, Message } from '@/types';
 
 interface ChatAreaProps {
@@ -8,6 +8,10 @@ interface ChatAreaProps {
   onSendMessage: (text: string) => void;
   onToggleMembers: () => void;
   onOpenSidebarLeft: () => void;
+  onLikeMessage: (messageId: string) => void;
+  onUnlikeMessage: (messageId: string) => void;
+  onDeleteMessage: (messageId: string) => void;
+  cargo?: string;
 }
 
 export default function ChatArea({
@@ -15,10 +19,15 @@ export default function ChatArea({
   messages,
   onSendMessage,
   onToggleMembers,
-  onOpenSidebarLeft
+  onOpenSidebarLeft,
+  onLikeMessage,
+  onUnlikeMessage,
+  onDeleteMessage,
+  cargo,
 }: ChatAreaProps) {
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const isAdmin = cargo === 'admin' || cargo === 'mod';
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -92,6 +101,29 @@ export default function ChatArea({
                   <span className="msg-time">{msg.time}</span>
                 </div>
                 <p className="msg-text">{msg.text}</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <button
+                    onClick={() => msg.likedByMe ? onUnlikeMessage(msg.id) : onLikeMessage(msg.id)}
+                    className={`flex items-center gap-1 text-xs transition-all ${
+                      msg.likedByMe
+                        ? 'text-accent-lilac'
+                        : 'text-gray-600 hover:text-gray-400'
+                    }`}
+                    title={msg.likedByMe ? 'Descurtir' : 'Curtir'}
+                  >
+                    <Heart className={`w-3.5 h-3.5 ${msg.likedByMe ? 'fill-accent-lilac' : ''}`} />
+                    {msg.likesCount ? <span>{msg.likesCount}</span> : null}
+                  </button>
+                  {isAdmin && (
+                    <button
+                      onClick={() => onDeleteMessage(msg.id)}
+                      className="flex items-center gap-1 text-xs text-gray-600 hover:text-red-400 transition-all opacity-0 group-hover:opacity-100"
+                      title="Excluir mensagem"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           );

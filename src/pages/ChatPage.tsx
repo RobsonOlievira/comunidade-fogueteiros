@@ -12,7 +12,7 @@ import '@/src/assets/style.css';
 
 export default function ChatPage() {
   const { channelId } = useParams();
-  const { user } = useAuth();
+  const { user, cargo } = useAuth();
   const [channels, setChannels] = useState<ChannelItem[]>([]);
   const [activeChannelId, setActiveChannelId] = useState(channelId || 'geral');
   const [messages, setMessages] = useState<Message[]>([]);
@@ -21,26 +21,23 @@ export default function ChatPage() {
   const [isSidebarRightHidden, setIsSidebarRightHidden] = useState(true);
   const [isSidebarLeftMobileOpen, setIsSidebarLeftMobileOpen] = useState(false);
 
+  const perfilId = user?.id;
+
   useEffect(() => {
     DatabaseService.getChannels().then(setChannels);
   }, []);
 
   useEffect(() => {
-    DatabaseService.getChannelMessages(activeChannelId).then(setMessages);
+    DatabaseService.getChannelMessages(activeChannelId, perfilId).then(setMessages);
     DatabaseService.getChannelDetails(activeChannelId).then(setChannelDetails);
-  }, [activeChannelId]);
+  }, [activeChannelId, perfilId]);
 
   useEffect(() => {
     const channel = supabase
       .channel('mensagens_realtime')
       .on(
         'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'fogueteiros',
-          table: 'mensagens',
-          filter: `canal_id=eq.${activeChannelId}`,
-        },
+        { event: 'INSERT', schema: 'fogueteiros', table: 'mensagens', filter: `canal_id=eq.${activeChannelId}` },
         (payload) => {
           const msg = payload.new as any;
           const newMessage: Message = {
@@ -51,6 +48,8 @@ export default function ChatPage() {
             badge: msg.cracha,
             text: msg.texto,
             time: msg.horario,
+            perfilId: msg.perfil_id,
+            likesCount: msg.likes_count || 0,
           };
           setMessages((prev) => {
             if (prev.some((m) => m.id === newMessage.id)) return prev;
@@ -60,10 +59,24 @@ export default function ChatPage() {
       )
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return () => { supabase.removeChannel(channel); };
   }, [activeChannelId]);
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('likes_realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'fogueteiros', table: 'mensagens_likes' },
+        async () => {
+          const fresh = await DatabaseService.getChannelMessages(activeChannelId, perfilId);
+          setMessages(fresh);
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [activeChannelId, perfilId]);
 
   const handleSendMessage = async (text: string) => {
     const now = new Date();
@@ -89,6 +102,31 @@ export default function ChatPage() {
     }
   };
 
+  const handleLikeMessage = async (messageId: string) => {
+    if (!perfilId) return;
+    await DatabaseService.likeMessage(messageId, perfilId);
+    setMessages(prev => prev.map(m =>
+      m.id === messageId
+        ? { ...m, likedByMe: true, likesCount: (m.likesCount || 0) + 1 }
+        : m
+    ));
+  };
+
+  const handleUnlikeMessage = async (messageId: string) => {
+    if (!perfilId) return;
+    await DatabaseService.unlikeMessage(messageId, perfilId);
+    setMessages(prev => prev.map(m =>
+      m.id === messageId
+        ? { ...m, likedByMe: false, likesCount: Math.max((m.likesCount || 0) - 1, 0) }
+        : m
+    ));
+  };
+
+  const handleDeleteMessage = async (messageId: string) => {
+    await DatabaseService.deleteMessage(messageId);
+    setMessages(prev => prev.filter(m => m.id !== messageId));
+  };
+
   return (
     <div className="app-container">
       <SidebarLeft
@@ -106,6 +144,10 @@ export default function ChatPage() {
         onSendMessage={handleSendMessage}
         onToggleMembers={() => setIsSidebarRightHidden(prev => !prev)}
         onOpenSidebarLeft={() => setIsSidebarLeftMobileOpen(true)}
+        onLikeMessage={handleLikeMessage}
+        onUnlikeMessage={handleUnlikeMessage}
+        onDeleteMessage={handleDeleteMessage}
+        cargo={cargo}
       />
       <SidebarRight isHidden={isSidebarRightHidden} />
       {isSidebarLeftMobileOpen && (

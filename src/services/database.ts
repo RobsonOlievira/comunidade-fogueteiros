@@ -21,7 +21,7 @@ export const DatabaseService = {
     return (data || []).map(ch => ({ id: ch.id, title: ch.titulo, desc: ch.descricao }));
   },
 
-  async getChannelMessages(channelId: string): Promise<Message[]> {
+  async getChannelMessages(channelId: string, perfilId?: string): Promise<Message[]> {
     const { data, error } = await supabase
       .from('mensagens')
       .select('*')
@@ -34,15 +34,31 @@ export const DatabaseService = {
       return [];
     }
 
-    return (data || []).map(msg => ({
+    const messages = (data || []).map(msg => ({
       id: msg.id,
       author: msg.autor,
       avatar: msg.avatar,
       avatarColor: msg.cor_avatar,
       badge: msg.cracha,
       text: msg.texto,
-      time: msg.horario
+      time: msg.horario,
+      perfilId: msg.perfil_id,
+      likesCount: msg.likes_count || 0,
     }));
+
+    if (perfilId && messages.length > 0) {
+      const msgIds = messages.map(m => m.id);
+      const { data: likes } = await supabase
+        .from('mensagens_likes')
+        .select('mensagem_id')
+        .in('mensagem_id', msgIds)
+        .eq('perfil_id', perfilId);
+
+      const likedIds = new Set((likes || []).map(l => l.mensagem_id));
+      messages.forEach(m => { m.likedByMe = likedIds.has(m.id); });
+    }
+
+    return messages;
   },
 
   async getChannelDetails(channelId: string): Promise<ChannelItem | null> {
@@ -87,8 +103,108 @@ export const DatabaseService = {
       avatarColor: data.cor_avatar,
       badge: data.cracha,
       text: data.texto,
-      time: data.horario
+      time: data.horario,
+      perfilId: data.perfil_id,
+      likesCount: 0,
     };
+  },
+
+  async likeMessage(mensagemId: string, perfilId: string): Promise<boolean> {
+    const { error } = await supabase
+      .from('mensagens_likes')
+      .insert({ mensagem_id: mensagemId, perfil_id: perfilId });
+
+    if (error && error.code !== '23505') {
+      console.error('Erro ao curtir mensagem:', error);
+      return false;
+    }
+    return true;
+  },
+
+  async unlikeMessage(mensagemId: string, perfilId: string): Promise<boolean> {
+    const { error } = await supabase
+      .from('mensagens_likes')
+      .delete()
+      .eq('mensagem_id', mensagemId)
+      .eq('perfil_id', perfilId);
+
+    if (error) {
+      console.error('Erro ao descurtir mensagem:', error);
+      return false;
+    }
+    return true;
+  },
+
+  async deleteMessage(mensagemId: string): Promise<boolean> {
+    const { error } = await supabase
+      .from('mensagens')
+      .delete()
+      .eq('id', mensagemId);
+
+    if (error) {
+      console.error('Erro ao deletar mensagem:', error);
+      return false;
+    }
+    return true;
+  },
+
+  async getAllChannels(): Promise<any[]> {
+    const { data, error } = await supabase
+      .from('canais')
+      .select('*')
+      .order('ordem', { ascending: true });
+
+    if (error) {
+      console.error('Erro ao buscar todos os canais:', error);
+      return [];
+    }
+    return data || [];
+  },
+
+  async createChannel(channel: { id: string; titulo: string; descricao: string; categoria: string; icone?: string; ordem?: number; pro_only?: boolean }): Promise<boolean> {
+    const { error } = await supabase
+      .from('canais')
+      .insert({
+        id: channel.id,
+        titulo: channel.titulo,
+        descricao: channel.descricao,
+        categoria: channel.categoria || 'conversas',
+        icone: channel.icone || 'hash',
+        ordem: channel.ordem || 0,
+        pro_only: channel.pro_only || false,
+      });
+
+    if (error) {
+      console.error('Erro ao criar canal:', error);
+      return false;
+    }
+    return true;
+  },
+
+  async updateChannel(id: string, updates: Partial<{ titulo: string; descricao: string; categoria: string; icone: string; ordem: number; pro_only: boolean }>): Promise<boolean> {
+    const { error } = await supabase
+      .from('canais')
+      .update(updates)
+      .eq('id', id);
+
+    if (error) {
+      console.error('Erro ao atualizar canal:', error);
+      return false;
+    }
+    return true;
+  },
+
+  async deleteChannel(id: string): Promise<boolean> {
+    const { error } = await supabase
+      .from('canais')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Erro ao deletar canal:', error);
+      return false;
+    }
+    return true;
   },
 
 };

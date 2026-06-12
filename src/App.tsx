@@ -16,6 +16,7 @@ import AdminDashboard from '@/src/pages/admin/AdminDashboard';
 import AdminUsers from '@/src/pages/admin/AdminUsers';
 import AdminContent from '@/src/pages/admin/AdminContent';
 import AdminCourses from '@/src/pages/admin/AdminCourses';
+import AdminChannels from '@/src/pages/admin/AdminChannels';
 import CoursesPage from '@/src/pages/CoursesPage';
 import CourseDetailPage from '@/src/pages/CourseDetailPage';
 
@@ -63,6 +64,7 @@ function AppRoutes() {
         <Route path="/admin/usuarios" element={<AdminUsers />} />
         <Route path="/admin/cursos" element={<AdminCourses />} />
         <Route path="/admin/conteudo" element={<AdminContent />} />
+        <Route path="/admin/canais" element={<AdminChannels />} />
       </Route>
       <Route path="*" element={<Navigate to="/labs" replace />} />
     </Routes>
