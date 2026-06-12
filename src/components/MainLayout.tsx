@@ -260,7 +260,7 @@ export default function MainLayout() {
       )}
 
       {/* Page Content */}
-      <main className="flex-1 flex flex-col overflow-hidden">
+      <main className="flex-1 flex flex-col overflow-y-auto">
         <Outlet />
       </main>
     </div>
