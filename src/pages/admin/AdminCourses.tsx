@@ -3,7 +3,7 @@ import { supabasePublic as supabase } from '@/src/services/supabaseClient';
 import { useAuth } from '@/src/context/AuthContext';
 import {
   BookOpen, Plus, Trash2, Edit2, Loader2, AlertCircle, X, Check,
-  ChevronUp, ChevronDown, Save, Hash
+  ChevronUp, ChevronDown, Save, Hash, Eye, EyeOff
 } from 'lucide-react';
 
 interface Course {
@@ -14,6 +14,7 @@ interface Course {
   description: string;
   image_url: string;
   status: 'draft' | 'published';
+  hidden: boolean;
   duration: string;
   tags: string[];
   order_index: number;
@@ -52,6 +53,7 @@ export default function AdminCourses() {
     description: '',
     image_url: '',
     status: 'published',
+    hidden: false,
     duration: '',
     tags: [],
     order_index: 0,
@@ -87,6 +89,7 @@ export default function AdminCourses() {
       description: '',
       image_url: '',
       status: 'published',
+      hidden: false,
       duration: '',
       tags: [],
       order_index: maxOrder + 1,
@@ -104,6 +107,7 @@ export default function AdminCourses() {
       description: course.description,
       image_url: course.image_url,
       status: course.status,
+      hidden: course.hidden,
       duration: course.duration,
       tags: course.tags || [],
       order_index: course.order_index,
@@ -146,6 +150,7 @@ export default function AdminCourses() {
       description: form.description.trim(),
       image_url: form.image_url.trim(),
       status: form.status,
+      hidden: form.hidden,
       duration: form.duration.trim(),
       tags: form.tags,
       order_index: form.order_index,
@@ -194,6 +199,19 @@ export default function AdminCourses() {
       supabase.from('courses').update({ order_index: a.order_index }).eq('id', b.id),
     ]);
     loadCourses();
+  };
+
+  const toggleHidden = async (course: Course) => {
+    const next = !course.hidden;
+    const { error } = await supabase
+      .from('courses')
+      .update({ hidden: next })
+      .eq('id', course.id);
+    if (!error) {
+      setCourses((prev) =>
+        prev.map((c) => (c.id === course.id ? { ...c, hidden: next } : c))
+      );
+    }
   };
 
   const toggleStatus = async (course: Course) => {
@@ -280,15 +298,22 @@ export default function AdminCourses() {
                     </span>
                   )}
                   <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/40 to-transparent" />
-                  <span
-                    className={`absolute top-3 right-3 text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded border ${
-                      course.status === 'published'
-                        ? 'bg-green-500/20 text-green-400 border-green-500/30'
-                        : 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
-                    }`}
-                  >
-                    {course.status}
-                  </span>
+                  <div className="absolute top-3 right-3 flex gap-1.5">
+                    {course.hidden && (
+                      <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded bg-red-500/20 text-red-400 border border-red-500/30">
+                        oculto
+                      </span>
+                    )}
+                    <span
+                      className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded border ${
+                        course.status === 'published'
+                          ? 'bg-green-500/20 text-green-400 border-green-500/30'
+                          : 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
+                      }`}
+                    >
+                      {course.status}
+                    </span>
+                  </div>
                   {course.duration && (
                     <span className="absolute bottom-3 left-3 text-[10px] font-medium text-white/80">
                       {course.duration}
@@ -320,6 +345,14 @@ export default function AdminCourses() {
 
                   <div className="mt-auto pt-3 border-t border-glass-border flex items-center justify-between">
                     <div className="flex gap-1">
+                      <button
+                        onClick={() => toggleHidden(course)}
+                        className="text-[11px] font-bold text-gray-400 hover:text-white transition-colors flex items-center gap-1 px-2 py-1 rounded hover:bg-white/5"
+                        title={course.hidden ? 'Mostrar no front-end' : 'Ocultar do front-end'}
+                      >
+                        {course.hidden ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
+                        {course.hidden ? 'Mostrar' : 'Ocultar'}
+                      </button>
                       <button
                         onClick={() => deleteCourse(course.id)}
                         className="text-[11px] font-bold text-red-400 hover:text-red-300 transition-colors flex items-center gap-1 px-2 py-1 rounded hover:bg-red-400/10"
@@ -452,7 +485,7 @@ export default function AdminCourses() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <label className={labelClass}>Status</label>
                     <select
@@ -464,6 +497,19 @@ export default function AdminCourses() {
                     >
                       <option value="published">Publicado</option>
                       <option value="draft">Rascunho</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className={labelClass}>Visível no front-end</label>
+                    <select
+                      value={form.hidden ? 'hidden' : 'visible'}
+                      onChange={(e) =>
+                        setForm({ ...form, hidden: e.target.value === 'hidden' })
+                      }
+                      className={inputClass}
+                    >
+                      <option value="visible">Visível</option>
+                      <option value="hidden">Oculto</option>
                     </select>
                   </div>
                   <div>
