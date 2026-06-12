@@ -196,15 +196,6 @@ export default function MainLayout() {
               </div>
             </div>
 
-            {/* Theme Toggle */}
-            <button
-              onClick={() => { toggleTheme(); setMobileOpen(false); }}
-              className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-base text-gray-400 hover:text-white hover:bg-white/[0.03] w-full mb-2"
-            >
-              {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-              {darkMode ? 'Modo Claro' : 'Modo Escuro'}
-            </button>
-
             {/* Nav Items */}
             <nav className="space-y-1 flex-1 overflow-y-auto">
               {navItems.map(item => {
@@ -226,23 +217,34 @@ export default function MainLayout() {
               })}
             </nav>
 
-            {/* Admin Link (if admin) */}
-            {isAdmin && (
-              <Link
-                to="/admin"
-                onClick={() => setMobileOpen(false)}
-                className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-base font-semibold text-primary bg-primary/10 border border-primary/20 hover:bg-primary/20 transition-all mb-1"
+            {/* Theme Toggle - bottom section */}
+            <div className="border-t border-glass-border pt-2 mt-2 space-y-1">
+              <button
+                onClick={() => { toggleTheme(); setMobileOpen(false); }}
+                className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-base text-gray-400 hover:text-white hover:bg-white/[0.03] w-full"
               >
-                <Shield className="w-5 h-5" />
-                Painel Admin
-              </Link>
-            )}
+                {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                {darkMode ? 'Modo Claro' : 'Modo Escuro'}
+              </button>
 
-            {/* Logout */}
-            <button onClick={handleLogout} className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-base text-red-400 hover:bg-red-500/10 w-full mt-auto">
-              <LogOut className="w-5 h-5" />
-              Sair
-            </button>
+              {/* Admin Link (if admin) */}
+              {isAdmin && (
+                <Link
+                  to="/admin"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-base font-semibold text-primary bg-primary/10 border border-primary/20 hover:bg-primary/20 transition-all w-full"
+                >
+                  <Shield className="w-5 h-5" />
+                  Painel Admin
+                </Link>
+              )}
+
+              {/* Logout */}
+              <button onClick={handleLogout} className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-base text-red-400 hover:bg-red-500/10 w-full">
+                <LogOut className="w-5 h-5" />
+                Sair
+              </button>
+            </div>
           </div>
         </div>
       )}
