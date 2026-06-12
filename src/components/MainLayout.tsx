@@ -14,6 +14,7 @@ export default function MainLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
+  const isLabsPage = location.pathname.startsWith('/labs');
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -260,7 +261,11 @@ export default function MainLayout() {
       )}
 
       {/* Page Content */}
-      <main className="flex-1 flex flex-col overflow-y-auto pt-[156px] md:pt-14">
+      <main
+        className={`flex-1 flex flex-col overflow-y-auto ${
+          isLabsPage ? 'pt-[50px] md:pt-14' : 'pt-14 md:pt-14'
+        }`}
+      >
         <Outlet />
       </main>
     </div>
