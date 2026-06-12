@@ -1,10 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { supabasePublic as supabase } from '@/src/services/supabaseClient';
+import { DatabaseService } from '@/src/services/database';
+import { useAuth } from '@/src/context/AuthContext';
 import {
   ArrowLeft, BookOpen, ChevronRight, Hash, Loader2, PlayCircle,
-  CheckCircle2, AlertCircle, FileText, Youtube
+  CheckCircle2, AlertCircle, FileText, Youtube, ShoppingCart, LogIn
 } from 'lucide-react';
+import CheckoutModal from '@/src/components/CheckoutModal';
 
 interface Course {
   id: string;
@@ -16,6 +19,7 @@ interface Course {
   duration: string;
   tags: string[];
   order_index: number;
+  produto_id: string;
   created_at: string;
 }
 
@@ -54,16 +58,21 @@ const paletteFor = (id: string) => {
 
 export default function CourseDetailPage() {
   const { id } = useParams();
+  const { user } = useAuth();
   const [course, setCourse] = useState<Course | null>(null);
   const [modules, setModules] = useState<Module[]>([]);
   const [lessonsByModule, setLessonsByModule] = useState<Record<string, Lesson[]>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [hasAccess, setHasAccess] = useState(false);
+  const [checkingAccess, setCheckingAccess] = useState(true);
+  const [showCheckout, setShowCheckout] = useState(false);
+  const conteudoRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!id) return;
     loadCourse();
-  }, [id]);
+  }, [id, user]);
 
   const loadCourse = async () => {
     setLoading(true);
@@ -74,7 +83,8 @@ export default function CourseDetailPage() {
       setLoading(false);
       return;
     }
-    setCourse(courseRes.data as Course);
+    const courseData = courseRes.data as Course;
+    setCourse(courseData);
 
     const modulesRes = await supabase
       .from('modules')
@@ -100,7 +110,28 @@ export default function CourseDetailPage() {
       });
       setLessonsByModule(grouped);
     }
+
+    if (user && courseData.produto_id) {
+      const acesso = await DatabaseService.getAcessoCurso(user.id, courseData.produto_id);
+      setHasAccess(!!acesso);
+    }
+    setCheckingAccess(false);
     setLoading(false);
+  };
+
+  const handleBuySuccess = async () => {
+    if (!course?.produto_id || !user) return;
+    const expira = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString();
+    await DatabaseService.grantAcesso(user.id, course.produto_id, expira);
+    setHasAccess(true);
+    setShowCheckout(false);
+    setTimeout(() => {
+      conteudoRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 300);
+  };
+
+  const scrollToConteudo = () => {
+    conteudoRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   if (loading) {
@@ -126,6 +157,7 @@ export default function CourseDetailPage() {
   }
 
   const totalLessons = Object.values(lessonsByModule).reduce((acc, ls) => acc + ls.length, 0);
+  const podeComprar = !!course.produto_id;
 
   return (
     <div className="flex-1 overflow-y-auto bg-background">
@@ -191,72 +223,106 @@ export default function CourseDetailPage() {
           </div>
         )}
 
-        <h2 className="font-display text-lg font-semibold text-white mb-4">Modulos</h2>
-
-        {modules.length === 0 ? (
-          <div className="p-6 rounded-xl border border-glass-border bg-glass text-center text-gray-500 text-sm">
-            Nenhum modulo cadastrado para este curso ainda.
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {modules.map((m) => {
-              const lessons = lessonsByModule[m.id] || [];
-              return (
-                <div
-                  key={m.id}
-                  className="rounded-xl border border-glass-border bg-glass overflow-hidden"
-                >
-                  <div className="flex items-center gap-3 p-4 border-b border-glass-border">
-                    <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary to-accent-cyan flex items-center justify-center text-sm font-bold text-white flex-shrink-0">
-                      {m.number}
-                    </div>
-                    <h3 className="font-display text-base font-semibold text-white flex-1">
-                      {m.name}
-                    </h3>
-                    <span className="text-xs text-gray-500">
-                      {lessons.length} {lessons.length === 1 ? 'aula' : 'aulas'}
-                    </span>
-                  </div>
-
-                  {lessons.length === 0 ? (
-                    <p className="p-4 text-xs text-gray-500">Nenhuma aula cadastrada.</p>
-                  ) : (
-                    <ul className="divide-y divide-glass-border">
-                      {lessons.map((l) => {
-                        const isDone = l.status === 'concluido' || l.status === 'concluida';
-                        return (
-                          <li key={l.id} className="flex items-center gap-3 p-3 px-4">
-                            <div className="flex-shrink-0">
-                              {isDone ? (
-                                <CheckCircle2 className="w-4 h-4 text-green-400" />
-                              ) : l.youtube_link ? (
-                                <Youtube className="w-4 h-4 text-pink-400" />
-                              ) : (
-                                <PlayCircle className="w-4 h-4 text-gray-500" />
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm text-white truncate">
-                                {l.number}. {l.title}
-                              </p>
-                              {l.status && (
-                                <p className="text-[10px] text-gray-500 uppercase tracking-wider">
-                                  {l.status}
-                                </p>
-                              )}
-                            </div>
-                            <ChevronRight className="w-4 h-4 text-gray-600" />
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  )}
-                </div>
-              );
-            })}
+        {podeComprar && !checkingAccess && (
+          <div className="mb-8">
+            {hasAccess ? (
+              <button
+                onClick={scrollToConteudo}
+                className="w-full flex items-center justify-center gap-3 px-6 py-4 rounded-xl bg-gradient-to-r from-primary to-accent-cyan text-white font-semibold text-lg hover:opacity-90 transition-all shadow-lg shadow-primary/20"
+              >
+                <LogIn className="w-5 h-5" />
+                Entrar agora
+              </button>
+            ) : (
+              <button
+                onClick={() => setShowCheckout(true)}
+                className="w-full flex items-center justify-center gap-3 px-6 py-4 rounded-xl bg-gradient-to-r from-primary to-accent-cyan text-white font-semibold text-lg hover:opacity-90 transition-all shadow-lg shadow-primary/20"
+              >
+                <ShoppingCart className="w-5 h-5" />
+                Comprar curso
+              </button>
+            )}
           </div>
         )}
+
+        <div ref={conteudoRef}>
+          <h2 className="font-display text-lg font-semibold text-white mb-4">Modulos</h2>
+
+          {modules.length === 0 ? (
+            <div className="p-6 rounded-xl border border-glass-border bg-glass text-center text-gray-500 text-sm">
+              Nenhum modulo cadastrado para este curso ainda.
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {modules.map((m) => {
+                const lessons = lessonsByModule[m.id] || [];
+                return (
+                  <div
+                    key={m.id}
+                    className="rounded-xl border border-glass-border bg-glass overflow-hidden"
+                  >
+                    <div className="flex items-center gap-3 p-4 border-b border-glass-border">
+                      <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary to-accent-cyan flex items-center justify-center text-sm font-bold text-white flex-shrink-0">
+                        {m.number}
+                      </div>
+                      <h3 className="font-display text-base font-semibold text-white flex-1">
+                        {m.name}
+                      </h3>
+                      <span className="text-xs text-gray-500">
+                        {lessons.length} {lessons.length === 1 ? 'aula' : 'aulas'}
+                      </span>
+                    </div>
+
+                    {lessons.length === 0 ? (
+                      <p className="p-4 text-xs text-gray-500">Nenhuma aula cadastrada.</p>
+                    ) : (
+                      <ul className="divide-y divide-glass-border">
+                        {lessons.map((l) => {
+                          const isDone = l.status === 'concluido' || l.status === 'concluida';
+                          return (
+                            <li key={l.id} className="flex items-center gap-3 p-3 px-4">
+                              <div className="flex-shrink-0">
+                                {isDone ? (
+                                  <CheckCircle2 className="w-4 h-4 text-green-400" />
+                                ) : l.youtube_link ? (
+                                  <Youtube className="w-4 h-4 text-pink-400" />
+                                ) : (
+                                  <PlayCircle className="w-4 h-4 text-gray-500" />
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm text-white truncate">
+                                  {l.number}. {l.title}
+                                </p>
+                                {l.status && (
+                                  <p className="text-[10px] text-gray-500 uppercase tracking-wider">
+                                    {l.status}
+                                  </p>
+                                )}
+                              </div>
+                              <ChevronRight className="w-4 h-4 text-gray-600" />
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
+
+      {showCheckout && course.produto_id && user && (
+        <CheckoutModal
+          isOpen={showCheckout}
+          onClose={() => setShowCheckout(false)}
+          cursoId={course.produto_id}
+          perfilId={user.id}
+          onSuccess={handleBuySuccess}
+        />
+      )}
     </div>
   );
 }

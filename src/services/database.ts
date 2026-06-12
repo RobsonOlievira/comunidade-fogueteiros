@@ -1,5 +1,5 @@
 import { supabase } from './supabaseClient';
-import type { ChannelItem, Message, Download } from '@/types';
+import type { ChannelItem, Message, Download, AcessoCurso } from '@/types';
 
 const formatTime = () => {
   const now = new Date();
@@ -253,6 +253,33 @@ export const DatabaseService = {
 
     if (error) {
       console.error('Erro ao deletar download:', error);
+      return false;
+    }
+    return true;
+  },
+
+  async getAcessoCurso(perfilId: string, produtoId: string): Promise<AcessoCurso | null> {
+    const { data, error } = await supabase
+      .from('acessos_cursos')
+      .select('*')
+      .eq('perfil_id', perfilId)
+      .eq('produto_id', produtoId)
+      .gte('expira_em', new Date().toISOString())
+      .order('expira_em', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (error) return null;
+    return data;
+  },
+
+  async grantAcesso(perfilId: string, produtoId: string, expiraEm: string): Promise<boolean> {
+    const { error } = await supabase
+      .from('acessos_cursos')
+      .insert({ perfil_id: perfilId, produto_id: produtoId, expira_em: expiraEm });
+
+    if (error) {
+      console.error('Erro ao conceder acesso:', error);
       return false;
     }
     return true;

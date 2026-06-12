@@ -117,6 +117,14 @@ export interface Download {
   criado_em: string
 }
 
+export interface AcessoCurso {
+  id: string
+  perfil_id: string
+  produto_id: string
+  expira_em: string
+  criado_em: string
+}
+
 export interface UserProfile {
   id: string
   name: string

@@ -15,7 +15,7 @@ export default function AdminLayout() {
   const location = useLocation();
 
   return (
-    <div className="flex-1 flex bg-background">
+    <div className="flex-1 flex bg-background h-screen">
       <aside className="w-56 border-r border-glass-border bg-glass flex flex-col flex-shrink-0">
         <div className="p-4 border-b border-glass-border">
           <Link to="/labs" className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors">

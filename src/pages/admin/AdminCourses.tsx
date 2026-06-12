@@ -18,6 +18,7 @@ interface Course {
   duration: string;
   tags: string[];
   order_index: number;
+  produto_id: string;
   created_at: string;
 }
 
@@ -57,6 +58,7 @@ export default function AdminCourses() {
     duration: '',
     tags: [],
     order_index: 0,
+    produto_id: '',
   });
   const [tagInput, setTagInput] = useState('');
 
@@ -93,6 +95,7 @@ export default function AdminCourses() {
       duration: '',
       tags: [],
       order_index: maxOrder + 1,
+      produto_id: '',
     });
     setTagInput('');
     setIsFormOpen(true);
@@ -111,6 +114,7 @@ export default function AdminCourses() {
       duration: course.duration,
       tags: course.tags || [],
       order_index: course.order_index,
+      produto_id: course.produto_id || '',
     });
     setTagInput('');
     setIsFormOpen(true);
@@ -154,6 +158,7 @@ export default function AdminCourses() {
       duration: form.duration.trim(),
       tags: form.tags,
       order_index: form.order_index,
+      produto_id: form.produto_id.trim(),
     };
 
     let res;
@@ -483,6 +488,17 @@ export default function AdminCourses() {
                       className={inputClass}
                     />
                   </div>
+                </div>
+
+                <div>
+                  <label className={labelClass}>ID do Produto (Tesseract)</label>
+                  <input
+                    type="text"
+                    value={form.produto_id}
+                    onChange={(e) => setForm({ ...form, produto_id: e.target.value })}
+                    placeholder="Ex: mestre_aplicativos_ia"
+                    className={inputClass}
+                  />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
