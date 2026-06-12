@@ -206,8 +206,8 @@ export default function MainLayout() {
                     key={item.path}
                     to={item.path}
                     onClick={() => setMobileOpen(false)}
-                    className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-base font-display font-medium transition-all ${
-                      isActive ? 'bg-primary/15 text-white' : 'text-gray-400 hover:text-white hover:bg-white/[0.03]'
+                    className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-base font-display font-semibold transition-all ${
+                      isActive ? 'bg-primary/15 text-white' : 'text-gray-200 hover:text-white hover:bg-white/[0.03]'
                     }`}
                   >
                     <Icon className="w-5 h-5" />
@@ -221,7 +221,7 @@ export default function MainLayout() {
             <div className="border-t border-glass-border pt-2 mt-2 space-y-1">
               <button
                 onClick={() => { toggleTheme(); setMobileOpen(false); }}
-                className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-base text-gray-400 hover:text-white hover:bg-white/[0.03] w-full"
+                className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-base font-semibold text-gray-200 hover:text-white hover:bg-white/[0.03] w-full"
               >
                 {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
                 {darkMode ? 'Modo Claro' : 'Modo Escuro'}

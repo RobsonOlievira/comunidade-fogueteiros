@@ -11,8 +11,8 @@
     --bg-chat: #0e0728;              /* Roxo escuro para área de mensagens */
     --bg-input: rgba(22, 13, 56, 0.6);  /* Caixa de entrada */
     
-    --accent-glow: #8a2be2;          /* Brilho principal (Violeta) */
-    --accent-cyan: #00e5ff;          /* Ciano Neon (Tecnologia/Foguete) */
+    --accent-glow: #339c81;          /* Brilho principal (Verde Teal) */
+    --accent-cyan: #35acb9;          /* Ciano Teal (Tecnologia/Foguete) */
     --accent-pink: #ff007f;          /* Pink Fúcsia (Destaques) */
     --accent-green: #39ff14;         /* Verde Neon (Status Online) */
     
