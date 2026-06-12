@@ -42,7 +42,7 @@ export default function MainLayout() {
   return (
     <div className="flex flex-col h-screen w-full bg-background">
       {/* Top Header Bar */}
-      <header className="flex items-center justify-between px-4 h-14 bg-surface border-b border-glass-border flex-shrink-0 sticky top-0 z-40">
+      <header className="flex items-center justify-between px-4 h-14 bg-surface border-b border-glass-border flex-shrink-0 relative z-40">
         <Link to="/labs" className="flex items-center gap-2">
           <img src="/logo.svg" alt="Logo" className="w-8 h-8" />
           <div className="flex items-center gap-1.5">
