@@ -81,6 +81,16 @@ body {
     height: 100%;
     position: relative;
     max-width: 100%;
+    min-height: 0;
+}
+
+@media (max-width: 768px) {
+    .app-container {
+        /* No mobile, o <main> pai já tem pt-14; o height:100% ignora padding,
+           então usamos min-height:0 no flex e deixamos o pai controlar. */
+        height: auto;
+        min-height: 0;
+    }
 }
 
 /* ==========================================================================
@@ -802,21 +812,21 @@ body {
     .sidebar-left {
         position: absolute;
         left: 0;
-        top: 0;
-        height: 100%;
+        top: 56px; /* abaixo do header fixo (h-14) */
+        height: calc(100% - 56px);
         transform: translateX(-100%);
         box-shadow: 10px 0 30px rgba(0, 0, 0, 0.5);
     }
     .sidebar-left.active {
         transform: translateX(0);
     }
-    
+
     .mobile-toggle-btn {
         display: flex;
         align-items: center;
         justify-content: center;
     }
-    
+
     .channel-description-text {
         display: none; /* Esconde descrição longa no celular */
     }
