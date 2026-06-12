@@ -53,37 +53,6 @@ export default function ChatArea({
 
   return (
     <main className="chat-area">
-      <header className="chat-header">
-        <div className="chat-header-info">
-          <button
-            className="mobile-toggle-btn"
-            onClick={onOpenSidebarLeft}
-            title="Abrir menu"
-          >
-            <Menu />
-          </button>
-          <div className="channel-header-title">
-            <Hash className="header-icon-hash" />
-            <h1>{channelDetails?.title || 'carregando...'}</h1>
-          </div>
-          <span className="channel-description-text">
-            {channelDetails?.desc || ''}
-          </span>
-        </div>
-        <div className="chat-header-actions">
-          <button
-            className="header-btn"
-            onClick={onToggleMembers}
-            title="Mostrar/Ocultar membros"
-          >
-            <Users />
-          </button>
-          <button className="header-btn" title="Fixar mensagens">
-            <Pin />
-          </button>
-        </div>
-      </header>
-
       <div className="chat-messages">
         {messages.map((msg) => {
           const badgeClass = msg.badge ? `badge-${msg.badge.toLowerCase()}` : '';
@@ -155,6 +124,37 @@ export default function ChatArea({
           </div>
         </form>
       </div>
+
+      <header className="chat-header">
+        <div className="chat-header-info">
+          <button
+            className="mobile-toggle-btn"
+            onClick={onOpenSidebarLeft}
+            title="Abrir menu"
+          >
+            <Menu />
+          </button>
+          <div className="channel-header-title">
+            <Hash className="header-icon-hash" />
+            <h1>{channelDetails?.title || 'carregando...'}</h1>
+          </div>
+          <span className="channel-description-text">
+            {channelDetails?.desc || ''}
+          </span>
+        </div>
+        <div className="chat-header-actions">
+          <button
+            className="header-btn"
+            onClick={onToggleMembers}
+            title="Mostrar/Ocultar membros"
+          >
+            <Users />
+          </button>
+          <button className="header-btn" title="Fixar mensagens">
+            <Pin />
+          </button>
+        </div>
+      </header>
     </main>
   );
 }
