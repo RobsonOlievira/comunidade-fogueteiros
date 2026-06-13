@@ -22,6 +22,7 @@ import DownloadsPage from '@/src/pages/DownloadsPage';
 import CoursesPage from '@/src/pages/CoursesPage';
 import CourseDetailPage from '@/src/pages/CourseDetailPage';
 import OnboardingModal from '@/src/components/OnboardingModal';
+import DownloadsPreviewPage from '@/src/pages/DownloadsPreviewPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -51,6 +52,9 @@ function AppRoutes() {
     <Routes>
       <Route path="/login" element={user ? <Navigate to="/labs" replace /> : <Login />} />
       <Route path="/registrar" element={user ? <Navigate to="/labs" replace /> : <Register />} />
+      <Route path="/materiais" element={<DownloadsPreviewPage />} />
+      <Route path="/materiais-gratis" element={<DownloadsPreviewPage />} />
+      <Route path="/downloads-preview" element={<DownloadsPreviewPage />} />
       <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
         <Route path="/labs" element={<ChatPage />} />
         <Route path="/labs/:channelId" element={<ChatPage />} />
