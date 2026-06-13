@@ -226,7 +226,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsPro(data?.pro === true);
         setCargoLoaded(true);
         if (data?.avatar_url) {
-          setUser(prev => prev ? { ...prev, avatarUrl: data.avatar_url } : prev);
+          setUser(prev => {
+            if (!prev || prev.avatarUrl === data.avatar_url) return prev;
+            return { ...prev, avatarUrl: data.avatar_url };
+          });
         }
       })
       .catch(() => {
@@ -234,6 +237,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsPro(false);
         setCargoLoaded(true);
       });
+  };
+
+  const userIdRef = React.useRef<string | null>(null);
+
+  const applyUser = async (sessionUser: any, checkStudent: boolean) => {
+    if (userIdRef.current === sessionUser.id) {
+      return;
+    }
+    userIdRef.current = sessionUser.id;
+
+    const { needsOnboarding: need, apelido } = await ensurePerfil(sessionUser);
+    setUser(prev => {
+      if (
+        prev &&
+        prev.id === sessionUser.id &&
+        prev.email === (sessionUser.email || '') &&
+        prev.name === (
+          sessionUser.user_metadata?.full_name ||
+          sessionUser.user_metadata?.name ||
+          sessionUser.email?.split('@')[0] ||
+          'Membro'
+        ) &&
+        prev.avatarUrl === (
+          sessionUser.user_metadata?.avatar_url ||
+          sessionUser.user_metadata?.picture ||
+          ''
+        ) &&
+        prev.apelido === apelido &&
+        prev.needsOnboarding === need
+      ) {
+        return prev;
+      }
+      return buildUser(sessionUser, apelido, need);
+    });
+    setNeedsOnboarding(need);
+    fetchPerfil(sessionUser.id);
+
+    if (checkStudent) {
+      const status = await checkAppBStudent(sessionUser.email || '');
+      if (status?.isStudent) {
+        await syncAppBToProfile(sessionUser.id, status);
+        setAppBStatus(status);
+      }
+    }
   };
 
   useEffect(() => {
@@ -245,17 +292,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (cancelled) return;
 
         if (session?.user) {
-          const { needsOnboarding: need, apelido } = await ensurePerfil(session.user);
-          if (cancelled) return;
-          setUser(buildUser(session.user, apelido, need));
-          setNeedsOnboarding(need);
-          fetchPerfil(session.user.id);
-
-          const status = await checkAppBStudent(session.user.email || '');
-          if (!cancelled && status?.isStudent) {
-            await syncAppBToProfile(session.user.id, status);
-            setAppBStatus(status);
-          }
+          await applyUser(session.user, true);
         }
       } catch (err) {
         console.error('[Auth] Erro na inicialização:', err);
@@ -269,17 +306,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     init();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (cancelled) return;
 
       if (session?.user) {
-        const { needsOnboarding: need, apelido } = await ensurePerfil(session.user);
-        if (cancelled) return;
-        setUser(buildUser(session.user, apelido, need));
-        setNeedsOnboarding(need);
-        fetchPerfil(session.user.id);
-
-        if (_event === 'SIGNED_IN') {
+        if (event === 'SIGNED_IN') {
           const isNewUser = !!session.user.created_at &&
             (Date.now() - new Date(session.user.created_at).getTime() < 60_000);
           const provider = (session.user.app_metadata?.provider as string) || 'email';
@@ -295,19 +326,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             .eq('id', session.user.id)
             .then(() => {});
 
-          checkAppBStudent(session.user.email || '').then(status => {
-            if (!cancelled && status?.isStudent) {
-              syncAppBToProfile(session.user.id, status);
-              setAppBStatus(status);
-            }
-          });
+          await applyUser(session.user, true);
+        } else if (event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') {
+          await applyUser(session.user, event === 'INITIAL_SESSION');
+        } else if (event === 'USER_UPDATED') {
+          await applyUser(session.user, false);
         }
       } else {
-        setUser(null);
-        setCargo(null);
-        setCargoLoaded(true);
-        setNeedsOnboarding(false);
-        setAppBStatus(null);
+        if (userIdRef.current !== null) {
+          userIdRef.current = null;
+          setUser(null);
+          setCargo(null);
+          setCargoLoaded(true);
+          setNeedsOnboarding(false);
+          setAppBStatus(null);
+        }
       }
     });
 
