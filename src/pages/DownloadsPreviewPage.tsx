@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { DatabaseService } from '@/src/services/database';
 import { useAuth } from '@/src/context/AuthContext';
+import { Analytics } from '@/src/services/analytics';
 import { Download, ExternalLink, Play, FileDown, Rocket, Lock, Unlock, X, Mail, CheckCircle2, GraduationCap, User as UserIcon } from 'lucide-react';
 import type { Download as DownloadType } from '@/types';
 
@@ -57,6 +58,7 @@ export default function DownloadsPreviewPage() {
 
   const openDeliverable = (item: DownloadType) => {
     if (!item.deliverable_url) return;
+    Analytics.downloadComplete(item.id, item.titulo, item.deliverable_type);
     if (item.deliverable_type === 'link') {
       window.open(item.deliverable_url, '_blank', 'noopener,noreferrer');
     } else {
@@ -70,10 +72,12 @@ export default function DownloadsPreviewPage() {
   };
 
   const handleActionClick = (item: DownloadType) => {
+    Analytics.downloadClick(item.id, item.titulo, 'preview', viewer.kind);
     if (viewer.kind === 'student') {
       openDeliverable(item);
       return;
     }
+    Analytics.paywallView('preview', viewer.kind, { id: item.id, title: item.titulo });
     setPaywallFor(item);
   };
 
@@ -106,6 +110,7 @@ export default function DownloadsPreviewPage() {
         ctaIcon: <GraduationCap className="w-4 h-4" />,
         showEmail: false,
         badge: 'Exclusivo alunos',
+        onCtaClick: () => Analytics.courseCtaClick('preview_paywall'),
       };
     }
     return {
@@ -120,6 +125,7 @@ export default function DownloadsPreviewPage() {
       ctaIcon: <UserIcon className="w-4 h-4" />,
       showEmail: true,
       badge: 'Login necessário',
+      onCtaClick: () => Analytics.login('google', 'preview-paywall'),
     };
   })();
 
@@ -395,7 +401,7 @@ export default function DownloadsPreviewPage() {
                 {!paywallCopy.showEmail && (
                   <Link
                     to={paywallCopy.ctaHref}
-                    onClick={() => setPaywallFor(null)}
+                    onClick={() => { paywallCopy.onCtaClick?.(); setPaywallFor(null); }}
                     className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 text-black font-semibold hover:opacity-90 transition-all shadow-lg shadow-amber-500/20"
                   >
                     {paywallCopy.ctaIcon}
@@ -411,7 +417,7 @@ export default function DownloadsPreviewPage() {
                     </div>
                     <Link
                       to={paywallCopy.ctaHref}
-                      onClick={() => setPaywallFor(null)}
+                      onClick={() => { paywallCopy.onCtaClick?.(); setPaywallFor(null); }}
                       className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-glass-border bg-glass text-white text-sm font-medium hover:bg-white/5 transition-all"
                     >
                       {paywallCopy.ctaIcon}

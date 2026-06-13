@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/src/services/supabaseClient';
+import { Analytics } from '@/src/services/analytics';
 
 const APP_B_CHECK_URL = 'https://ghdpmlmescgdhvrdqfiz.supabase.co/functions/v1/check-student-status'
 const SITE_URL = typeof window !== 'undefined' ? window.location.origin : ''
@@ -279,6 +280,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         fetchPerfil(session.user.id);
 
         if (_event === 'SIGNED_IN') {
+          const isNewUser = !!session.user.created_at &&
+            (Date.now() - new Date(session.user.created_at).getTime() < 60_000);
+          const provider = (session.user.app_metadata?.provider as string) || 'email';
+          const method: 'google' | 'magic_link' = provider === 'google' ? 'google' : 'magic_link';
+          const origem = sessionStorage.getItem('cf_origem_cadastro') || undefined;
+          if (isNewUser) Analytics.signUp(method, origem);
+          else Analytics.login(method, origem);
+          sessionStorage.removeItem('cf_origem_cadastro');
+
           supabase
             .from('perfis')
             .update({ ultimo_acesso_em: new Date().toISOString() })
@@ -355,6 +365,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (error) return error.message;
 
+    const wasGoogle = user?.avatarUrl?.includes('googleusercontent.com') || user?.avatarUrl?.includes('google');
+    Analytics.onboardingComplete(wasGoogle ? 'google' : 'magic_link');
+
     setUser({ ...user, apelido: cleanApelido, needsOnboarding: false });
     setNeedsOnboarding(false);
     return null;
@@ -368,6 +381,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await supabase.auth.signOut();
     } catch {}
+    Analytics.logout();
     setUser(null);
     setCargo(null);
     setCargoLoaded(false);

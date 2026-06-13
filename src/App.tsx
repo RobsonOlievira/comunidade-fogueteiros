@@ -1,7 +1,8 @@
-import React from 'react';
-import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from '@/src/context/AuthContext';
 import { ThemeProvider } from '@/src/context/ThemeContext';
+import { Analytics } from '@/src/services/analytics';
 import MainLayout from '@/src/components/MainLayout';
 import AdminLayout from '@/src/components/AdminLayout';
 import AdminRoute from '@/src/components/AdminRoute';
@@ -39,6 +40,11 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 function AppRoutes() {
   const { user, loading } = useAuth();
+  const location = useLocation();
+
+  useEffect(() => {
+    Analytics.pageView(location.pathname, document.title);
+  }, [location.pathname]);
 
   if (loading) {
     return (

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, Hash, Bell, Lightbulb, Code2, FolderOpen, HelpCircle, Users, Crown, GraduationCap, Lock, Mic, Settings, LogOut } from 'lucide-react';
 import { useAuth } from '@/src/context/AuthContext';
 import { DatabaseService } from '@/src/services/database';
+import { Analytics } from '@/src/services/analytics';
 import type { ChannelItem } from '@/types';
 import AlunosPaywall from './AlunosPaywall';
 
@@ -58,6 +59,7 @@ export default function SidebarLeft({
   };
 
   const handleAlunosClick = () => {
+    Analytics.canalAlunosClick(isAluno ? 'student' : (user ? 'member' : 'anon'), !isAluno);
     if (isAluno) {
       setActiveChannel('alunos');
       setIsMobileOpen(false);
@@ -66,6 +68,7 @@ export default function SidebarLeft({
         setHasJoinedAlunos(true);
       }
     } else {
+      if (user) Analytics.paywallView('in_app', 'member');
       setPaywallOpen(true);
     }
   };

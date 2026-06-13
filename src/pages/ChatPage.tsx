@@ -8,6 +8,7 @@ import { supabase } from '@/src/services/supabaseClient';
 import { useAuth } from '@/src/context/AuthContext';
 import { GamificationService } from '@/src/services/gamificationService';
 import { DatabaseService } from '@/src/services/database';
+import { Analytics } from '@/src/services/analytics';
 import type { ChannelItem, Message } from '@/types';
 
 export default function ChatPage() {
@@ -37,11 +38,12 @@ export default function ChatPage() {
 
   useEffect(() => {
     if (activeChannelId === 'alunos' && isAluno === false) {
+      Analytics.paywallView('in_app', user ? 'member' : 'anon');
       setPaywallOpen(true);
       setActiveChannelId('geral');
       navigate('/labs/geral', { replace: true });
     }
-  }, [activeChannelId, isAluno, navigate]);
+  }, [activeChannelId, isAluno, navigate, user]);
 
   useEffect(() => {
     DatabaseService.getChannels().then(setChannels);
