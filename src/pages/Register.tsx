@@ -1,35 +1,36 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/src/context/AuthContext';
 import { TOPIC_TAGS } from '@/src/constants/tags';
 import {
-  Rocket, Mail, User as UserIcon, Eye, EyeOff, AlertCircle, Phone, Loader2, Check, Hash
+  Rocket, Mail, User as UserIcon, AlertCircle, Phone, Loader2, Check, Hash, ArrowRight
 } from 'lucide-react';
 
 export default function Register() {
-  const { signUp, signInWithGoogle } = useAuth();
+  const { signInWithMagicLink, signInWithGoogle } = useAuth();
+  const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     name: '',
     username: '',
     email: '',
     phone: '',
-    pass: '',
-    confirmPass: '',
   });
   const [interests, setInterests] = useState<string[]>([]);
 
-  const [showPass, setShowPass] = useState(false);
-  const [showConfirmPass, setShowConfirmPass] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [sending, setSending] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [sent, setSent] = useState(false);
+
+  const origem = React.useMemo(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('utm_source') || params.get('origem') || 'organico';
+  }, []);
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value.replace(/\D/g, '');
     if (value.length > 11) value = value.slice(0, 11);
-
     let formatted = value;
     if (value.length > 2) {
       formatted = `(${value.slice(0, 2)}) `;
@@ -46,7 +47,6 @@ export default function Register() {
     } else if (value.length > 0) {
       formatted = `(${value}`;
     }
-
     setFormData({ ...formData, phone: formatted });
   };
 
@@ -68,41 +68,34 @@ export default function Register() {
     if (!formData.name.trim()) return setError('Nome é obrigatório.');
     if (!formData.email.trim()) return setError('E-mail é obrigatório.');
     if (!formData.username.trim()) return setError('Nome de usuário é obrigatório.');
-    if (interests.length === 0) return setError('Escolha pelo menos um tema de interesse.');
+    if (formData.username.length < 3) return setError('Nome de usuário deve ter pelo menos 3 caracteres.');
 
     if (formData.phone.trim()) {
       const cleanPhone = formData.phone.replace(/\D/g, '');
       if (cleanPhone.length < 10) return setError('WhatsApp inválido. Informe o DDD e o número.');
     }
 
-    if (formData.pass.length < 6) return setError('A senha deve ter no mínimo 6 caracteres.');
-    if (formData.pass !== formData.confirmPass) return setError('As senhas não coincidem.');
+    setSending(true);
 
-    const cleanUsername = formData.username.trim().replace(/^@/, '');
-    const cleanPhone = formData.phone.replace(/\D/g, '');
-
-    setIsSubmitting(true);
-    const err = await signUp({
-      email: formData.email,
-      password: formData.pass,
-      name: formData.name,
-      username: cleanUsername,
-      phone: cleanPhone,
+    localStorage.setItem('cf_pending_cadastro', JSON.stringify({
+      name: formData.name.trim(),
+      email: formData.email.trim(),
+      username: formData.username.trim(),
+      phone: formData.phone.replace(/\D/g, ''),
       interests,
-    });
+    }));
+
+    const err = await signInWithMagicLink(formData.email, origem);
+    setSending(false);
 
     if (err) {
       if (err.includes('already registered') || err.includes('user_already_exists')) {
-        setError('Este e-mail já está cadastrado. Por favor, faça login.');
-      } else if (err.includes('apelido') || err.includes('duplicate')) {
-        setError('Este nome de usuário já está em uso. Escolha outro.');
+        setError('Este e-mail já está cadastrado. Tente fazer login.');
       } else {
         setError(err);
       }
-      setIsSubmitting(false);
     } else {
-      setSuccess(true);
-      setIsSubmitting(false);
+      setSent(true);
     }
   };
 
@@ -110,31 +103,35 @@ export default function Register() {
     setError('');
     setGoogleLoading(true);
     try {
-      await signInWithGoogle();
+      await signInWithGoogle(origem);
     } catch (e: any) {
       setError(e?.message || 'Erro ao entrar com Google');
       setGoogleLoading(false);
     }
   };
 
-  if (success) {
+  if (sent) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background"
+      <div className="min-h-screen flex items-center justify-center bg-background p-4"
         style={{ backgroundImage: 'radial-gradient(at 10% 10%, rgba(138,43,226,0.15) 0px, transparent 40%), radial-gradient(at 90% 90%, rgba(0,229,255,0.1) 0px, transparent 40%)' }}>
         <div className="w-full max-w-md p-8 text-center">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-accent-cyan shadow-lg shadow-primary/30 mb-4">
             <Rocket className="w-8 h-8 text-white" />
           </div>
-          <h1 className="font-display text-2xl font-bold text-white mb-2">Conta criada!</h1>
-          <p className="text-gray-400 mb-6">
-            Verifique seu email para confirmar o cadastro e fazer login.
+          <h1 className="font-display text-2xl font-bold text-white mb-2">Quase lá!</h1>
+          <p className="text-gray-400 mb-2">
+            Enviamos um link mágico para <span className="text-white font-medium">{formData.email}</span>.
           </p>
-          <Link
-            to="/login"
+          <p className="text-gray-500 text-sm mb-6">
+            Abre o link no email pra confirmar e entrar. Chegou em segundos — não esquece o spam.
+          </p>
+          <button
+            onClick={() => navigate('/login')}
             className="inline-flex items-center gap-2 py-3 px-6 rounded-xl bg-gradient-to-r from-primary to-accent-cyan text-white font-semibold hover:opacity-90 transition-all shadow-lg shadow-primary/20"
           >
-            Ir para o login
-          </Link>
+            Voltar pro login
+            <ArrowRight className="w-4 h-4" />
+          </button>
         </div>
       </div>
     );
@@ -162,7 +159,7 @@ export default function Register() {
             Criar Conta
           </h1>
           <p className="text-gray-400 text-sm px-4">
-            Preencha seus dados abaixo para iniciar seu cadastro na Comunidade Fogueteiros.
+            Preencha seus dados e a gente te manda um link mágico por email. Sem senha!
           </p>
         </div>
 
@@ -255,53 +252,12 @@ export default function Register() {
                     className="block w-full pl-8 pr-3 py-3 bg-white/[0.03] border border-glass-border rounded-lg focus:border-accent-lilac outline-none text-white transition-all focus:ring-1 focus:ring-primary text-sm placeholder:text-gray-600"
                     placeholder="seunome"
                     required
+                    maxLength={20}
                   />
                 </div>
                 <p className="mt-1.5 text-[10px] text-gray-500 uppercase tracking-widest leading-tight">
                   Apenas letras minúsculas, números e _.
                 </p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-              <div className="relative group">
-                <label className="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wider">Senha</label>
-                <input
-                  type={showPass ? 'text' : 'password'}
-                  value={formData.pass}
-                  onChange={(e) => setFormData({ ...formData, pass: e.target.value })}
-                  className="block w-full px-3 py-3 bg-white/[0.03] border border-glass-border rounded-lg focus:border-accent-lilac outline-none text-white transition-all focus:ring-1 focus:ring-primary text-sm placeholder:text-gray-600"
-                  placeholder="Mínimo 6 caracteres"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPass(!showPass)}
-                  className="absolute right-3 top-9 text-gray-500 hover:text-accent-lilac transition-colors"
-                  tabIndex={-1}
-                >
-                  {showPass ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                </button>
-              </div>
-
-              <div className="relative group">
-                <label className="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wider">Confirmar Senha</label>
-                <input
-                  type={showConfirmPass ? 'text' : 'password'}
-                  value={formData.confirmPass}
-                  onChange={(e) => setFormData({ ...formData, confirmPass: e.target.value })}
-                  className="block w-full px-3 py-3 bg-white/[0.03] border border-glass-border rounded-lg focus:border-accent-lilac outline-none text-white transition-all focus:ring-1 focus:ring-primary text-sm placeholder:text-gray-600"
-                  placeholder="Repita sua senha"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPass(!showConfirmPass)}
-                  className="absolute right-3 top-9 text-gray-500 hover:text-accent-lilac transition-colors"
-                  tabIndex={-1}
-                >
-                  {showConfirmPass ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                </button>
               </div>
             </div>
 
@@ -340,10 +296,15 @@ export default function Register() {
 
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={sending}
               className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl text-sm font-bold font-display tracking-wide shadow-lg transition-all disabled:opacity-50 mt-4 bg-gradient-to-r from-primary to-accent-cyan hover:opacity-90 text-white hover:-translate-y-0.5"
             >
-              {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : 'CADASTRAR'}
+              {sending ? <Loader2 className="w-5 h-5 animate-spin" /> : (
+                <>
+                  ENVIAR LINK MÁGICO
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
             </button>
           </form>
 

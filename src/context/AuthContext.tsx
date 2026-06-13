@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/src/services/supabaseClient';
 
 const APP_B_CHECK_URL = 'https://ghdpmlmescgdhvrdqfiz.supabase.co/functions/v1/check-student-status'
+const SITE_URL = typeof window !== 'undefined' ? window.location.origin : ''
 
 interface AppBStatus {
   isStudent: boolean
@@ -19,15 +20,8 @@ interface User {
   name: string;
   avatar: string;
   avatarUrl?: string;
-}
-
-interface SignUpData {
-  email: string;
-  password: string;
-  name: string;
-  username: string;
-  phone?: string;
-  interests: string[];
+  apelido?: string;
+  needsOnboarding: boolean;
 }
 
 interface AuthContextType {
@@ -37,9 +31,10 @@ interface AuthContextType {
   cargoLoaded: boolean;
   isPro: boolean;
   appBStatus: AppBStatus | null;
-  signUp: (data: SignUpData) => Promise<string | null>;
-  signIn: (email: string, password: string) => Promise<string | null>;
-  signInWithGoogle: () => Promise<void>;
+  needsOnboarding: boolean;
+  signInWithMagicLink: (email: string, origem?: string) => Promise<string | null>;
+  signInWithGoogle: (origem?: string) => Promise<void>;
+  completeOnboarding: (apelido: string, whatsapp: string) => Promise<string | null>;
   signOut: () => Promise<void>;
 }
 
@@ -50,83 +45,12 @@ const AuthContext = createContext<AuthContextType>({
   cargoLoaded: false,
   isPro: false,
   appBStatus: null,
-  signUp: async () => null,
-  signIn: async () => null,
+  needsOnboarding: false,
+  signInWithMagicLink: async () => null,
   signInWithGoogle: async () => {},
+  completeOnboarding: async () => null,
   signOut: async () => {},
 });
-
-const ensurePerfil = async (sessionUser: any): Promise<void> => {
-  try {
-    const { id, email, user_metadata } = sessionUser;
-    const fullName: string =
-      user_metadata?.full_name || user_metadata?.name || email?.split('@')[0] || 'Membro';
-
-    const { data: existing, error: selectError } = await supabase
-      .from('perfis')
-      .select('id, apelido, tech_stack, avatar_url, app_b_id')
-      .eq('id', id)
-      .maybeSingle();
-
-    if (selectError || !existing) {
-      const baseApelido = (email?.split('@')[0] || fullName.split(' ')[0] || 'membro')
-        .toLowerCase()
-        .replace(/[^a-z0-9]/g, '')
-        .slice(0, 20) || 'membro';
-
-      let apelido = baseApelido;
-      let suffix = 0;
-
-      while (suffix < 100) {
-        const { data: dup } = await supabase
-          .from('perfis')
-          .select('id')
-          .eq('apelido', apelido)
-          .neq('id', id)
-          .maybeSingle();
-        if (!dup) break;
-        suffix += 1;
-        apelido = `${baseApelido}${suffix}`;
-      }
-
-      const { error: insertError } = await supabase.from('perfis').insert({
-        id,
-        nome: fullName,
-        email: email || '',
-        apelido,
-        telefone: '',
-        cargo: 'membro',
-        xp: 0,
-        nivel: 1,
-        cor_avatar: 'color-4',
-        cracha: '',
-        bio: '',
-        avatar_url: user_metadata?.avatar_url || user_metadata?.picture || '',
-        tech_stack: [],
-        criado_em: new Date().toISOString(),
-        atualizado_em: new Date().toISOString(),
-      });
-
-      if (insertError && !insertError.message?.includes('duplicate')) {
-        console.error('[Auth] Erro ao criar perfil:', insertError.message);
-      }
-    } else if (user_metadata?.avatar_url && existing.avatar_url !== user_metadata.avatar_url) {
-      await supabase
-        .from('perfis')
-        .update({ avatar_url: user_metadata.avatar_url, atualizado_em: new Date().toISOString() })
-        .eq('id', id);
-    }
-
-    if (email && !existing?.app_b_id) {
-      const status = await checkAppBStudent(email)
-      if (status?.isStudent) {
-        await syncAppBToProfile(id, status)
-      }
-    }
-  } catch (err) {
-    console.error('[Auth] ensurePerfil falhou (não crítico):', err);
-  }
-};
 
 const checkAppBStudent = async (email: string): Promise<AppBStatus | null> => {
   try {
@@ -142,11 +66,7 @@ const checkAppBStudent = async (email: string): Promise<AppBStatus | null> => {
       body: JSON.stringify({ email }),
     })
 
-    if (!res.ok) {
-      console.error('[Auth] App B check failed:', res.status)
-      return null
-    }
-
+    if (!res.ok) return null
     return await res.json() as AppBStatus
   } catch (err) {
     console.error('[Auth] App B check error:', err)
@@ -156,7 +76,6 @@ const checkAppBStudent = async (email: string): Promise<AppBStatus | null> => {
 
 const syncAppBToProfile = async (userId: string, status: AppBStatus) => {
   if (!status.isStudent) return
-
   await supabase.from('perfis').update({
     app_b_id: status.appBUserId,
     vinculado_app_b: true,
@@ -165,7 +84,108 @@ const syncAppBToProfile = async (userId: string, status: AppBStatus) => {
   }).eq('id', userId)
 }
 
-const buildUser = (sessionUser: any): User => ({
+const ensurePerfil = async (sessionUser: any, origem: string = 'organico'): Promise<{ needsOnboarding: boolean; apelido?: string }> => {
+  try {
+    const { id, email, user_metadata } = sessionUser;
+    const metaName: string =
+      user_metadata?.full_name || user_metadata?.name || email?.split('@')[0] || 'Membro';
+    const avatarUrl: string = user_metadata?.avatar_url || user_metadata?.picture || '';
+    const metaApelido: string | undefined = user_metadata?.preferred_username || user_metadata?.user_name;
+
+    const pendingRaw = localStorage.getItem('cf_pending_cadastro');
+    const pending = pendingRaw ? (() => { try { return JSON.parse(pendingRaw); } catch { return null; } })() : null;
+    const isPendingForThisUser = sessionStorage.getItem('cf_pending_cadastro_marker') === '1' && pending?.email === email;
+
+    const { data: existing, error: selectError } = await supabase
+      .from('perfis')
+      .select('id, apelido, telefone, tech_stack, avatar_url, app_b_id, origem_cadastro')
+      .eq('id', id)
+      .maybeSingle();
+
+    if (selectError) {
+      console.error('[Auth] erro select perfil:', selectError.message);
+      return { needsOnboarding: true };
+    }
+
+    if (!existing) {
+      let baseApelido = (pending?.username || metaApelido || email?.split('@')[0] || metaName.split(' ')[0] || 'membro')
+        .toString()
+        .toLowerCase()
+        .replace(/[^a-z0-9_]/g, '')
+        .slice(0, 20) || 'membro';
+
+      let apelido = baseApelido;
+      let suffix = 0;
+      while (suffix < 100) {
+        const { data: dup } = await supabase
+          .from('perfis')
+          .select('id')
+          .eq('apelido', apelido)
+          .neq('id', id)
+          .maybeSingle();
+        if (!dup) break;
+        suffix += 1;
+        apelido = `${baseApelido}${suffix}`;
+      }
+
+      const fullName = pending?.name || metaName;
+      const telefone = pending?.phone || '';
+      const techStack = pending?.interests || [];
+
+      const { error: insertError } = await supabase.from('perfis').insert({
+        id,
+        nome: fullName,
+        email: email || '',
+        apelido,
+        telefone,
+        cargo: 'membro',
+        xp: 0,
+        nivel: 1,
+        cor_avatar: 'color-4',
+        cracha: '',
+        bio: '',
+        avatar_url: avatarUrl,
+        tech_stack: techStack,
+        origem_cadastro: origem,
+        criado_em: new Date().toISOString(),
+        atualizado_em: new Date().toISOString(),
+      });
+
+      if (insertError && !insertError.message?.includes('duplicate')) {
+        console.error('[Auth] Erro ao criar perfil:', insertError.message);
+      }
+
+      if (pending && isPendingForThisUser) {
+        localStorage.removeItem('cf_pending_cadastro');
+        sessionStorage.removeItem('cf_pending_cadastro_marker');
+      }
+
+      return { needsOnboarding: !telefone, apelido };
+    }
+
+    if (pending && isPendingForThisUser) {
+      const updates: any = { atualizado_em: new Date().toISOString() };
+      if (!existing.apelido && pending.username) updates.apelido = pending.username;
+      if (!existing.telefone && pending.phone) updates.telefone = pending.phone;
+      if ((!existing.tech_stack || existing.tech_stack.length === 0) && pending.interests?.length) {
+        updates.tech_stack = pending.interests;
+      }
+      if (Object.keys(updates).length > 1) {
+        await supabase.from('perfis').update(updates).eq('id', id);
+      }
+      localStorage.removeItem('cf_pending_cadastro');
+      sessionStorage.removeItem(pendingOwnerKey);
+    }
+
+    const needsOnboarding = !existing.apelido?.trim() || !existing.telefone?.trim();
+    return { needsOnboarding, apelido: existing.apelido };
+  } catch (err) {
+    console.error('[Auth] ensurePerfil falhou:', err);
+    return { needsOnboarding: true };
+  }
+};
+
+const buildUser = (sessionUser: any, apelido?: string, needsOnboarding = false): User => ({
   id: sessionUser.id,
   email: sessionUser.email || '',
   name:
@@ -181,6 +201,8 @@ const buildUser = (sessionUser: any): User => ({
     sessionUser.user_metadata?.avatar_url ||
     sessionUser.user_metadata?.picture ||
     '',
+  apelido,
+  needsOnboarding,
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -190,6 +212,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [cargoLoaded, setCargoLoaded] = useState(false);
   const [isPro, setIsPro] = useState(false);
   const [appBStatus, setAppBStatus] = useState<AppBStatus | null>(null);
+  const [needsOnboarding, setNeedsOnboarding] = useState(false);
 
   const fetchPerfil = (userId: string) => {
     supabase
@@ -221,15 +244,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (cancelled) return;
 
         if (session?.user) {
-          await ensurePerfil(session.user);
+          const { needsOnboarding: need, apelido } = await ensurePerfil(session.user);
           if (cancelled) return;
-          setUser(buildUser(session.user));
+          setUser(buildUser(session.user, apelido, need));
+          setNeedsOnboarding(need);
           fetchPerfil(session.user.id);
 
-          const status = await checkAppBStudent(session.user.email || '')
+          const status = await checkAppBStudent(session.user.email || '');
           if (!cancelled && status?.isStudent) {
-            await syncAppBToProfile(session.user.id, status)
-            setAppBStatus(status)
+            await syncAppBToProfile(session.user.id, status);
+            setAppBStatus(status);
           }
         }
       } catch (err) {
@@ -248,12 +272,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (cancelled) return;
 
       if (session?.user) {
-        ensurePerfil(session.user).then(() => {
-          if (!cancelled) {
-            setUser(buildUser(session.user!));
-            fetchPerfil(session.user!.id);
-          }
-        });
+        const { needsOnboarding: need, apelido } = await ensurePerfil(session.user);
+        if (cancelled) return;
+        setUser(buildUser(session.user, apelido, need));
+        setNeedsOnboarding(need);
+        fetchPerfil(session.user.id);
+
         if (_event === 'SIGNED_IN') {
           supabase
             .from('perfis')
@@ -263,15 +287,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
           checkAppBStudent(session.user.email || '').then(status => {
             if (!cancelled && status?.isStudent) {
-              syncAppBToProfile(session.user.id, status)
-              setAppBStatus(status)
+              syncAppBToProfile(session.user.id, status);
+              setAppBStatus(status);
             }
-          })
+          });
         }
       } else {
         setUser(null);
         setCargo(null);
         setCargoLoaded(true);
+        setNeedsOnboarding(false);
+        setAppBStatus(null);
       }
     });
 
@@ -281,70 +307,57 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  const signUp = async ({ email, password, name, username, phone, interests }: SignUpData): Promise<string | null> => {
-    const { data, error } = await supabase.auth.signUp({
+  const signInWithMagicLink = async (email: string, origem: string = 'organico'): Promise<string | null> => {
+    sessionStorage.setItem('cf_origem_cadastro', origem);
+    sessionStorage.setItem('cf_pending_cadastro_marker', '1');
+    const { error } = await supabase.auth.signInWithOtp({
       email,
-      password,
-      options: { data: { full_name: name } },
+      options: {
+        emailRedirectTo: SITE_URL + (SITE_URL.endsWith('/') ? '' : '/'),
+      },
     });
-    if (error) return error.message;
-
-    const userId = data.user?.id;
-    if (userId) {
-      const { error: insertError } = await supabase.from('perfis').insert({
-        id: userId,
-        nome: name,
-        email,
-        apelido: username,
-        telefone: phone || '',
-        cargo: 'membro',
-        xp: 0,
-        nivel: 1,
-        cor_avatar: 'color-4',
-        cracha: '',
-        bio: '',
-        avatar_url: '',
-        tech_stack: interests || [],
-        criado_em: new Date().toISOString(),
-        atualizado_em: new Date().toISOString(),
-      });
-      if (insertError) return insertError.message;
-
-      const status = await checkAppBStudent(email)
-      if (status?.isStudent) {
-        await syncAppBToProfile(userId, status)
-        setAppBStatus(status)
-      }
-    }
-
-    return null;
-  };
-
-  const signIn = async (email: string, password: string): Promise<string | null> => {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (!error && data.user?.id) {
-      supabase
-        .from('perfis')
-        .update({ ultimo_acesso_em: new Date().toISOString() })
-        .eq('id', data.user.id)
-        .then(() => {});
-
-      const status = await checkAppBStudent(email)
-      if (status?.isStudent) {
-        await syncAppBToProfile(data.user.id, status)
-        setAppBStatus(status)
-      } else {
-        setAppBStatus(null)
-      }
-    }
     return error?.message || null;
   };
 
-  const signInWithGoogle = async () => {
+  const signInWithGoogle = async (origem: string = 'organico') => {
+    sessionStorage.setItem('cf_origem_cadastro', origem);
     await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: window.location.origin + window.location.pathname },
+      options: { redirectTo: SITE_URL + (SITE_URL.endsWith('/') ? '' : '/') },
     });
+  };
+
+  const completeOnboarding = async (apelido: string, whatsapp: string): Promise<string | null> => {
+    if (!user) return 'Não autenticado';
+
+    const cleanApelido = apelido.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+    if (cleanApelido.length < 3) return 'Nome de usuário deve ter pelo menos 3 caracteres';
+
+    const cleanPhone = whatsapp.replace(/\D/g, '');
+    if (cleanPhone.length < 10) return 'WhatsApp inválido';
+
+    const { data: dup } = await supabase
+      .from('perfis')
+      .select('id')
+      .eq('apelido', cleanApelido)
+      .neq('id', user.id)
+      .maybeSingle();
+    if (dup) return 'Este nome de usuário já está em uso';
+
+    const { error } = await supabase
+      .from('perfis')
+      .update({
+        apelido: cleanApelido,
+        telefone: cleanPhone,
+        atualizado_em: new Date().toISOString(),
+      })
+      .eq('id', user.id);
+
+    if (error) return error.message;
+
+    setUser({ ...user, apelido: cleanApelido, needsOnboarding: false });
+    setNeedsOnboarding(false);
+    return null;
   };
 
   const signOut = async () => {
@@ -355,10 +368,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setCargo(null);
     setCargoLoaded(false);
     setAppBStatus(null);
+    setNeedsOnboarding(false);
   };
 
   return (
-      <AuthContext.Provider value={{ user, loading, cargo, cargoLoaded, isPro, appBStatus, signUp, signIn, signInWithGoogle, signOut }}>
+    <AuthContext.Provider value={{
+      user, loading, cargo, cargoLoaded, isPro, appBStatus, needsOnboarding,
+      signInWithMagicLink, signInWithGoogle, completeOnboarding, signOut
+    }}>
       {children}
     </AuthContext.Provider>
   );

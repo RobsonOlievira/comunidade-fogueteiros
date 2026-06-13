@@ -21,6 +21,7 @@ import AdminDownloads from '@/src/pages/admin/AdminDownloads';
 import DownloadsPage from '@/src/pages/DownloadsPage';
 import CoursesPage from '@/src/pages/CoursesPage';
 import CourseDetailPage from '@/src/pages/CourseDetailPage';
+import OnboardingModal from '@/src/components/OnboardingModal';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -81,6 +82,7 @@ export default function App() {
         <HashRouter>
           <AppRoutes />
         </HashRouter>
+        <OnboardingModal />
       </AuthProvider>
     </ThemeProvider>
   );
