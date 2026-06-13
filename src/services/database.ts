@@ -273,6 +273,17 @@ export const DatabaseService = {
     return data;
   },
 
+  async isAlunoAtivo(perfilId: string): Promise<boolean> {
+    const { count, error } = await supabase
+      .from('acessos_cursos')
+      .select('*', { count: 'exact', head: true })
+      .eq('perfil_id', perfilId)
+      .gte('expira_em', new Date().toISOString());
+
+    if (error) return false;
+    return (count || 0) > 0;
+  },
+
   async grantAcesso(perfilId: string, produtoId: string, expiraEm: string): Promise<boolean> {
     const { error } = await supabase
       .from('acessos_cursos')

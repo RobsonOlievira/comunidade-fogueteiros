@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import SidebarLeft from '@/src/components/SidebarLeft';
 import ChatArea from '@/src/components/ChatArea';
 import SidebarRight from '@/src/components/SidebarRight';
+import AlunosPaywall from '@/src/components/AlunosPaywall';
 import { supabase } from '@/src/services/supabaseClient';
 import { useAuth } from '@/src/context/AuthContext';
 import { GamificationService } from '@/src/services/gamificationService';
@@ -12,6 +13,7 @@ import type { ChannelItem, Message } from '@/types';
 export default function ChatPage() {
   const { channelId } = useParams();
   const { user, cargo } = useAuth();
+  const navigate = useNavigate();
   const [channels, setChannels] = useState<ChannelItem[]>([]);
   const [activeChannelId, setActiveChannelId] = useState(channelId || 'geral');
   const [messages, setMessages] = useState<Message[]>([]);
@@ -19,8 +21,27 @@ export default function ChatPage() {
   const [channelDetails, setChannelDetails] = useState<ChannelItem | null>(null);
   const [isSidebarRightHidden, setIsSidebarRightHidden] = useState(true);
   const [isSidebarLeftMobileOpen, setIsSidebarLeftMobileOpen] = useState(false);
+  const [isAluno, setIsAluno] = useState<boolean | null>(null);
+  const [paywallOpen, setPaywallOpen] = useState(false);
 
   const perfilId = user?.id;
+
+  useEffect(() => {
+    if (!user?.id) { setIsAluno(null); return; }
+    let cancelled = false;
+    DatabaseService.isAlunoAtivo(user.id).then((ok) => {
+      if (!cancelled) setIsAluno(ok);
+    });
+    return () => { cancelled = true; };
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (activeChannelId === 'alunos' && isAluno === false) {
+      setPaywallOpen(true);
+      setActiveChannelId('geral');
+      navigate('/labs/geral', { replace: true });
+    }
+  }, [activeChannelId, isAluno, navigate]);
 
   useEffect(() => {
     DatabaseService.getChannels().then(setChannels);
@@ -153,6 +174,10 @@ export default function ChatPage() {
       {isSidebarLeftMobileOpen && (
         <div className="sidebar-overlay" onClick={() => setIsSidebarLeftMobileOpen(false)} />
       )}
+      <AlunosPaywall
+        open={paywallOpen}
+        onClose={() => setPaywallOpen(false)}
+      />
     </div>
   );
 }
