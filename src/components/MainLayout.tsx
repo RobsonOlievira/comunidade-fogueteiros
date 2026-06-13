@@ -264,11 +264,15 @@ export default function MainLayout() {
           pt-[57px] = h-14 (56px) do header + 1px do border-b.
           Como o <header> é position:fixed, ele sai do flex flow e o <main>
           ocupa 100% da h-screen; o padding-top empurra o conteúdo para
-          abaixo do header fixo. */}
+          abaixo do header fixo.
+          Em /labs, espelhamos o mesmo padding-bottom (pb-[57px] mobile /
+          md:pb-14 desktop) para que o input do chat tenha o mesmo respiro
+          que existe acima do conteúdo — evita o input colar na borda
+          inferior. */}
       <main
         className={`flex-1 flex flex-col min-h-0 pt-[57px] md:pt-14 ${
           isLabsPage
-            ? 'overflow-hidden md:overflow-y-auto'
+            ? 'pb-[57px] md:pb-14 overflow-hidden md:overflow-y-auto'
             : 'overflow-y-auto'
         }`}
       >
