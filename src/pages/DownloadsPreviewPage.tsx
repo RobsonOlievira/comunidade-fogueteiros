@@ -2,10 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { DatabaseService } from '@/src/services/database';
 import { useAuth } from '@/src/context/AuthContext';
-import { Download, ExternalLink, Play, FileDown, Rocket, Lock, X, Mail, CheckCircle2 } from 'lucide-react';
+import { Download, ExternalLink, Play, FileDown, Rocket, Lock, Unlock, X, Mail, CheckCircle2, GraduationCap, User as UserIcon } from 'lucide-react';
 import type { Download as DownloadType } from '@/types';
 
-function getYouTubeIdFixed(url: string): string | null {
+function getYouTubeId(url: string): string | null {
   if (!url) return null;
   const patterns = [
     /(?:youtube\.com\/watch\?v=)([a-zA-Z0-9_-]+)/,
@@ -20,6 +20,11 @@ function getYouTubeIdFixed(url: string): string | null {
   return null;
 }
 
+type ViewerState =
+  | { kind: 'anon' }
+  | { kind: 'member' }
+  | { kind: 'student' };
+
 export default function DownloadsPreviewPage() {
   const [items, setItems] = useState<DownloadType[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,6 +34,7 @@ export default function DownloadsPreviewPage() {
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState('');
+  const [viewer, setViewer] = useState<ViewerState>({ kind: 'anon' });
   const { user, signInWithMagicLink } = useAuth();
 
   useEffect(() => {
@@ -38,12 +44,37 @@ export default function DownloadsPreviewPage() {
     });
   }, []);
 
-  const handleLockedClick = (item: DownloadType) => {
-    if (user) {
-      setPaywallFor(item);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (!user?.id) { setViewer({ kind: 'anon' }); return; }
+      const ok = await DatabaseService.isAlunoAtivo(user.id);
+      if (cancelled) return;
+      setViewer(ok ? { kind: 'student' } : { kind: 'member' });
+    })();
+    return () => { cancelled = true; };
+  }, [user?.id]);
+
+  const openDeliverable = (item: DownloadType) => {
+    if (!item.deliverable_url) return;
+    if (item.deliverable_type === 'link') {
+      window.open(item.deliverable_url, '_blank', 'noopener,noreferrer');
     } else {
-      setPaywallFor(item);
+      const a = document.createElement('a');
+      a.href = item.deliverable_url;
+      a.download = '';
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      a.click();
     }
+  };
+
+  const handleActionClick = (item: DownloadType) => {
+    if (viewer.kind === 'student') {
+      openDeliverable(item);
+      return;
+    }
+    setPaywallFor(item);
   };
 
   const handleSendMagicLink = async (e: React.FormEvent) => {
@@ -60,6 +91,38 @@ export default function DownloadsPreviewPage() {
     }
   };
 
+  const paywallCopy = (() => {
+    if (!paywallFor) return null;
+    if (viewer.kind === 'member') {
+      return {
+        title: 'Conteúdo exclusivo pra alunos 🚀',
+        desc: (
+          <>
+            <span className="text-white font-medium">"{paywallFor.titulo}"</span> e os outros materiais são liberados pra alunos da comunidade. Adquira qualquer curso pra baixar agora.
+          </>
+        ),
+        cta: 'Conhecer cursos',
+        ctaHref: '/cursos',
+        ctaIcon: <GraduationCap className="w-4 h-4" />,
+        showEmail: false,
+        badge: 'Exclusivo alunos',
+      };
+    }
+    return {
+      title: 'Quase lá! Só falta o login.',
+      desc: (
+        <>
+          Pra baixar <span className="text-white font-medium">"{paywallFor.titulo}"</span> e ter acesso a TODOS os materiais, é só entrar com seu email.
+        </>
+      ),
+      cta: 'Entrar com Google ou ver mais opções',
+      ctaHref: '/login',
+      ctaIcon: <UserIcon className="w-4 h-4" />,
+      showEmail: true,
+      badge: 'Login necessário',
+    };
+  })();
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background"
@@ -74,7 +137,7 @@ export default function DownloadsPreviewPage() {
       style={{ backgroundImage: 'radial-gradient(at 10% 10%, rgba(138,43,226,0.15) 0px, transparent 40%), radial-gradient(at 90% 90%, rgba(0,229,255,0.1) 0px, transparent 40%)' }}>
 
       <header className="sticky top-0 z-30 bg-background/80 backdrop-blur-xl border-b border-glass-border">
-        <div className="max-w-4xl mx-auto px-6 py-3 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
           <Link to="/login" className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent-cyan flex items-center justify-center">
               <Rocket className="w-4 h-4 text-white" />
@@ -85,11 +148,26 @@ export default function DownloadsPreviewPage() {
             </div>
           </Link>
           <div className="flex items-center gap-2">
+            {viewer.kind === 'student' && (
+              <span className="hidden sm:inline-flex items-center gap-1 text-xs text-green-400 px-2.5 py-1 rounded-full bg-green-500/10 border border-green-500/20">
+                <Unlock className="w-3 h-3" />
+                Você é aluno — downloads liberados
+              </span>
+            )}
+            {viewer.kind === 'member' && (
+              <Link
+                to="/cursos"
+                className="hidden sm:inline-flex items-center gap-1 text-xs text-amber-300 px-2.5 py-1 rounded-full bg-amber-400/10 border border-amber-400/20 hover:bg-amber-400/15 transition-all"
+              >
+                <GraduationCap className="w-3 h-3" />
+                Tornar-se aluno
+              </Link>
+            )}
             <Link
               to="/login"
               className="text-xs text-gray-400 hover:text-white px-3 py-1.5 rounded-lg hover:bg-white/5 transition-all hidden sm:inline-block"
             >
-              Já sou aluno
+              {viewer.kind === 'anon' ? 'Já tenho conta' : 'Sair'}
             </Link>
             <Link
               to="/login"
@@ -101,7 +179,7 @@ export default function DownloadsPreviewPage() {
         </div>
       </header>
 
-      <div className="max-w-4xl mx-auto p-6 pb-24">
+      <div className="max-w-6xl mx-auto p-6 pb-24">
         <div className="flex items-center gap-3 mb-6">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent-cyan flex items-center justify-center">
             <Download className="w-5 h-5 text-white" />
@@ -126,21 +204,22 @@ export default function DownloadsPreviewPage() {
           </div>
         )}
 
-        <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {items.map(item => {
-            const videoId = getYouTubeIdFixed(item.youtube_url);
+            const videoId = getYouTubeId(item.youtube_url);
             const isPlaying = playing === item.id;
+            const isLocked = viewer.kind !== 'student';
 
             return (
-              <div key={item.id} className="rounded-xl border border-glass-border bg-glass overflow-hidden">
-                <div className="p-5">
-                  <h2 className="font-display text-lg font-semibold text-white mb-1">{item.titulo}</h2>
+              <div key={item.id} className="rounded-xl border border-glass-border bg-glass overflow-hidden flex flex-col">
+                <div className="p-5 flex-1 flex flex-col">
+                  <h2 className="font-display text-lg font-semibold text-white mb-1 line-clamp-2">{item.titulo}</h2>
                   {item.descricao && (
-                    <p className="text-sm text-gray-400 mb-4">{item.descricao}</p>
+                    <p className="text-sm text-gray-400 mb-3 line-clamp-3">{item.descricao}</p>
                   )}
 
                   {videoId && (
-                    <div className="mb-4">
+                    <div className="mb-3 -mx-1">
                       {isPlaying ? (
                         <div className="relative rounded-lg overflow-hidden" style={{ paddingBottom: '56.25%' }}>
                           <iframe
@@ -166,8 +245,8 @@ export default function DownloadsPreviewPage() {
                             }}
                           />
                           <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/20 transition-all">
-                            <div className="w-14 h-14 rounded-full bg-accent-lilac/90 flex items-center justify-center group-hover:scale-110 transition-transform">
-                              <Play className="w-6 h-6 text-white ml-0.5" />
+                            <div className="w-12 h-12 rounded-full bg-accent-lilac/90 flex items-center justify-center group-hover:scale-110 transition-transform">
+                              <Play className="w-5 h-5 text-white ml-0.5" />
                             </div>
                           </div>
                         </button>
@@ -175,25 +254,28 @@ export default function DownloadsPreviewPage() {
                     </div>
                   )}
 
-                  <div className="flex items-center justify-between gap-3 flex-wrap">
-                    <p className="text-xs text-gray-500">
-                      {item.deliverable_type === 'link' ? '📁 Google Drive' : '📦 Download direto'}
+                  <div className="mt-auto flex items-center justify-between gap-3 flex-wrap pt-3 border-t border-glass-border">
+                    <p className="text-xs text-gray-500 flex items-center gap-1.5">
+                      {isLocked ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3 text-green-400" />}
+                      <span>{item.deliverable_type === 'link' ? 'Google Drive' : 'Download direto'}</span>
                     </p>
                     <button
-                      onClick={() => handleLockedClick(item)}
-                      className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-gradient-to-r from-primary to-accent-cyan text-white text-sm font-semibold hover:opacity-90 transition-all shadow-lg shadow-primary/20"
+                      onClick={() => handleActionClick(item)}
+                      className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-semibold transition-all ${
+                        isLocked
+                          ? 'bg-gradient-to-r from-primary to-accent-cyan text-white hover:opacity-90 shadow-lg shadow-primary/20'
+                          : 'bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:opacity-90 shadow-lg shadow-green-500/20'
+                      }`}
                     >
                       {item.deliverable_type === 'link' ? (
                         <>
-                          <Lock className="w-3.5 h-3.5" />
-                          <ExternalLink className="w-4 h-4" />
-                          Baixar do Google Drive
+                          <ExternalLink className="w-3.5 h-3.5" />
+                          {isLocked ? 'Baixar do Drive' : 'Abrir no Drive'}
                         </>
                       ) : (
                         <>
-                          <Lock className="w-3.5 h-3.5" />
-                          <FileDown className="w-4 h-4" />
-                          Baixar arquivo
+                          <FileDown className="w-3.5 h-3.5" />
+                          {isLocked ? 'Baixar arquivo' : 'Baixar agora'}
                         </>
                       )}
                     </button>
@@ -220,7 +302,7 @@ export default function DownloadsPreviewPage() {
         </div>
       </div>
 
-      {paywallFor && (
+      {paywallFor && paywallCopy && (
         <div
           className="fixed inset-0 z-[300] flex items-center justify-center bg-black/80 backdrop-blur-md p-4"
           onClick={() => { setPaywallFor(null); setSent(false); setError(''); setEmail(''); }}
@@ -258,56 +340,88 @@ export default function DownloadsPreviewPage() {
             ) : (
               <>
                 <div className="text-center mb-5">
-                  <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-accent-cyan shadow-lg shadow-primary/30 mb-3">
-                    <Lock className="w-7 h-7 text-white" />
+                  <div className={`inline-flex items-center justify-center w-14 h-14 rounded-2xl shadow-lg mb-3 ${
+                    viewer.kind === 'member'
+                      ? 'bg-gradient-to-br from-amber-400 to-yellow-500 shadow-amber-500/30'
+                      : 'bg-gradient-to-br from-primary to-accent-cyan shadow-primary/30'
+                  }`}>
+                    {viewer.kind === 'member'
+                      ? <GraduationCap className="w-7 h-7 text-black" />
+                      : <Lock className="w-7 h-7 text-white" />
+                    }
+                  </div>
+                  <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full mb-2 ${
+                    viewer.kind === 'member'
+                      ? 'bg-amber-400/15 border border-amber-400/30'
+                      : 'bg-accent-lilac/15 border border-accent-lilac/30'
+                  }`}>
+                    <span className={`text-[10px] font-semibold uppercase tracking-wider ${
+                      viewer.kind === 'member' ? 'text-amber-300' : 'text-accent-lilac'
+                    }`}>{paywallCopy.badge}</span>
                   </div>
                   <h3 className="font-display text-xl font-bold text-white">
-                    Quase lá! Só falta o login.
+                    {paywallCopy.title}
                   </h3>
-                  <p className="text-sm text-gray-400 mt-2">
-                    Pra baixar <span className="text-white font-medium">"{paywallFor.titulo}"</span> e ter acesso a TODOS os materiais, é só entrar com seu email.
+                  <p className="text-sm text-gray-400 mt-2 leading-relaxed">
+                    {paywallCopy.desc}
                   </p>
                 </div>
 
-                <form onSubmit={handleSendMagicLink} className="space-y-3">
-                  <div className="flex items-center gap-3 bg-glass border border-glass-border rounded-xl px-4 py-3 focus-within:border-accent-lilac transition-colors">
-                    <Mail className="w-4 h-4 text-gray-500" />
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="seu@email.com"
-                      className="bg-transparent border-none outline-none text-white w-full placeholder:text-gray-600 text-sm"
-                      required
-                      autoFocus
-                    />
-                  </div>
-                  {error && <p className="text-red-400 text-xs">{error}</p>}
-                  <button
-                    type="submit"
-                    disabled={sending}
-                    className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-gradient-to-r from-primary to-accent-cyan text-white font-semibold hover:opacity-90 transition-all shadow-lg shadow-primary/20 disabled:opacity-60"
+                {paywallCopy.showEmail && (
+                  <form onSubmit={handleSendMagicLink} className="space-y-3">
+                    <div className="flex items-center gap-3 bg-glass border border-glass-border rounded-xl px-4 py-3 focus-within:border-accent-lilac transition-colors">
+                      <Mail className="w-4 h-4 text-gray-500" />
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="seu@email.com"
+                        className="bg-transparent border-none outline-none text-white w-full placeholder:text-gray-600 text-sm"
+                        required
+                        autoFocus
+                      />
+                    </div>
+                    {error && <p className="text-red-400 text-xs">{error}</p>}
+                    <button
+                      type="submit"
+                      disabled={sending}
+                      className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-gradient-to-r from-primary to-accent-cyan text-white font-semibold hover:opacity-90 transition-all shadow-lg shadow-primary/20 disabled:opacity-60"
+                    >
+                      {sending ? 'Enviando...' : 'Enviar link mágico e baixar'}
+                    </button>
+                  </form>
+                )}
+
+                {!paywallCopy.showEmail && (
+                  <Link
+                    to={paywallCopy.ctaHref}
+                    onClick={() => setPaywallFor(null)}
+                    className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 text-black font-semibold hover:opacity-90 transition-all shadow-lg shadow-amber-500/20"
                   >
-                    {sending ? 'Enviando...' : 'Enviar link mágico e baixar'}
-                  </button>
-                </form>
+                    {paywallCopy.ctaIcon}
+                    {paywallCopy.cta}
+                  </Link>
+                )}
 
-                <div className="relative my-4">
-                  <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-glass-border"></div></div>
-                  <div className="relative flex justify-center"><span className="px-3 text-[10px] text-gray-500 bg-[#0c0a1a] uppercase tracking-wider">ou</span></div>
-                </div>
-
-                <Link
-                  to="/login"
-                  onClick={() => setPaywallFor(null)}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-glass-border bg-glass text-white text-sm font-medium hover:bg-white/5 transition-all"
-                >
-                  Entrar com Google ou ver mais opções
-                </Link>
-
-                <p className="text-[10px] text-center text-gray-500 mt-3">
-                  É grátis e leva menos de 10 segundos. Sem senha, sem complicação.
-                </p>
+                {paywallCopy.showEmail && (
+                  <>
+                    <div className="relative my-4">
+                      <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-glass-border"></div></div>
+                      <div className="relative flex justify-center"><span className="px-3 text-[10px] text-gray-500 bg-[#0c0a1a] uppercase tracking-wider">ou</span></div>
+                    </div>
+                    <Link
+                      to={paywallCopy.ctaHref}
+                      onClick={() => setPaywallFor(null)}
+                      className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-glass-border bg-glass text-white text-sm font-medium hover:bg-white/5 transition-all"
+                    >
+                      {paywallCopy.ctaIcon}
+                      {paywallCopy.cta}
+                    </Link>
+                    <p className="text-[10px] text-center text-gray-500 mt-3">
+                      É grátis e leva menos de 10 segundos. Sem senha, sem complicação.
+                    </p>
+                  </>
+                )}
               </>
             )}
           </div>
