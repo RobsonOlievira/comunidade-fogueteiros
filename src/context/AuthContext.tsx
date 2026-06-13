@@ -361,6 +361,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
+    if (needsOnboarding) {
+      console.warn('[Auth] signOut bloqueado: complete o cadastro primeiro');
+      return;
+    }
     try {
       await supabase.auth.signOut();
     } catch {}
