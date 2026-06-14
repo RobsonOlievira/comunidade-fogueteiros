@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Hash, Bell, Lightbulb, Code2, FolderOpen, HelpCircle, Users, Crown, GraduationCap, Lock, Mic, Settings, LogOut } from 'lucide-react';
+import { Search, Hash, Bell, Lightbulb, Code2, FolderOpen, HelpCircle, Users, Crown, Mic, Settings, LogOut } from 'lucide-react';
 import { useAuth } from '@/src/context/AuthContext';
-import { DatabaseService } from '@/src/services/database';
 import { Analytics } from '@/src/services/analytics';
 import type { ChannelItem } from '@/types';
-import AlunosPaywall from './AlunosPaywall';
 
 interface SidebarLeftProps {
   activeChannel: string;
@@ -16,8 +14,6 @@ interface SidebarLeftProps {
   setIsMobileOpen: (open: boolean) => void;
 }
 
-const STORAGE_KEY_JOINED_ALUNOS = 'cf_joined_alunos';
-
 export default function SidebarLeft({
   activeChannel,
   setActiveChannel,
@@ -27,21 +23,9 @@ export default function SidebarLeft({
   isMobileOpen,
   setIsMobileOpen
 }: SidebarLeftProps) {
-  const { user, signOut, isPro } = useAuth();
-  const [isAluno, setIsAluno] = useState(false);
-  const [hasJoinedAlunos, setHasJoinedAlunos] = useState<boolean>(
-    () => localStorage.getItem(STORAGE_KEY_JOINED_ALUNOS) === '1'
-  );
-  const [paywallOpen, setPaywallOpen] = useState(false);
-
-  useEffect(() => {
-    if (!user?.id) return;
-    let cancelled = false;
-    DatabaseService.isAlunoAtivo(user.id).then((ok) => {
-      if (!cancelled) setIsAluno(ok);
-    });
-    return () => { cancelled = true; };
-  }, [user?.id]);
+  const { user, signOut, cargo } = useAuth();
+  const isAdmin = cargo === 'admin' || cargo === 'mod';
+  const isProItemActive = activeChannel === 'pro';
 
   const getChannelIcon = (id: string) => {
     switch (id) {
@@ -53,42 +37,34 @@ export default function SidebarLeft({
       case 'duvidas': return <HelpCircle />;
       case 'networking': return <Users />;
       case 'pro': return <Crown className="text-yellow-400" />;
-      case 'alunos': return <GraduationCap className="text-[#6ee7b7]" />;
       default: return <Hash />;
     }
   };
 
-  const handleAlunosClick = () => {
-    Analytics.canalAlunosClick(isAluno ? 'student' : (user ? 'member' : 'anon'), !isAluno);
-    if (isAluno) {
-      setActiveChannel('alunos');
+  const handleProClick = () => {
+    if (isAdmin) {
+      Analytics.canalAlunosClick('student', false);
+      setActiveChannel('pro');
       setIsMobileOpen(false);
-      if (!hasJoinedAlunos) {
-        localStorage.setItem(STORAGE_KEY_JOINED_ALUNOS, '1');
-        setHasJoinedAlunos(true);
-      }
     } else {
-      if (user) Analytics.paywallView('in_app', 'member');
-      setPaywallOpen(true);
+      Analytics.canalAlunosClick('member', true);
     }
   };
 
-  const isAlunosItemActive = activeChannel === 'alunos';
-
   const categorias = [
-    {
-      titulo: "🎓 ALUNOS",
+    ...(isAdmin ? [{
+      titulo: "👑 EXCLUSIVO PRO",
       destaque: true,
       itens: [
         {
-          id: 'alunos',
-          name: isAluno ? 'comunidade-alunos' : 'comunidade-alunos',
-          onClick: handleAlunosClick,
-          bloqueado: !isAluno,
-          active: isAlunosItemActive,
+          id: 'pro',
+          name: 'comunidade-pro',
+          onClick: handleProClick,
+          bloqueado: false,
+          active: isProItemActive,
         }
       ]
-    },
+    }] : []),
     {
       titulo: "🚀 INÍCIO",
       itens: [
@@ -111,12 +87,6 @@ export default function SidebarLeft({
         { id: 'networking', name: 'networking' }
       ]
     },
-    ...(isPro ? [{
-      titulo: "👑 EXCLUSIVO PRO",
-      itens: [
-        { id: 'pro', name: 'comunidade-pro' }
-      ]
-    }] : [])
   ];
 
   const handleLogout = async () => {
@@ -156,21 +126,18 @@ export default function SidebarLeft({
                     const isLocked = it.bloqueado;
                     return (
                       <li
-                        className={`channel-item channel-item--alunos ${it.active ? 'active' : ''} ${isLocked ? 'channel-item--locked' : ''}`}
+                        className={`channel-item channel-item--destaque ${it.active ? 'active' : ''} ${isLocked ? 'channel-item--locked' : ''}`}
                         key={it.id}
                         onClick={it.onClick}
-                        title={isLocked ? 'Compre um curso para entrar' : ''}
+                        title={isLocked ? 'Acesso restrito' : ''}
                       >
                         {isLocked
-                          ? <Lock className="text-[#6ee7b7]" />
+                          ? <Lock className="text-yellow-300" />
                           : getChannelIcon(it.id)
                         }
                         <span className="channel-name">{it.name}</span>
-                        {!isLocked && hasJoinedAlunos && (
-                          <span className="badge-unread badge-alunos" title="Você participa">✓</span>
-                        )}
-                        {isLocked && (
-                          <span className="badge-unread badge-locked" title="Bloqueado">🔒</span>
+                        {isAdmin && !isLocked && (
+                          <span className="badge-unread badge-destaque" title="Acesso liberado">✓</span>
                         )}
                       </li>
                     );
@@ -204,7 +171,7 @@ export default function SidebarLeft({
             {user?.name?.charAt(0).toUpperCase() || 'U'}
           </div>
           <div className="user-status-dot online"></div>
-          {isPro && <span className="user-pro-badge" title="Pro">👑</span>}
+          {isAdmin && <span className="user-pro-badge" title={cargo?.toUpperCase()}>👑</span>}
         </div>
         <div className="user-info">
           <span className="user-name">{user?.name || 'Usuário'}</span>
@@ -222,11 +189,6 @@ export default function SidebarLeft({
           </button>
         </div>
       </div>
-
-      <AlunosPaywall
-        open={paywallOpen}
-        onClose={() => setPaywallOpen(false)}
-      />
     </aside>
   );
 }

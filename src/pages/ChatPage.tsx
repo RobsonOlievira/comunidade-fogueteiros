@@ -39,15 +39,22 @@ export default function ChatPage() {
   }, [user?.id]);
 
   useEffect(() => {
-    if (import.meta.env.DEV) console.log(`[ChatPage] paywall-check activeChannelId=${activeChannelId} isAluno=${isAluno}`);
+    if (import.meta.env.DEV) console.log(`[ChatPage] gate-check activeChannelId=${activeChannelId} isAluno=${isAluno} cargo=${cargo}`);
+
     if (activeChannelId === 'alunos' && isAluno === false) {
       Analytics.paywallView('in_app', user ? 'member' : 'anon');
       setPaywallOpen(true);
       setActiveChannelId('geral');
       navigate('/labs/geral', { replace: true });
+      return;
+    }
+
+    if (activeChannelId === 'pro' && cargo !== 'admin' && cargo !== 'mod') {
+      setActiveChannelId('geral');
+      navigate('/labs/geral', { replace: true });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeChannelId, isAluno]);
+  }, [activeChannelId, isAluno, cargo]);
 
   useEffect(() => {
     DatabaseService.getChannels().then(setChannels);
