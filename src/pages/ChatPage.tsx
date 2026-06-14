@@ -17,6 +17,8 @@ export default function ChatPage() {
   const navigate = useNavigate();
   const [channels, setChannels] = useState<ChannelItem[]>([]);
   const [activeChannelId, setActiveChannelId] = useState(channelId || 'geral');
+
+  if (import.meta.env.DEV) console.log(`[ChatPage] render channelId=${channelId} activeChannelId=${activeChannelId}`);
   const [messages, setMessages] = useState<Message[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [channelDetails, setChannelDetails] = useState<ChannelItem | null>(null);

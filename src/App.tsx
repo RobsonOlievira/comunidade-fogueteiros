@@ -27,6 +27,7 @@ import DownloadsPreviewPage from '@/src/pages/DownloadsPreviewPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
+  if (import.meta.env.DEV) console.log(`[ProtectedRoute] render loading=${loading} user=${!!user}`);
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -43,8 +44,9 @@ function AppRoutes() {
   const location = useLocation();
 
   useEffect(() => {
+    if (import.meta.env.DEV) console.log(`[AppRoutes] render path=${location.pathname} loading=${loading} user=${!!user}`);
     Analytics.pageView(location.pathname, document.title);
-  }, [location.pathname]);
+  }, [location.pathname, loading, user]);
 
   if (loading) {
     return (
@@ -80,7 +82,7 @@ function AppRoutes() {
         <Route path="/admin/canais" element={<AdminChannels />} />
         <Route path="/admin/downloads" element={<AdminDownloads />} />
       </Route>
-      <Route path="*" element={<Navigate to="/labs" replace />} />
+      <Route path="*" element={user ? <Navigate to="/labs" replace /> : <Navigate to="/login" replace />} />
     </Routes>
   );
 }
