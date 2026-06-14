@@ -42,11 +42,9 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 function AppRoutes() {
   const { user, loading } = useAuth();
   const location = useLocation();
-  const [renderCount, setRenderCount] = React.useState(0);
-
-  React.useEffect(() => {
-    setRenderCount(c => c + 1);
-  });
+  const renderCountRef = React.useRef(0);
+  renderCountRef.current += 1;
+  const renderCount = renderCountRef.current;
 
   useEffect(() => {
     if (import.meta.env.DEV) console.log(`[AppRoutes] render #${renderCount} path=${location.pathname} loading=${loading} user=${!!user}`);
