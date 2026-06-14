@@ -169,15 +169,22 @@ export default function SidebarLeft({
 
       <div className="user-profile">
         <div className="user-avatar-wrapper">
-          <div className="user-avatar">
+          <div className="user-avatar relative">
             {avatarUrl ? (
               <img src={avatarUrl} alt="" className="w-full h-full object-cover" loading="lazy" />
             ) : (
               user?.name?.charAt(0).toUpperCase() || 'U'
             )}
+            {isAdmin && (
+              <span
+                className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#fbbf24] border-2 border-[#0b0520] flex items-center justify-center shadow-md shadow-black/30 pointer-events-none"
+                title={cargo?.toUpperCase()}
+              >
+                <Crown className="w-2.5 h-2.5 text-black" />
+              </span>
+            )}
           </div>
           <div className="user-status-dot online"></div>
-          {isAdmin && <span className="user-pro-badge" title={cargo?.toUpperCase()}>👑</span>}
         </div>
         <div className="user-info">
           <span className="user-name">{user?.name || 'Usuário'}</span>

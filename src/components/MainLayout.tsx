@@ -5,19 +5,32 @@ import { useTheme } from '@/src/context/ThemeContext';
 import { useAvatarUrl } from '@/src/hooks/useAvatarUrl';
 import {
   MessageCircle, MessageSquare, User, LogOut,
-  Sun, Moon, Menu, X, Shield, Settings, BookOpen, Download
+  Sun, Moon, Menu, X, Shield, Settings, BookOpen, Download, Crown
 } from 'lucide-react';
 
-const Avatar = ({ size }: { size: 'sm' | 'md' | 'lg' }) => {
+const Avatar = ({ size, badge }: { size: 'sm' | 'md' | 'lg'; badge?: 'admin' | 'mod' | 'pro' }) => {
   const { user } = useAuth();
   const url = useAvatarUrl();
   const dim = size === 'sm' ? 'w-8 h-8 text-xs' : size === 'md' ? 'w-10 h-10 text-sm' : 'w-11 h-11 text-base';
+  const badgeSize = size === 'sm' ? 'w-3.5 h-3.5 -top-0.5 -right-0.5' : size === 'md' ? 'w-4 h-4 -top-0.5 -right-0.5' : 'w-4 h-4 -top-0.5 -right-0.5';
   return (
-    <div className={`${dim} rounded-full bg-gradient-to-br from-accent-cyan to-primary flex items-center justify-center font-bold text-white flex-shrink-0 overflow-hidden`}>
-      {url ? (
-        <img src={url} alt="" className="w-full h-full object-cover" loading="lazy" />
-      ) : (
-        user?.name?.charAt(0).toUpperCase() || 'U'
+    <div className={`relative ${dim} rounded-full bg-gradient-to-br from-accent-cyan to-primary flex items-center justify-center font-bold text-white flex-shrink-0 overflow-visible`}>
+      <div className="absolute inset-0 rounded-full overflow-hidden">
+        {url ? (
+          <img src={url} alt="" className="w-full h-full object-cover" loading="lazy" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            {user?.name?.charAt(0).toUpperCase() || 'U'}
+          </div>
+        )}
+      </div>
+      {badge && (
+        <span
+          className={`absolute ${badgeSize} rounded-full bg-[#fbbf24] border-2 border-surface flex items-center justify-center shadow-md shadow-black/30`}
+          title={badge.toUpperCase()}
+        >
+          <Crown className="w-2 h-2 text-black" />
+        </span>
       )}
     </div>
   );
@@ -116,21 +129,16 @@ export default function MainLayout() {
             <div className="relative" ref={profileRef}>
               <button
                 onClick={() => setProfileOpen(!profileOpen)}
-                className="relative w-8 h-8 rounded-full bg-gradient-to-br from-accent-cyan to-primary flex items-center justify-center text-xs font-bold text-white hover:opacity-90 transition-all overflow-hidden"
+                className="block hover:opacity-90 transition-all"
                 title="Perfil"
               >
-                <Avatar size="sm" />
-                {isAdmin && (
-                  <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-accent-lilac border-2 border-surface flex items-center justify-center">
-                    <Shield className="w-2 h-2 text-white" />
-                  </span>
-                )}
+                <Avatar size="sm" badge={isAdmin ? cargo : undefined} />
               </button>
 
               {profileOpen && (
                 <div className="absolute right-0 top-10 w-64 bg-surface border border-glass-border rounded-xl shadow-2xl shadow-black/40 p-4 z-50">
                   <div className="flex items-center gap-3 mb-4 pb-4 border-b border-glass-border">
-                    <Avatar size="md" />
+                    <Avatar size="md" badge={isAdmin ? cargo : undefined} />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <p className="text-sm font-medium text-white truncate">{user?.name || 'Usuário'}</p>
@@ -192,7 +200,7 @@ export default function MainLayout() {
           <div className="fixed right-0 top-14 bottom-0 w-72 bg-surface border-l border-glass-border p-4 flex flex-col" onClick={e => e.stopPropagation()}>
             {/* Profile Section */}
             <div className="flex items-center gap-3 mb-5 pb-4 border-b border-glass-border">
-              <Avatar size="lg" />
+              <Avatar size="lg" badge={isAdmin ? cargo : undefined} />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <p className="text-base font-medium text-white truncate">{user?.name || 'Usuário'}</p>
@@ -265,14 +273,14 @@ export default function MainLayout() {
           Como o <header> é position:fixed, ele sai do flex flow e o <main>
           ocupa 100% da h-screen; o padding-top empurra o conteúdo para
           abaixo do header fixo.
-          Em /labs, espelhamos o mesmo padding-bottom (pb-[57px] mobile /
-          md:pb-14 desktop) para que o input do chat tenha o mesmo respiro
-          que existe acima do conteúdo — evita o input colar na borda
-          inferior. */}
+          Em /labs, no mobile aplicamos pb-[57px] para o input do chat
+          ter respiro acima da borda inferior. No desktop (md+),
+          o input deve ocupar a tela inteira — sem padding-bottom,
+          o input encosta no final da tela. */}
       <main
         className={`flex-1 flex flex-col min-h-0 pt-[57px] md:pt-14 ${
           isLabsPage
-            ? 'pb-[57px] md:pb-14 overflow-hidden md:overflow-y-auto'
+            ? 'pb-[57px] md:pb-0 overflow-hidden md:overflow-y-auto'
             : 'overflow-y-auto'
         }`}
       >
