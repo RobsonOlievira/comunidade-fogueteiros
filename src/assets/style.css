@@ -263,45 +263,45 @@ body {
 /* Item especial em DESTAQUE no topo da sidebar
    (atualmente usado para "EXCLUSIVO PRO" — admin/mod) */
 .category-title--destaque {
-    color: #fbbf24 !important;
+    color: #bb9fff !important;
     font-size: 0.78rem !important;
     letter-spacing: 1.5px !important;
-    background: linear-gradient(90deg, rgba(251, 191, 36, 0.18) 0%, transparent 80%);
+    background: linear-gradient(90deg, rgba(187, 159, 255, 0.18) 0%, transparent 80%);
     padding: 6px 10px !important;
-    border-left: 3px solid #fbbf24;
+    border-left: 3px solid #bb9fff;
     border-radius: 4px;
     margin-bottom: 8px !important;
 }
 .channel-item--destaque {
-    background: linear-gradient(90deg, rgba(251, 191, 36, 0.10) 0%, rgba(251, 191, 36, 0.02) 100%);
-    border: 1px solid rgba(251, 191, 36, 0.22);
+    background: linear-gradient(90deg, rgba(187, 159, 255, 0.10) 0%, rgba(187, 159, 255, 0.02) 100%);
+    border: 1px solid rgba(187, 159, 255, 0.22);
     border-radius: 10px !important;
     margin-bottom: 4px;
-    color: #fde68a;
+    color: #d4b8ff;
     font-weight: 600;
 }
 .channel-item--destaque:hover {
-    background: linear-gradient(90deg, rgba(251, 191, 36, 0.20) 0%, rgba(251, 191, 36, 0.04) 100%);
-    border-color: rgba(251, 191, 36, 0.40);
-    color: #fef3c7;
+    background: linear-gradient(90deg, rgba(187, 159, 255, 0.20) 0%, rgba(187, 159, 255, 0.04) 100%);
+    border-color: rgba(187, 159, 255, 0.40);
+    color: #e2cdff;
 }
 .channel-item--destaque.active {
-    background: linear-gradient(90deg, rgba(251, 191, 36, 0.28) 0%, rgba(251, 191, 36, 0.05) 100%);
-    border-color: rgba(251, 191, 36, 0.55);
-    border-left: 3px solid #fbbf24 !important;
+    background: linear-gradient(90deg, rgba(187, 159, 255, 0.28) 0%, rgba(187, 159, 255, 0.05) 100%);
+    border-color: rgba(187, 159, 255, 0.55);
+    border-left: 3px solid #bb9fff !important;
     color: #ffffff;
 }
 .channel-item--locked {
     opacity: 0.75;
-    color: #fcd34d !important;
+    color: #d4b8ff !important;
 }
 .channel-item--locked:hover {
     opacity: 1;
 }
 .badge-destaque {
-    background-color: #fbbf24 !important;
-    box-shadow: 0 0 10px rgba(251, 191, 36, 0.4) !important;
-    color: #1f1a05 !important;
+    background-color: #bb9fff !important;
+    box-shadow: 0 0 10px rgba(187, 159, 255, 0.4) !important;
+    color: #1f0d4f !important;
 }
 .badge-unread {
     background-color: var(--accent-pink);

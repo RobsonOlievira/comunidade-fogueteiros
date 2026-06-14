@@ -36,7 +36,7 @@ export default function SidebarLeft({
       case 'recursos': return <FolderOpen />;
       case 'duvidas': return <HelpCircle />;
       case 'networking': return <Users />;
-      case 'pro': return <Crown className="text-yellow-400" />;
+      case 'pro': return <Crown className="text-[#bb9fff]" />;
       default: return <Hash />;
     }
   };
@@ -132,7 +132,7 @@ export default function SidebarLeft({
                         title={isLocked ? 'Acesso restrito' : ''}
                       >
                         {isLocked
-                          ? <Lock className="text-yellow-300" />
+                          ? <Lock className="text-[#d4b8ff]" />
                           : getChannelIcon(it.id)
                         }
                         <span className="channel-name">{it.name}</span>
