@@ -53,7 +53,7 @@ export default function SidebarLeft({
       case 'duvidas': return <HelpCircle />;
       case 'networking': return <Users />;
       case 'pro': return <Crown className="text-yellow-400" />;
-      case 'alunos': return <GraduationCap className="text-amber-300" />;
+      case 'alunos': return <GraduationCap className="text-[#6ee7b7]" />;
       default: return <Hash />;
     }
   };
@@ -162,7 +162,7 @@ export default function SidebarLeft({
                         title={isLocked ? 'Compre um curso para entrar' : ''}
                       >
                         {isLocked
-                          ? <Lock className="text-amber-300" />
+                          ? <Lock className="text-[#6ee7b7]" />
                           : getChannelIcon(it.id)
                         }
                         <span className="channel-name">{it.name}</span>

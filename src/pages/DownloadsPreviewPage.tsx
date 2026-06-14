@@ -163,7 +163,8 @@ export default function DownloadsPreviewPage() {
             {viewer.kind === 'member' && (
               <Link
                 to="/cursos"
-                className="hidden sm:inline-flex items-center gap-1 text-xs text-amber-300 px-2.5 py-1 rounded-full bg-amber-400/10 border border-amber-400/20 hover:bg-amber-400/15 transition-all"
+                className="hidden sm:inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full transition-all"
+                style={{ color: '#6ee7b7', background: 'rgba(51, 156, 129, 0.10)', border: '1px solid rgba(51, 156, 129, 0.22)' }}
               >
                 <GraduationCap className="w-3 h-3" />
                 Tornar-se aluno
@@ -348,21 +349,25 @@ export default function DownloadsPreviewPage() {
                 <div className="text-center mb-5">
                   <div className={`inline-flex items-center justify-center w-14 h-14 rounded-2xl shadow-lg mb-3 ${
                     viewer.kind === 'member'
-                      ? 'bg-gradient-to-br from-amber-400 to-yellow-500 shadow-amber-500/30'
+                      ? ''
                       : 'bg-gradient-to-br from-primary to-accent-cyan shadow-primary/30'
-                  }`}>
+                  }`}
+                  style={viewer.kind === 'member' ? { background: 'linear-gradient(135deg, #339c81 0%, #35acb9 100%)', boxShadow: '0 8px 24px rgba(51, 156, 129, 0.4)' } : undefined}
+                >
                     {viewer.kind === 'member'
-                      ? <GraduationCap className="w-7 h-7 text-black" />
+                      ? <GraduationCap className="w-7 h-7 text-white" />
                       : <Lock className="w-7 h-7 text-white" />
                     }
                   </div>
                   <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full mb-2 ${
                     viewer.kind === 'member'
-                      ? 'bg-amber-400/15 border border-amber-400/30'
+                      ? ''
                       : 'bg-accent-lilac/15 border border-accent-lilac/30'
-                  }`}>
+                  }`}
+                  style={viewer.kind === 'member' ? { background: 'rgba(51, 156, 129, 0.15)', border: '1px solid rgba(51, 156, 129, 0.30)' } : undefined}
+                >
                     <span className={`text-[10px] font-semibold uppercase tracking-wider ${
-                      viewer.kind === 'member' ? 'text-amber-300' : 'text-accent-lilac'
+                      viewer.kind === 'member' ? 'text-[#6ee7b7]' : 'text-accent-lilac'
                     }`}>{paywallCopy.badge}</span>
                   </div>
                   <h3 className="font-display text-xl font-bold text-white">
@@ -402,7 +407,8 @@ export default function DownloadsPreviewPage() {
                   <Link
                     to={paywallCopy.ctaHref}
                     onClick={() => { paywallCopy.onCtaClick?.(); setPaywallFor(null); }}
-                    className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 text-black font-semibold hover:opacity-90 transition-all shadow-lg shadow-amber-500/20"
+                    className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-white font-semibold hover:opacity-90 transition-all shadow-lg"
+                    style={{ background: 'linear-gradient(90deg, #339c81 0%, #35acb9 100%)', boxShadow: '0 8px 24px rgba(51, 156, 129, 0.25)' }}
                   >
                     {paywallCopy.ctaIcon}
                     {paywallCopy.cta}

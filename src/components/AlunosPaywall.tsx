@@ -18,7 +18,7 @@ export default function AlunosPaywall({ open, onClose }: AlunosPaywallProps) {
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md bg-[#0c0a1a] border-2 border-amber-400/40 rounded-2xl p-6 shadow-2xl relative"
+        className="w-full max-w-md bg-[#0c0a1a] border-2 border-[#339c81]/40 rounded-2xl p-6 shadow-2xl relative"
         onClick={(e) => e.stopPropagation()}
       >
         <button
@@ -30,12 +30,12 @@ export default function AlunosPaywall({ open, onClose }: AlunosPaywallProps) {
         </button>
 
         <div className="text-center mb-5">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-400 to-yellow-500 shadow-lg shadow-amber-500/30 mb-3">
-            <GraduationCap className="w-8 h-8 text-black" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl shadow-lg mb-3" style={{ background: 'linear-gradient(135deg, #339c81 0%, #35acb9 100%)', boxShadow: '0 8px 24px rgba(51, 156, 129, 0.4)' }}>
+            <GraduationCap className="w-8 h-8 text-white" />
           </div>
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-400/15 border border-amber-400/30 mb-2">
-            <Sparkles className="w-3 h-3 text-amber-300" />
-            <span className="text-[10px] font-semibold text-amber-300 uppercase tracking-wider">Exclusivo para alunos</span>
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full mb-2" style={{ background: 'rgba(51, 156, 129, 0.15)', border: '1px solid rgba(51, 156, 129, 0.30)' }}>
+            <Sparkles className="w-3 h-3 text-[#6ee7b7]" />
+            <span className="text-[10px] font-semibold text-[#6ee7b7] uppercase tracking-wider">Exclusivo para alunos</span>
           </div>
           <h2 className="font-display text-xl font-bold text-white">
             Grupo EXCLUSIVO de alunos
@@ -45,8 +45,8 @@ export default function AlunosPaywall({ open, onClose }: AlunosPaywallProps) {
           </p>
         </div>
 
-        <div className="bg-amber-400/5 border border-amber-400/20 rounded-xl p-3 mb-5">
-          <p className="text-xs text-amber-200 text-center">
+        <div className="rounded-xl p-3 mb-5" style={{ background: 'rgba(51, 156, 129, 0.06)', border: '1px solid rgba(51, 156, 129, 0.20)' }}>
+          <p className="text-xs text-center text-[#a7f3d0]">
             🎓 Adquira qualquer curso pra liberar o acesso imediato ao grupo.
           </p>
         </div>
@@ -54,7 +54,8 @@ export default function AlunosPaywall({ open, onClose }: AlunosPaywallProps) {
         <div className="flex flex-col gap-2">
           <button
             onClick={() => { onClose(); navigate('/cursos'); }}
-            className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 text-black font-semibold hover:opacity-90 transition-all shadow-lg shadow-amber-500/20"
+            className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-white font-semibold hover:opacity-90 transition-all shadow-lg"
+            style={{ background: 'linear-gradient(90deg, #339c81 0%, #35acb9 100%)', boxShadow: '0 8px 24px rgba(51, 156, 129, 0.25)' }}
           >
             <GraduationCap className="w-4 h-4" />
             Conhecer cursos disponíveis
