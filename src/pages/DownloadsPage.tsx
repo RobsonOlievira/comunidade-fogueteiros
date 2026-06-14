@@ -54,7 +54,7 @@ export default function DownloadsPage() {
 
   return (
     <div className="flex-1 overflow-y-auto bg-background">
-      <div className="max-w-4xl mx-auto p-6">
+      <div className="max-w-6xl mx-auto p-6">
         <div className="flex items-center gap-3 mb-8">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent-cyan flex items-center justify-center">
             <Download className="w-5 h-5 text-white" />
@@ -72,21 +72,21 @@ export default function DownloadsPage() {
           </div>
         )}
 
-        <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {items.map(item => {
             const videoId = getYouTubeId(item.youtube_url);
             const isPlaying = playing === item.id;
 
             return (
-              <div key={item.id} className="rounded-xl border border-glass-border bg-glass overflow-hidden">
-                <div className="p-5">
-                  <h2 className="font-display text-lg font-semibold text-white mb-1">{item.titulo}</h2>
+              <div key={item.id} className="rounded-xl border border-glass-border bg-glass overflow-hidden flex flex-col">
+                <div className="p-5 flex-1 flex flex-col">
+                  <h2 className="font-display text-lg font-semibold text-white mb-1 line-clamp-2">{item.titulo}</h2>
                   {item.descricao && (
-                    <p className="text-sm text-gray-400 mb-4">{item.descricao}</p>
+                    <p className="text-sm text-gray-400 mb-3 line-clamp-3">{item.descricao}</p>
                   )}
 
                   {videoId && (
-                    <div className="mb-4">
+                    <div className="mb-3 -mx-1">
                       {isPlaying ? (
                         <div className="relative rounded-lg overflow-hidden" style={{ paddingBottom: '56.25%' }}>
                           <iframe
@@ -112,8 +112,8 @@ export default function DownloadsPage() {
                             }}
                           />
                           <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/20 transition-all">
-                            <div className="w-14 h-14 rounded-full bg-accent-lilac/90 flex items-center justify-center group-hover:scale-110 transition-transform">
-                              <Play className="w-6 h-6 text-white ml-0.5" />
+                            <div className="w-12 h-12 rounded-full bg-accent-lilac/90 flex items-center justify-center group-hover:scale-110 transition-transform">
+                              <Play className="w-5 h-5 text-white ml-0.5" />
                             </div>
                           </div>
                         </button>
@@ -121,24 +121,29 @@ export default function DownloadsPage() {
                     </div>
                   )}
 
-                  {item.deliverable_url && (
-                    <button
-                      onClick={() => handleDeliverable(item)}
-                      className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-gradient-to-r from-primary to-accent-cyan text-white text-sm font-semibold hover:opacity-90 transition-all"
-                    >
-                      {item.deliverable_type === 'link' ? (
-                        <>
-                          <ExternalLink className="w-4 h-4" />
-                          Abrir no Google Drive
-                        </>
-                      ) : (
-                        <>
-                          <FileDown className="w-4 h-4" />
-                          Baixar arquivo
-                        </>
-                      )}
-                    </button>
-                  )}
+                  <div className="mt-auto flex items-center justify-between gap-3 flex-wrap pt-3 border-t border-glass-border">
+                    <p className="text-xs text-gray-500">
+                      {item.deliverable_type === 'link' ? '📁 Google Drive' : '📦 Download direto'}
+                    </p>
+                    {item.deliverable_url && (
+                      <button
+                        onClick={() => handleDeliverable(item)}
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-gradient-to-r from-primary to-accent-cyan text-white text-sm font-semibold hover:opacity-90 transition-all"
+                      >
+                        {item.deliverable_type === 'link' ? (
+                          <>
+                            <ExternalLink className="w-4 h-4" />
+                            Abrir no Google Drive
+                          </>
+                        ) : (
+                          <>
+                            <FileDown className="w-4 h-4" />
+                            Baixar arquivo
+                          </>
+                        )}
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             );
