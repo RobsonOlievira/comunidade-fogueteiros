@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Hash, Bell, Lightbulb, Code2, FolderOpen, HelpCircle, Users, Crown, Mic, Settings, LogOut } from 'lucide-react';
 import { useAuth } from '@/src/context/AuthContext';
+import { useAvatarUrl } from '@/src/hooks/useAvatarUrl';
 import { Analytics } from '@/src/services/analytics';
 import type { ChannelItem } from '@/types';
 
@@ -24,6 +25,7 @@ export default function SidebarLeft({
   setIsMobileOpen
 }: SidebarLeftProps) {
   const { user, signOut, cargo } = useAuth();
+  const avatarUrl = useAvatarUrl();
   const isAdmin = cargo === 'admin' || cargo === 'mod';
   const isProItemActive = activeChannel === 'pro';
 
@@ -168,7 +170,11 @@ export default function SidebarLeft({
       <div className="user-profile">
         <div className="user-avatar-wrapper">
           <div className="user-avatar">
-            {user?.name?.charAt(0).toUpperCase() || 'U'}
+            {avatarUrl ? (
+              <img src={avatarUrl} alt="" className="w-full h-full object-cover" loading="lazy" />
+            ) : (
+              user?.name?.charAt(0).toUpperCase() || 'U'
+            )}
           </div>
           <div className="user-status-dot online"></div>
           {isAdmin && <span className="user-pro-badge" title={cargo?.toUpperCase()}>👑</span>}

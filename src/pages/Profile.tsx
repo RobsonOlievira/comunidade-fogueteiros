@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '@/src/context/AuthContext';
+import { useAvatarUrl } from '@/src/hooks/useAvatarUrl';
 import { supabase } from '@/src/services/supabaseClient';
+import { compressAvatar } from '@/src/services/imageUtils';
 import { Rocket, Award, Code, LogOut, ThumbsUp, MessageSquare, MessageCircle, FileText, Zap, Star, User, Camera } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { GamificationService } from '@/src/services/gamificationService';
@@ -17,10 +19,10 @@ const iconMap: Record<string, React.ReactNode> = {
 export default function Profile() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const avatarUrl = useAvatarUrl();
   const [perfil, setPerfil] = useState<any>(null);
   const [stats, setStats] = useState<any>(null);
   const [conquistas, setConquistas] = useState<any[]>([]);
-  const [avatarUrl, setAvatarUrl] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
 
@@ -43,7 +45,6 @@ export default function Profile() {
     setPerfil(p);
     setStats(s);
     setConquistas(c || []);
-    if (p?.avatar_url) setAvatarUrl(p.avatar_url);
   };
 
   const handleAvatarClick = () => {
@@ -54,11 +55,6 @@ export default function Profile() {
     const file = e.target.files?.[0];
     if (!file || !user?.id) return;
 
-    if (file.size > 128 * 1024) {
-      alert('A imagem deve ter no máximo 128KB.');
-      return;
-    }
-
     if (!file.type.startsWith('image/')) {
       alert('Selecione uma imagem válida.');
       return;
@@ -66,12 +62,23 @@ export default function Profile() {
 
     setUploading(true);
     try {
-      const ext = file.name.split('.').pop() || 'png';
-      const filePath = `${user.id}/avatar.${ext}`;
+      const compressed = await compressAvatar(file);
+
+      if (compressed.size > 100 * 1024) {
+        alert('Não foi possível comprimir a imagem abaixo de 100KB. Tente uma imagem menor.');
+        setUploading(false);
+        return;
+      }
+
+      const filePath = `${user.id}/avatar.jpg`;
 
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(filePath, file, { upsert: true });
+        .upload(filePath, compressed, {
+          upsert: true,
+          contentType: 'image/jpeg',
+          cacheControl: '3600',
+        });
 
       if (uploadError) throw uploadError;
 
@@ -80,7 +87,6 @@ export default function Profile() {
         .getPublicUrl(filePath);
 
       const publicUrl = urlData?.publicUrl || '';
-      setAvatarUrl(publicUrl);
 
       const { error: updateError } = await supabase
         .from('perfis')
@@ -88,11 +94,14 @@ export default function Profile() {
         .eq('id', user.id);
 
       if (updateError) throw updateError;
+
+      window.dispatchEvent(new CustomEvent('cf:avatar-updated', { detail: { url: publicUrl } }));
     } catch (err: any) {
       console.error('Erro ao enviar avatar:', err);
       alert('Erro ao enviar imagem. Tente novamente.');
     } finally {
       setUploading(false);
+      if (e.target) e.target.value = '';
     }
   };
 

@@ -2,10 +2,26 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/src/context/AuthContext';
 import { useTheme } from '@/src/context/ThemeContext';
+import { useAvatarUrl } from '@/src/hooks/useAvatarUrl';
 import {
   MessageCircle, MessageSquare, User, LogOut,
   Sun, Moon, Menu, X, Shield, Settings, BookOpen, Download
 } from 'lucide-react';
+
+const Avatar = ({ size }: { size: 'sm' | 'md' | 'lg' }) => {
+  const { user } = useAuth();
+  const url = useAvatarUrl();
+  const dim = size === 'sm' ? 'w-8 h-8 text-xs' : size === 'md' ? 'w-10 h-10 text-sm' : 'w-11 h-11 text-base';
+  return (
+    <div className={`${dim} rounded-full bg-gradient-to-br from-accent-cyan to-primary flex items-center justify-center font-bold text-white flex-shrink-0 overflow-hidden`}>
+      {url ? (
+        <img src={url} alt="" className="w-full h-full object-cover" loading="lazy" />
+      ) : (
+        user?.name?.charAt(0).toUpperCase() || 'U'
+      )}
+    </div>
+  );
+};
 
 export default function MainLayout() {
   const { user, signOut, cargo, isPro } = useAuth();
@@ -103,11 +119,7 @@ export default function MainLayout() {
                 className="relative w-8 h-8 rounded-full bg-gradient-to-br from-accent-cyan to-primary flex items-center justify-center text-xs font-bold text-white hover:opacity-90 transition-all overflow-hidden"
                 title="Perfil"
               >
-                {user?.avatarUrl ? (
-                  <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" />
-                ) : (
-                  user?.name?.charAt(0).toUpperCase() || 'U'
-                )}
+                <Avatar size="sm" />
                 {isAdmin && (
                   <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-accent-lilac border-2 border-surface flex items-center justify-center">
                     <Shield className="w-2 h-2 text-white" />
@@ -118,13 +130,7 @@ export default function MainLayout() {
               {profileOpen && (
                 <div className="absolute right-0 top-10 w-64 bg-surface border border-glass-border rounded-xl shadow-2xl shadow-black/40 p-4 z-50">
                   <div className="flex items-center gap-3 mb-4 pb-4 border-b border-glass-border">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-accent-cyan to-primary flex items-center justify-center text-sm font-bold text-white flex-shrink-0 overflow-hidden">
-                      {user?.avatarUrl ? (
-                        <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        user?.name?.charAt(0).toUpperCase() || 'U'
-                      )}
-                    </div>
+                    <Avatar size="md" />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <p className="text-sm font-medium text-white truncate">{user?.name || 'Usuário'}</p>
@@ -186,13 +192,7 @@ export default function MainLayout() {
           <div className="fixed right-0 top-14 bottom-0 w-72 bg-surface border-l border-glass-border p-4 flex flex-col" onClick={e => e.stopPropagation()}>
             {/* Profile Section */}
             <div className="flex items-center gap-3 mb-5 pb-4 border-b border-glass-border">
-              <div className="w-11 h-11 rounded-full bg-gradient-to-br from-accent-cyan to-primary flex items-center justify-center text-base font-bold text-white flex-shrink-0 overflow-hidden">
-                {user?.avatarUrl ? (
-                  <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" />
-                ) : (
-                  user?.name?.charAt(0).toUpperCase() || 'U'
-                )}
-              </div>
+              <Avatar size="lg" />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <p className="text-base font-medium text-white truncate">{user?.name || 'Usuário'}</p>
