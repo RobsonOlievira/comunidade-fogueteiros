@@ -38,13 +38,22 @@ import CampaignSender from './admin/CampaignSender';
 <Route path="/admin/campaigns" element={<CampaignSender />} />
 ```
 
-### 3. Instale o ícone (se ainda não tiver)
+### 3. Instale as dependências
 
 ```bash
-npm install lucide-react
+npm install @supabase/supabase-js lucide-react
 ```
 
-### 4. Variáveis de ambiente (se preferir externalizar)
+### 4. Setup do auth (IMPORTANTE)
+
+A Edge Function exige que o usuário esteja **logado no Supabase Auth** e o email dele esteja na allowlist `CAMPAIGN_ADMIN_EMAILS`. Você precisa:
+
+1. Garantir que o seu Gerenciador de Cursos usa o **mesmo projeto Supabase** (`ghdpmlmescgdhvrdqfiz`) para auth, OU
+2. Compartilhar a sessão de auth entre os dois apps via cookie de domínio (`.comunidade-fogueteiros.vercel.app`)
+
+A forma mais simples: **o usuário precisa estar logado no Supabase** (pode ser no app da Comunidade ou no Gerenciador, desde que seja o mesmo Supabase project). O snippet automaticamente lê a sessão do navegador e envia o JWT.
+
+### 5. Variáveis de ambiente (se preferir externalizar)
 
 As URLs/keys estão hardcoded no topo do arquivo:
 
@@ -59,20 +68,6 @@ Se quiser, mova pra `.env`:
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 ```
-
-### 5. Permissões
-
-As views e a função `campaign-status` já estão com `GRANT SELECT` para
-`anon` e `authenticated`. O envio é público via Edge Function (não
-requer auth do admin — idealmente você deveria colocar um `verify_jwt=true`
-e/ou checar `auth.uid()` antes de permitir disparos).
-
-**⚠️ IMPORTANTE**: até você adicionar autenticação, qualquer pessoa com
-a `anon` key pode disparar campanhas. Recomendo:
-
-- Mudar `verify_jwt: true` nas Edge Functions
-- Adicionar um check `if (user.email !== 'r.billwilliam@gmail.com') return new Response('forbidden', { status: 403 })`
-- Ou proteger a rota com sua lógica de admin existente
 
 ## Views SQL disponíveis
 

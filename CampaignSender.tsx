@@ -1,16 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Send, Eye, EyeOff, RefreshCw, CheckCircle2, AlertCircle, Users, Mail, Check, X, Loader2, BarChart3, Download } from 'lucide-react';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { Send, Eye, EyeOff, RefreshCw, CheckCircle2, AlertCircle, Users, Mail, Check, Loader2, BarChart3 } from 'lucide-react';
 
 const SUPABASE_URL = 'https://ghdpmlmescgdhvrdqfiz.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_ydR0CaKAAYuztfddU9d52w_0_6GuIqX';
 const SEND_BULK_URL = `${SUPABASE_URL}/functions/v1/send-bulk-campaign`;
 const STATUS_URL = `${SUPABASE_URL}/functions/v1/campaign-status`;
 
-const supabaseHeaders = {
-  apikey: SUPABASE_ANON_KEY,
-  Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-  'Content-Type': 'application/json',
-};
+const supabase: SupabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 interface GroupStat {
   group_id: string;
@@ -23,6 +20,7 @@ interface GroupStat {
 
 interface CampaignResult {
   ok: boolean;
+  admin_email?: string;
   recipients: number;
   sent: number;
   failed: number;
@@ -40,6 +38,36 @@ const DEFAULT_HTML = `<div style="font-family:-apple-system,BlinkMacSystemFont,'
   <p style="color:#6b7280;font-size:12px">Ou veja primeiro os <a href="{{materiais_url}}" style="color:#06b6d4">materiais gratuitos</a>.</p>
 </div>`;
 
+async function callAuthedFunction(url: string, body?: any, method: 'GET' | 'POST' = 'POST'): Promise<any> {
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session) {
+    throw new Error('Você precisa estar logado pra usar esta função')
+  }
+
+  const res = await fetch(url, {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${session.access_token}`,
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  })
+
+  if (res.status === 401) {
+    throw new Error('Sessão expirada. Faça login de novo.')
+  }
+  if (res.status === 403) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.error || 'Acesso negado (não é admin)')
+  }
+  if (!res.ok) {
+    const err = await res.text()
+    throw new Error(`HTTP ${res.status}: ${err.slice(0, 300)}`)
+  }
+  return res.json()
+}
+
 export default function CampaignSender() {
   const [groups, setGroups] = useState<GroupStat[]>([]);
   const [loadingGroups, setLoadingGroups] = useState(true);
@@ -53,41 +81,49 @@ export default function CampaignSender() {
   const [previewVars, setPreviewVars] = useState({ nome: 'João', email: 'joao@exemplo.com' });
 
   const [sending, setSending] = useState(false);
-  const [progress, setProgress] = useState<{ current: number; total: number } | null>(null);
   const [result, setResult] = useState<CampaignResult | null>(null);
   const [recentLogs, setRecentLogs] = useState<any[]>([]);
   const [loadingLogs, setLoadingLogs] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   const fetchGroups = async () => {
     setLoadingGroups(true);
+    setAuthError(null);
     try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        setAuthError('Você precisa estar logado pra ver os grupos.')
+        setGroups([])
+        return
+      }
       const res = await fetch(`${SUPABASE_URL}/rest/v1/v_lead_group_stats?select=*&order=group_name`, {
-        headers: supabaseHeaders,
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      setGroups(data || []);
-      if (data && data.length > 0 && !selectedGroupId) setSelectedGroupId(data[0].group_id);
+        headers: {
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const data = await res.json()
+      setGroups(data || [])
+      if (data && data.length > 0 && !selectedGroupId) setSelectedGroupId(data[0].group_id)
     } catch (e: any) {
-      console.error('Erro ao carregar grupos:', e);
+      setAuthError(e.message || 'Erro ao carregar grupos')
     } finally {
-      setLoadingGroups(false);
+      setLoadingGroups(false)
     }
   };
 
   const fetchRecentLogs = async (groupId?: string) => {
-    setLoadingLogs(true);
+    setLoadingLogs(true)
     try {
-      const url = new URL(STATUS_URL);
-      if (groupId) url.searchParams.set('group_id', groupId);
-      const res = await fetch(url.toString());
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      setRecentLogs(data.recent || []);
+      const url = new URL(STATUS_URL)
+      if (groupId) url.searchParams.set('group_id', groupId)
+      const data = await callAuthedFunction(url.toString(), undefined, 'GET')
+      setRecentLogs(data.recent || [])
     } catch (e: any) {
-      console.error('Erro ao carregar logs:', e);
+      console.error('Erro ao carregar logs:', e)
     } finally {
-      setLoadingLogs(false);
+      setLoadingLogs(false)
     }
   };
 
@@ -142,7 +178,6 @@ export default function CampaignSender() {
 
     setSending(true);
     setResult(null);
-    setProgress({ current: 0, total: recipientsToSend });
 
     try {
       const body: any = {
@@ -156,18 +191,8 @@ export default function CampaignSender() {
       };
       if (limit && Number(limit) > 0) body.limit = Number(limit);
 
-      const res = await fetch(SEND_BULK_URL, {
-        method: 'POST',
-        headers: supabaseHeaders,
-        body: JSON.stringify(body),
-      });
-      if (!res.ok) {
-        const errText = await res.text();
-        throw new Error(`HTTP ${res.status}: ${errText.slice(0, 300)}`);
-      }
-      const data: CampaignResult = await res.json();
-      setResult(data);
-      setProgress({ current: data.sent, total: data.recipients });
+      const data: CampaignResult = await callAuthedFunction(SEND_BULK_URL, body, 'POST')
+      setResult(data)
       await fetchGroups();
       await fetchRecentLogs(selectedGroupId);
     } catch (e: any) {
@@ -194,6 +219,15 @@ export default function CampaignSender() {
             Atualizar
           </button>
         </div>
+
+        {authError && (
+          <div className="mb-4 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-200 text-sm">
+            <strong>⚠️ Atenção:</strong> {authError}
+            <br />
+            Você precisa estar logado como admin e seu email precisa estar no allowlist
+            (CAMPAIGN_ADMIN_EMAILS no Supabase) pra usar estas funções.
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <div className="lg:col-span-1 space-y-3">
@@ -356,15 +390,6 @@ export default function CampaignSender() {
                 {sending ? 'Enviando...' : '🚀 Disparar campanha'}
               </button>
 
-              {progress && sending && (
-                <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 text-sm">
-                  <div className="flex items-center gap-2">
-                    <Loader2 className="w-4 h-4 animate-spin text-blue-300" />
-                    <span>Enviando... {progress.current}/{progress.total}</span>
-                  </div>
-                </div>
-              )}
-
               {result && (
                 <div
                   className={`rounded-lg p-3 text-sm ${
@@ -381,7 +406,7 @@ export default function CampaignSender() {
                     ) : (
                       <AlertCircle className="w-4 h-4" />
                     )}
-                    Campanha concluída
+                    Campanha concluída {result.admin_email && <span className="text-xs opacity-70">por {result.admin_email}</span>}
                   </div>
                   <div className="text-xs space-y-0.5">
                     <div>📤 Enviados: <strong>{result.sent}</strong></div>
