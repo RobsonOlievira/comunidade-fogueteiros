@@ -261,16 +261,18 @@ body {
 }
 
 /* Item especial em DESTAQUE no topo da sidebar
-   (atualmente usado para "EXCLUSIVO PRO" — admin/mod) */
+   (atualmente usado para "EXCLUSIVO PRO" — admin/mod).
+   Estilo "reto": sem border-radius, filete lateral sólido de 3px. */
 .category-title--destaque {
     color: #bb9fff !important;
-    font-size: 0.78rem !important;
+    font-size: 0.7rem !important;
+    font-weight: 700 !important;
     letter-spacing: 1.5px !important;
     background: linear-gradient(90deg, rgba(187, 159, 255, 0.18) 0%, transparent 80%);
-    padding: 6px 10px !important;
+    padding-left: 8px !important;
+    margin-bottom: 6px !important;
     border-left: 3px solid #bb9fff;
-    border-radius: 4px;
-    margin-bottom: 8px !important;
+    border-radius: 0 !important;
 }
 .channel-item--destaque {
     background: linear-gradient(90deg, rgba(187, 159, 255, 0.10) 0%, rgba(187, 159, 255, 0.02) 100%);
