@@ -240,6 +240,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const userIdRef = React.useRef<string | null>(null);
+  const userDataRef = React.useRef<{ email: string; name: string; avatarUrl: string; apelido?: string; needsOnboarding: boolean } | null>(null);
 
   const applyUser = async (sessionUser: any, checkStudent: boolean) => {
     if (userIdRef.current === sessionUser.id) {
@@ -248,29 +249,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     userIdRef.current = sessionUser.id;
 
     const { needsOnboarding: need, apelido } = await ensurePerfil(sessionUser);
-    setUser(prev => {
-      if (
-        prev &&
-        prev.id === sessionUser.id &&
-        prev.email === (sessionUser.email || '') &&
-        prev.name === (
-          sessionUser.user_metadata?.full_name ||
-          sessionUser.user_metadata?.name ||
-          sessionUser.email?.split('@')[0] ||
-          'Membro'
-        ) &&
-        prev.avatarUrl === (
-          sessionUser.user_metadata?.avatar_url ||
-          sessionUser.user_metadata?.picture ||
-          ''
-        ) &&
-        prev.apelido === apelido &&
-        prev.needsOnboarding === need
-      ) {
-        return prev;
-      }
-      return buildUser(sessionUser, apelido, need);
-    });
+    const metaName =
+      sessionUser.user_metadata?.full_name ||
+      sessionUser.user_metadata?.name ||
+      sessionUser.email?.split('@')[0] ||
+      'Membro';
+    const metaAvatar =
+      sessionUser.user_metadata?.avatar_url ||
+      sessionUser.user_metadata?.picture ||
+      '';
+
+    const lastData = userDataRef.current;
+    if (
+      lastData &&
+      lastData.email === (sessionUser.email || '') &&
+      lastData.name === metaName &&
+      lastData.avatarUrl === metaAvatar &&
+      lastData.apelido === apelido &&
+      lastData.needsOnboarding === need
+    ) {
+      return;
+    }
+    userDataRef.current = {
+      email: sessionUser.email || '',
+      name: metaName,
+      avatarUrl: metaAvatar,
+      apelido,
+      needsOnboarding: need,
+    };
+
+    setUser(buildUser(sessionUser, apelido, need));
     setNeedsOnboarding(need);
     fetchPerfil(sessionUser.id);
 
@@ -335,6 +343,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         if (userIdRef.current !== null) {
           userIdRef.current = null;
+          userDataRef.current = null;
           setUser(null);
           setCargo(null);
           setCargoLoaded(true);

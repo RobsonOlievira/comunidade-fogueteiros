@@ -43,7 +43,8 @@ export default function ChatPage() {
       setActiveChannelId('geral');
       navigate('/labs/geral', { replace: true });
     }
-  }, [activeChannelId, isAluno, navigate, user]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeChannelId, isAluno]);
 
   useEffect(() => {
     DatabaseService.getChannels().then(setChannels);
