@@ -42,48 +42,83 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 function AppRoutes() {
   const { user, loading } = useAuth();
   const location = useLocation();
+  const [renderCount, setRenderCount] = React.useState(0);
+
+  React.useEffect(() => {
+    setRenderCount(c => c + 1);
+  });
 
   useEffect(() => {
-    if (import.meta.env.DEV) console.log(`[AppRoutes] render path=${location.pathname} loading=${loading} user=${!!user}`);
+    if (import.meta.env.DEV) console.log(`[AppRoutes] render #${renderCount} path=${location.pathname} loading=${loading} user=${!!user}`);
     Analytics.pageView(location.pathname, document.title);
   }, [location.pathname, loading, user]);
+
+  if (import.meta.env.DEV && renderCount > 30) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-red-950 p-4">
+        <div className="max-w-2xl text-white">
+          <h1 className="text-2xl font-bold mb-3">🔴 Loop detectado ({renderCount} renders)</h1>
+          <p className="mb-2">O AppRoutes renderizou mais de 30 vezes. Causa provável:</p>
+          <ul className="list-disc pl-6 mb-3 text-sm space-y-1">
+            <li>useEffect que muda state em loop</li>
+            <li>setState em render direto</li>
+            <li>Listener sem cleanup que re-monta</li>
+          </ul>
+          <p className="text-xs text-gray-300 mb-3">Abra o DevTools → Console pra ver os logs com prefixo [AppRoutes], [Auth], [ChatPage] etc.</p>
+          <button onClick={() => window.location.reload()} className="px-4 py-2 bg-white text-red-950 rounded font-semibold">Recarregar página</button>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-accent-lilac" />
+        {import.meta.env.DEV && (
+          <div className="fixed bottom-2 right-2 z-[9999] px-2 py-1 bg-black/80 text-white text-[10px] rounded font-mono pointer-events-none">
+            render #{renderCount} • {location.pathname} • loading
+          </div>
+        )}
       </div>
     );
   }
 
   return (
-    <Routes>
-      <Route path="/login" element={user ? <Navigate to="/labs" replace /> : <Login />} />
-      <Route path="/registrar" element={user ? <Navigate to="/labs" replace /> : <Register />} />
-      <Route path="/materiais" element={<DownloadsPreviewPage />} />
-      <Route path="/materiais-gratis" element={<DownloadsPreviewPage />} />
-      <Route path="/downloads-preview" element={<DownloadsPreviewPage />} />
-      <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
-        <Route path="/labs" element={<ChatPage />} />
-        <Route path="/labs/:channelId" element={<ChatPage />} />
-        <Route path="/feed" element={<Feed />} />
-        <Route path="/thread/:id" element={<ThreadPage />} />
-        <Route path="/nova-thread" element={<NewThread />} />
-        <Route path="/cursos" element={<CoursesPage />} />
-        <Route path="/cursos/:id" element={<CourseDetailPage />} />
-        <Route path="/downloads" element={<DownloadsPage />} />
-        <Route path="/perfil" element={<Profile />} />
-      </Route>
-      <Route element={<ProtectedRoute><AdminRoute><AdminLayout /></AdminRoute></ProtectedRoute>}>
-        <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/admin/usuarios" element={<AdminUsers />} />
-        <Route path="/admin/cursos" element={<AdminCourses />} />
-        <Route path="/admin/conteudo" element={<AdminContent />} />
-        <Route path="/admin/canais" element={<AdminChannels />} />
-        <Route path="/admin/downloads" element={<AdminDownloads />} />
-      </Route>
-      <Route path="*" element={user ? <Navigate to="/labs" replace /> : <Navigate to="/login" replace />} />
-    </Routes>
+    <>
+      {import.meta.env.DEV && (
+        <div className="fixed bottom-2 right-2 z-[9999] px-2 py-1 bg-black/80 text-white text-[10px] rounded font-mono pointer-events-none">
+          render #{renderCount} • {location.pathname} • {user ? 'logged' : 'anon'}
+        </div>
+      )}
+      <Routes>
+        <Route path="/login" element={user ? <Navigate to="/labs" replace /> : <Login />} />
+        <Route path="/registrar" element={user ? <Navigate to="/labs" replace /> : <Register />} />
+        <Route path="/materiais" element={<DownloadsPreviewPage />} />
+        <Route path="/materiais-gratis" element={<DownloadsPreviewPage />} />
+        <Route path="/downloads-preview" element={<DownloadsPreviewPage />} />
+        <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
+          <Route path="/labs" element={<ChatPage />} />
+          <Route path="/labs/:channelId" element={<ChatPage />} />
+          <Route path="/feed" element={<Feed />} />
+          <Route path="/thread/:id" element={<ThreadPage />} />
+          <Route path="/nova-thread" element={<NewThread />} />
+          <Route path="/cursos" element={<CoursesPage />} />
+          <Route path="/cursos/:id" element={<CourseDetailPage />} />
+          <Route path="/downloads" element={<DownloadsPage />} />
+          <Route path="/perfil" element={<Profile />} />
+        </Route>
+        <Route element={<ProtectedRoute><AdminRoute><AdminLayout /></AdminRoute></ProtectedRoute>}>
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/usuarios" element={<AdminUsers />} />
+          <Route path="/admin/cursos" element={<AdminCourses />} />
+          <Route path="/admin/conteudo" element={<AdminContent />} />
+          <Route path="/admin/canais" element={<AdminChannels />} />
+          <Route path="/admin/downloads" element={<AdminDownloads />} />
+        </Route>
+        <Route path="*" element={user ? <Navigate to="/labs" replace /> : <Navigate to="/login" replace />} />
+      </Routes>
+    </>
   );
 }
 
