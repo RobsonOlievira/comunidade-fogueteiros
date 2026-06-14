@@ -313,17 +313,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let cancelled = false;
 
     const init = async () => {
+      const start = Date.now();
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const sessionPromise = supabase.auth.getSession();
+        const timeoutPromise = new Promise<{ data: { session: null } }>((resolve) =>
+          setTimeout(() => {
+            console.warn('[Auth] getSession() timeout (5s) — assuming logged out');
+            resolve({ data: { session: null } });
+          }, 5000)
+        );
+        const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise]);
         if (cancelled) return;
+        if (import.meta.env.DEV) console.log(`[Auth] init getSession resolved in ${Date.now() - start}ms hasUser=${!!session?.user}`);
 
         if (session?.user) {
-          await applyUser(session.user, true);
+          try {
+            await Promise.race([
+              applyUser(session.user, true),
+              new Promise((_, reject) => setTimeout(() => reject(new Error('applyUser timeout')), 5000))
+            ]);
+          } catch (e: any) {
+            console.error('[Auth] applyUser failed/timed out:', e?.message);
+            await supabase.auth.signOut().catch(() => {});
+            userIdRef.current = null;
+            userDataRef.current = null;
+            perfilFetchedRef.current = null;
+            setUser(null);
+            setCargo(null);
+          }
         }
       } catch (err) {
         console.error('[Auth] Erro na inicialização:', err);
       } finally {
         if (!cancelled) {
+          if (import.meta.env.DEV) console.log(`[Auth] init complete in ${Date.now() - start}ms, setting loading=false`);
           setLoading(false);
           setCargoLoaded(true);
         }
@@ -353,11 +376,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             .eq('id', session.user.id)
             .then(() => {});
 
-          await applyUser(session.user, true);
+          try {
+            await Promise.race([
+              applyUser(session.user, true),
+              new Promise((_, reject) => setTimeout(() => reject(new Error('applyUser timeout')), 5000))
+            ]);
+          } catch (e: any) {
+            console.error('[Auth] SIGNED_IN applyUser failed/timed out:', e?.message);
+          }
         } else if (event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') {
-          await applyUser(session.user, event === 'INITIAL_SESSION');
+          try {
+            await Promise.race([
+              applyUser(session.user, event === 'INITIAL_SESSION'),
+              new Promise((_, reject) => setTimeout(() => reject(new Error('applyUser timeout')), 5000))
+            ]);
+          } catch (e: any) {
+            console.error('[Auth] applyUser failed/timed out:', e?.message);
+          }
         } else if (event === 'USER_UPDATED') {
-          await applyUser(session.user, false);
+          try {
+            await applyUser(session.user, false);
+          } catch {}
         }
       } else {
         if (userIdRef.current !== null) {

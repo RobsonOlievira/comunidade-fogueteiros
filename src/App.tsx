@@ -46,6 +46,13 @@ function AppRoutes() {
   renderCountRef.current += 1;
   const renderCount = renderCountRef.current;
 
+  const [stuck, setStuck] = React.useState(false);
+  React.useEffect(() => {
+    if (!loading) { setStuck(false); return; }
+    const t = setTimeout(() => setStuck(true), 10000);
+    return () => clearTimeout(t);
+  }, [loading]);
+
   useEffect(() => {
     if (import.meta.env.DEV) console.log(`[AppRoutes] render #${renderCount} path=${location.pathname} loading=${loading} user=${!!user}`);
     Analytics.pageView(location.pathname, document.title);
@@ -64,6 +71,43 @@ function AppRoutes() {
           </ul>
           <p className="text-xs text-gray-300 mb-3">Abra o DevTools → Console pra ver os logs com prefixo [AppRoutes], [Auth], [ChatPage] etc.</p>
           <button onClick={() => window.location.reload()} className="px-4 py-2 bg-white text-red-950 rounded font-semibold">Recarregar página</button>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading && stuck) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-red-950 p-4">
+        <div className="max-w-md text-center text-white">
+          <div className="text-5xl mb-3">⏱️</div>
+          <h1 className="text-xl font-bold mb-2">Carregamento travado</h1>
+          <p className="text-sm text-gray-300 mb-4">
+            O app não conseguiu restaurar sua sessão em 10s. Isso geralmente é causado por:
+          </p>
+          <ul className="text-xs text-left text-gray-300 mb-4 space-y-1 list-disc pl-6">
+            <li>AdBlock bloqueando supabase.co/auth</li>
+            <li>Token expirado no localStorage</li>
+            <li>Problema de rede</li>
+          </ul>
+          <div className="flex gap-2 justify-center">
+            <button
+              onClick={() => {
+                localStorage.clear();
+                sessionStorage.clear();
+                window.location.reload();
+              }}
+              className="px-4 py-2 bg-white text-red-950 rounded font-semibold text-sm"
+            >
+              Limpar cache e recarregar
+            </button>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-white/10 text-white rounded font-semibold text-sm"
+            >
+              Tentar de novo
+            </button>
+          </div>
         </div>
       </div>
     );
