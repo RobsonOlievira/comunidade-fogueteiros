@@ -37,6 +37,7 @@ export default function ChatPage() {
   }, [user?.id]);
 
   useEffect(() => {
+    if (import.meta.env.DEV) console.log(`[ChatPage] paywall-check activeChannelId=${activeChannelId} isAluno=${isAluno}`);
     if (activeChannelId === 'alunos' && isAluno === false) {
       Analytics.paywallView('in_app', user ? 'member' : 'anon');
       setPaywallOpen(true);

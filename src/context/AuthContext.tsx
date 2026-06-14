@@ -175,7 +175,7 @@ const ensurePerfil = async (sessionUser: any, origem: string = 'organico'): Prom
         await supabase.from('perfis').update(updates).eq('id', id);
       }
       localStorage.removeItem('cf_pending_cadastro');
-      sessionStorage.removeItem(pendingOwnerKey);
+      sessionStorage.removeItem('cf_pending_cadastro_marker');
     }
 
     const needsOnboarding = !existing.apelido?.trim() || !existing.telefone?.trim();
@@ -216,23 +216,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
 
   const fetchPerfil = (userId: string) => {
+    if (import.meta.env.DEV) console.log(`[Auth] fetchPerfil start userId=${userId.slice(0,8)}`);
     supabase
       .from('perfis')
       .select('cargo, pro, avatar_url')
       .eq('id', userId)
       .maybeSingle()
       .then(({ data }) => {
+        if (import.meta.env.DEV) console.log(`[Auth] fetchPerfil done cargo=${data?.cargo} avatar=${!!data?.avatar_url}`);
         setCargo(data?.cargo || null);
         setIsPro(data?.pro === true);
         setCargoLoaded(true);
         if (data?.avatar_url) {
           setUser(prev => {
             if (!prev || prev.avatarUrl === data.avatar_url) return prev;
+            if (import.meta.env.DEV) console.log(`[Auth] fetchPerfil updating avatarUrl`);
             return { ...prev, avatarUrl: data.avatar_url };
           });
         }
       })
-      .catch(() => {
+      .catch((err) => {
+        if (import.meta.env.DEV) console.log(`[Auth] fetchPerfil ERROR`, err);
         setCargo(null);
         setIsPro(false);
         setCargoLoaded(true);
@@ -241,9 +245,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const userIdRef = React.useRef<string | null>(null);
   const userDataRef = React.useRef<{ email: string; name: string; avatarUrl: string; apelido?: string; needsOnboarding: boolean } | null>(null);
+  const perfilFetchedRef = React.useRef<string | null>(null);
+  const applyCountRef = React.useRef(0);
 
   const applyUser = async (sessionUser: any, checkStudent: boolean) => {
+    applyCountRef.current += 1;
+    const cid = applyCountRef.current;
+    if (import.meta.env.DEV) console.log(`[Auth] applyUser #${cid} id=${sessionUser.id?.slice(0,8)}`);
+
     if (userIdRef.current === sessionUser.id) {
+      if (import.meta.env.DEV) console.log(`[Auth] applyUser #${cid} SKIP (same user.id)`);
       return;
     }
     userIdRef.current = sessionUser.id;
@@ -280,7 +291,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     setUser(buildUser(sessionUser, apelido, need));
     setNeedsOnboarding(need);
-    fetchPerfil(sessionUser.id);
+
+    if (perfilFetchedRef.current !== sessionUser.id) {
+      perfilFetchedRef.current = sessionUser.id;
+      if (import.meta.env.DEV) console.log(`[Auth] applyUser #${cid} calling fetchPerfil`);
+      fetchPerfil(sessionUser.id);
+    } else {
+      if (import.meta.env.DEV) console.log(`[Auth] applyUser #${cid} SKIP fetchPerfil (already fetched)`);
+    }
 
     if (checkStudent) {
       const status = await checkAppBStudent(sessionUser.email || '');
@@ -316,6 +334,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (cancelled) return;
+      if (import.meta.env.DEV) console.log(`[Auth] onAuthStateChange event=${event} hasUser=${!!session?.user}`);
 
       if (session?.user) {
         if (event === 'SIGNED_IN') {
@@ -344,6 +363,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (userIdRef.current !== null) {
           userIdRef.current = null;
           userDataRef.current = null;
+          perfilFetchedRef.current = null;
           setUser(null);
           setCargo(null);
           setCargoLoaded(true);
