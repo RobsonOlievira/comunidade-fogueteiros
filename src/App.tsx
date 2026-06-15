@@ -24,6 +24,15 @@ import CoursesPage from '@/src/pages/CoursesPage';
 import CourseDetailPage from '@/src/pages/CourseDetailPage';
 import OnboardingModal from '@/src/components/OnboardingModal';
 import DownloadsPreviewPage from '@/src/pages/DownloadsPreviewPage';
+import InstallPrompt from '@/src/components/InstallPrompt';
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch((err) => {
+      console.warn('[PWA] SW registration failed:', err)
+    })
+  })
+}
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -172,6 +181,7 @@ export default function App() {
           <AppRoutes />
         </HashRouter>
         <OnboardingModal />
+        <InstallPrompt />
       </AuthProvider>
     </ThemeProvider>
   );
