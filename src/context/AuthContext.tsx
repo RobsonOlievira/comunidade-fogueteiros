@@ -318,9 +318,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const sessionPromise = supabase.auth.getSession();
         const timeoutPromise = new Promise<{ data: { session: null } }>((resolve) =>
           setTimeout(() => {
-            console.warn('[Auth] getSession() timeout (5s) — assuming logged out');
+            console.warn('[Auth] getSession() timeout (15s) — assuming logged out');
             resolve({ data: { session: null } });
-          }, 5000)
+          }, 15000)
         );
         const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise]);
         if (cancelled) return;
@@ -330,7 +330,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           try {
             await Promise.race([
               applyUser(session.user, true),
-              new Promise((_, reject) => setTimeout(() => reject(new Error('applyUser timeout')), 5000))
+              new Promise((_, reject) => setTimeout(() => reject(new Error('applyUser timeout')), 15000))
             ]);
           } catch (e: any) {
             console.error('[Auth] applyUser failed/timed out:', e?.message);
@@ -379,7 +379,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           try {
             await Promise.race([
               applyUser(session.user, true),
-              new Promise((_, reject) => setTimeout(() => reject(new Error('applyUser timeout')), 5000))
+              new Promise((_, reject) => setTimeout(() => reject(new Error('applyUser timeout')), 15000))
             ]);
           } catch (e: any) {
             console.error('[Auth] SIGNED_IN applyUser failed/timed out:', e?.message);
@@ -388,7 +388,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           try {
             await Promise.race([
               applyUser(session.user, event === 'INITIAL_SESSION'),
-              new Promise((_, reject) => setTimeout(() => reject(new Error('applyUser timeout')), 5000))
+              new Promise((_, reject) => setTimeout(() => reject(new Error('applyUser timeout')), 15000))
             ]);
           } catch (e: any) {
             console.error('[Auth] applyUser failed/timed out:', e?.message);
