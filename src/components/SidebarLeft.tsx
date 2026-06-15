@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Hash, Bell, Lightbulb, Code2, FolderOpen, HelpCircle, Users, Crown, Mic, Settings, LogOut } from 'lucide-react';
+import { Search, Hash, Bell, Lightbulb, Code2, FolderOpen, HelpCircle, Users, Crown, Lock, Mic, Settings, LogOut } from 'lucide-react';
 import { useAuth } from '@/src/context/AuthContext';
 import { useAvatarUrl } from '@/src/hooks/useAvatarUrl';
 import { Analytics } from '@/src/services/analytics';
+import ProPaywall from '@/src/components/ProPaywall';
 import type { ChannelItem } from '@/types';
 
 interface SidebarLeftProps {
@@ -28,6 +29,7 @@ export default function SidebarLeft({
   const avatarUrl = useAvatarUrl();
   const isAdmin = cargo === 'admin' || cargo === 'mod';
   const isProItemActive = activeChannel === 'pro';
+  const [proPaywallOpen, setProPaywallOpen] = useState(false);
 
   const getChannelIcon = (id: string) => {
     switch (id) {
@@ -50,11 +52,15 @@ export default function SidebarLeft({
       setIsMobileOpen(false);
     } else {
       Analytics.canalAlunosClick('member', true);
+      setProPaywallOpen(true);
     }
   };
 
   const categorias = [
-    ...(isAdmin ? [{
+    // 👑 EXCLUSIVO PRO — visível pra TODOS os logados.
+    // Admins/mods entram direto; demais usuários veem o cadeado
+    // e recebem o modal ProPaywall ao clicar.
+    {
       titulo: "👑 EXCLUSIVO PRO",
       destaque: true,
       itens: [
@@ -62,11 +68,11 @@ export default function SidebarLeft({
           id: 'pro',
           name: 'comunidade-pro',
           onClick: handleProClick,
-          bloqueado: false,
+          bloqueado: !isAdmin,
           active: isProItemActive,
         }
       ]
-    }] : []),
+    },
     {
       titulo: "🚀 INÍCIO",
       itens: [
@@ -202,6 +208,8 @@ export default function SidebarLeft({
           </button>
         </div>
       </div>
+
+      <ProPaywall open={proPaywallOpen} onClose={() => setProPaywallOpen(false)} />
     </aside>
   );
 }
