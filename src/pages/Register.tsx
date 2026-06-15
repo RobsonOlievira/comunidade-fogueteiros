@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/src/context/AuthContext';
 import { TOPIC_TAGS } from '@/src/constants/tags';
 import {
@@ -7,8 +7,9 @@ import {
 } from 'lucide-react';
 
 export default function Register() {
-  const { signInWithMagicLink, signInWithGoogle } = useAuth();
+  const { signInWithMagicLink, signInWithGoogle, user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [formData, setFormData] = useState({
     name: '',
@@ -22,6 +23,18 @@ export default function Register() {
   const [sending, setSending] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [sent, setSent] = useState(false);
+
+  // Where the user was trying to reach before being asked to sign up.
+  const from = (location.state as any)?.from as string | undefined
+    || (() => { try { return sessionStorage.getItem('cf_auth_redirect') || undefined; } catch { return undefined; } })();
+
+  // If the user is already logged in, send them straight to the intended page
+  React.useEffect(() => {
+    if (user && from) {
+      try { sessionStorage.removeItem('cf_auth_redirect'); } catch {}
+      navigate(from, { replace: true });
+    }
+  }, [user, from, navigate]);
 
   const origem = React.useMemo(() => {
     const params = new URLSearchParams(window.location.search);
@@ -123,10 +136,14 @@ export default function Register() {
             Enviamos um link mágico para <span className="text-white font-medium">{formData.email}</span>.
           </p>
           <p className="text-gray-500 text-sm mb-6">
-            Abre o link no email pra confirmar e entrar. Chegou em segundos — não esquece o spam.
+            Abre o link no email pra confirmar e entrar
+            {from === '/downloads' ? ' e baixar seus materiais' : ''}. Chegou em segundos — não esquece o spam.
           </p>
           <button
-            onClick={() => navigate('/login')}
+            onClick={() => {
+              try { sessionStorage.removeItem('cf_auth_redirect'); } catch {}
+              navigate('/login')
+            }}
             className="inline-flex items-center gap-2 py-3 px-6 rounded-xl bg-gradient-to-r from-primary to-accent-cyan text-white font-semibold hover:opacity-90 transition-all shadow-lg shadow-primary/20"
           >
             Voltar pro login

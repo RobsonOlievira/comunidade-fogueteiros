@@ -421,10 +421,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signInWithMagicLink = async (email: string, origem: string = 'organico'): Promise<string | null> => {
     sessionStorage.setItem('cf_origem_cadastro', origem);
     sessionStorage.setItem('cf_pending_cadastro_marker', '1');
+    // If the user was redirected here from a protected page, send the magic
+    // link back to that page after they click it in their email.
+    const redirectHash = (() => {
+      try {
+        const target = sessionStorage.getItem('cf_auth_redirect');
+        return target ? '#' + target : '';
+      } catch { return ''; }
+    })();
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: SITE_URL + (SITE_URL.endsWith('/') ? '' : '/'),
+        emailRedirectTo: SITE_URL + (SITE_URL.endsWith('/') ? '' : '/') + redirectHash,
       },
     });
     return error?.message || null;
@@ -432,9 +440,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signInWithGoogle = async (origem: string = 'organico') => {
     sessionStorage.setItem('cf_origem_cadastro', origem);
+    const redirectHash = (() => {
+      try {
+        const target = sessionStorage.getItem('cf_auth_redirect');
+        return target ? '#' + target : '';
+      } catch { return ''; }
+    })();
     await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: SITE_URL + (SITE_URL.endsWith('/') ? '' : '/') },
+      options: { redirectTo: SITE_URL + (SITE_URL.endsWith('/') ? '' : '/') + redirectHash },
     });
   };
 

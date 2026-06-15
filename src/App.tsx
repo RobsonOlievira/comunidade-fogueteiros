@@ -36,7 +36,8 @@ if ('serviceWorker' in navigator) {
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
-  if (import.meta.env.DEV) console.log(`[ProtectedRoute] render loading=${loading} user=${!!user}`);
+  const location = useLocation();
+  if (import.meta.env.DEV) console.log(`[ProtectedRoute] render loading=${loading} user=${!!user} path=${location.pathname}`);
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -44,7 +45,12 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
       </div>
     );
   }
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) {
+    // Persist the intended destination so Login/Register can return there
+    // after the user finishes creating their account.
+    try { sessionStorage.setItem('cf_auth_redirect', location.pathname); } catch {}
+    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+  }
   return <>{children}</>;
 }
 

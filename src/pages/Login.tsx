@@ -1,11 +1,13 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/src/context/AuthContext';
 import { SSO_TESSERACT_URL } from '@/src/services/appBIntegration';
 import { Rocket, Mail, ArrowRight, GraduationCap, X, CheckCircle2 } from 'lucide-react';
 
 export default function Login() {
-  const { signInWithMagicLink, signInWithGoogle } = useAuth();
+  const { signInWithMagicLink, signInWithGoogle, user } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [email, setEmail] = React.useState('');
   const [error, setError] = React.useState('');
   const [success, setSuccess] = React.useState(false);
@@ -15,6 +17,20 @@ export default function Login() {
   const [showSsoModal, setShowSsoModal] = React.useState(false);
   const [ssoLoading, setSsoLoading] = React.useState(false);
   const [ssoError, setSsoError] = React.useState('');
+
+  // Where to send the user after they finish authenticating.
+  // Falls back to sessionStorage (set by ProtectedRoute) in case the
+  // router state was lost (e.g. user opened a new tab to /login).
+  const from = (location.state as any)?.from as string | undefined
+    || (() => { try { return sessionStorage.getItem('cf_auth_redirect') || undefined; } catch { return undefined; } })();
+
+  // If the user is already logged in, send them straight to the intended page
+  React.useEffect(() => {
+    if (user && from) {
+      try { sessionStorage.removeItem('cf_auth_redirect'); } catch {}
+      navigate(from, { replace: true });
+    }
+  }, [user, from, navigate]);
 
   const origem = React.useMemo(() => {
     const params = new URLSearchParams(window.location.search);
@@ -96,7 +112,7 @@ export default function Login() {
               Enviamos um link mágico para <span className="text-white font-medium">{email}</span>.
             </p>
             <p className="text-gray-500 text-xs mt-3">
-              Abre o link no seu email pra entrar. Não esquece de checar o spam.
+              Abre o link no seu email pra entrar{from === '/downloads' ? ' e baixar seus materiais' : ''}. Não esquece de checar o spam.
             </p>
             <button
               onClick={() => { setSuccess(false); setEmail(''); }}
