@@ -103,7 +103,17 @@ export default function OnboardingModal() {
     setSubmitting(true);
     const err = await completeOnboarding(apelido, phone);
     setSubmitting(false);
-    if (err) setError(err);
+    if (err) {
+      setError(err);
+      return;
+    }
+
+    // Sucesso: notifica o app que o onboarding foi concluído
+    // (usado pra disparar o popup de instalação do PWA)
+    try {
+      window.localStorage.setItem('cf_onboarding_completed', '1')
+    } catch {}
+    window.dispatchEvent(new CustomEvent('cf:onboarding-complete', { detail: { apelido, phone } }));
   };
 
   const canSubmit =
