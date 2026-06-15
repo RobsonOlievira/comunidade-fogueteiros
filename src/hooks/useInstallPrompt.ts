@@ -8,14 +8,20 @@ interface BeforeInstallPromptEvent extends Event {
 const STORAGE_KEY_DISMISSED = 'cf_pwa_install_dismissed'
 const STORAGE_KEY_INSTALLED = 'cf_pwa_installed'
 
+const isIosDevice = () => {
+  if (typeof navigator === 'undefined') return false
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream
+}
+
 /**
  * Hook: controla quando mostrar o popup de instalação PWA.
  *
- * O popup só aparece quando TODAS as condições são verdadeiras:
+ * O popup aparece quando TODAS as condições são verdadeiras:
  *  1. onBoardingComplete === true (user logado E cadastro completo)
- *  2. Browser disparou `beforeinstallprompt` (Android/Chrome/Edge)
- *  3. App não está instalado (display-mode !== standalone)
- *  4. User não marcou "Não mostrar de novo"
+ *  2. App não está instalado (display-mode !== standalone)
+ *  3. User não marcou "Não mostrar de novo"
+ *  4. O browser suporta instalação PWA (Chrome/Edge/Android — antesinstallprompt)
+ *     OU é iOS (instruções manuais de Safari "Adicionar à Tela de Início")
  *
  * Ordem esperada na UX:
  *  1. User entra (visitante) → nada
@@ -29,6 +35,7 @@ export function useInstallPrompt() {
   const [onboardingComplete, setOnboardingComplete] = useState(false)
   const [visible, setVisible] = useState(false)
   const [iosInstructions, setIosInstructions] = useState(false)
+  const [supportsNativePrompt, setSupportsNativePrompt] = useState<boolean | null>(null)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -44,6 +51,9 @@ export function useInstallPrompt() {
     }
 
     setDismissed(wasDismissed)
+    // Detect "can install" support. iOS never fires beforeinstallprompt,
+    // so on iOS we always treat the app as installable (manual instructions).
+    setSupportsNativePrompt(!isIosDevice())
 
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault()
@@ -90,17 +100,24 @@ export function useInstallPrompt() {
     }
   }, [])
 
-  // Controla visibilidade: só mostra se onboarding foi completado E tem prompt
+  // Mostra o popup quando onboarding for completado.
+  //   - iOS: aparece com instruções manuais (sempre; beforeinstallprompt
+  //     nunca dispara em Safari).
+  //   - Android/Chrome: aparece SÓ SE o beforeinstallprompt foi capturado
+  //     nesta sessão. Se passou (sessão persistente), não mostramos —
+  //     o botão "Instalar" não funcionaria.
   useEffect(() => {
-    if (onboardingComplete && deferredPrompt && !installed && !dismissed) {
-      // Pequeno delay pra dar tempo do user ver o app "limpo" primeiro
-      const t = setTimeout(() => setVisible(true), 1500)
-      return () => clearTimeout(t)
-    }
-  }, [onboardingComplete, deferredPrompt, installed, dismissed])
+    if (!onboardingComplete || installed || dismissed || supportsNativePrompt === null) return
+    const shouldShow = isIosDevice() || !!deferredPrompt
+    if (!shouldShow) return
+    const t = setTimeout(() => setVisible(true), 1500)
+    return () => clearTimeout(t)
+  }, [onboardingComplete, installed, dismissed, supportsNativePrompt, deferredPrompt])
 
   const promptInstall = useCallback(async () => {
     if (!deferredPrompt) {
+      // No iOS (or if the native prompt was already used this session),
+      // show manual instructions instead.
       setIosInstructions(true)
       return
     }
