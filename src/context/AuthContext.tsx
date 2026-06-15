@@ -427,16 +427,54 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const redirectHash = (() => {
       try {
         const target = sessionStorage.getItem('cf_auth_redirect');
-        return target ? '#' + target : '';
+        return target ? target.replace(/^#/, '') : '';
       } catch { return ''; }
     })();
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: SITE_URL + (SITE_URL.endsWith('/') ? '' : '/') + redirectHash,
+
+    // Pull pending profile data from localStorage (set by Register.tsx)
+    // so the edge function can pre-fill nome/apelido/telefone on the
+    // fogueteiros.perfis row before the user clicks the link.
+    const pending = (() => {
+      try {
+        const raw = localStorage.getItem('cf_pending_cadastro');
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        return parsed?.email === email ? parsed : null;
+      } catch { return null; }
+    })();
+
+    // Call our edge function which:
+    //   1. generates a magic link (no email sent by Supabase)
+    //   2. makes sure the user has a fogueteiros.perfis row
+    //   3. sends ONE beautiful email with the link embedded
+    const { data, error } = await supabase.functions.invoke('welcome-with-magic-link', {
+      body: {
+        email,
+        nome: pending?.name,
+        apelido: pending?.username,
+        telefone: pending?.phone,
+        interests: pending?.interests,
+        redirectTo: redirectHash,
       },
     });
-    return error?.message || null;
+
+    if (error) {
+      // Fallback: if the edge function is down, use Supabase's built-in
+      // magic-link so the user still gets a sign-in email.
+      console.warn('[Auth] welcome-with-magic-link failed, falling back to signInWithOtp:', error.message);
+      const { error: fallbackErr } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: SITE_URL + (SITE_URL.endsWith('/') ? '' : '/') + (redirectHash ? '#' + redirectHash : ''),
+        },
+      });
+      return fallbackErr?.message || error.message || null;
+    }
+
+    if (data && (data as any).ok === false) {
+      return (data as any).error || 'Failed to send welcome email';
+    }
+    return null;
   };
 
   const signInWithGoogle = async (origem: string = 'organico') => {
