@@ -64,10 +64,14 @@ function AppRoutes() {
   renderCountRef.current += 1;
   const renderCount = renderCountRef.current;
 
+  // We no longer block the app shell while getSession() resolves: the
+  // AuthProvider now flips loading=false immediately, so this 'stuck'
+  // overlay is no longer reachable. Kept as a safety net for the
+  // initial mount (it can still fire before the useEffect runs).
   const [stuck, setStuck] = React.useState(false);
   React.useEffect(() => {
     if (!loading) { setStuck(false); return; }
-    const t = setTimeout(() => setStuck(true), 10000);
+    const t = setTimeout(() => setStuck(true), 30000);
     return () => clearTimeout(t);
   }, [loading]);
 

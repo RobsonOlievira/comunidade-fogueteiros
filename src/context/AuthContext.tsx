@@ -314,6 +314,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const init = async () => {
       const start = Date.now();
+      // Flip loading=false IMMEDIATELY so the app shell renders even if
+      // getSession() is slow (AdBlock / MessageChannel issues / slow
+      // network). The onAuthStateChange handler below will populate the
+      // user when the session is eventually restored.
+      setLoading(false);
+      setCargoLoaded(true);
+      if (import.meta.env.DEV) console.log(`[Auth] init started at ${Date.now() - start}ms, loading=false immediately`);
+
       try {
         const sessionPromise = supabase.auth.getSession();
         const timeoutPromise = new Promise<{ data: { session: null } }>((resolve) =>
@@ -333,10 +341,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               new Promise((_, reject) => setTimeout(() => reject(new Error('applyUser timeout')), 15000))
             ]);
           } catch (e: any) {
-            // Don't signOut on a timeout: the onAuthStateChange handler will
-            // set the user from the same session in parallel. Logging out
-            // here would race and clear the user that was just set.
-            // Just clear local refs; the next auth event will repopulate.
             console.error('[Auth] applyUser failed/timed out:', e?.message);
             userIdRef.current = null;
             userDataRef.current = null;
@@ -345,12 +349,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       } catch (err) {
         console.error('[Auth] Erro na inicialização:', err);
-      } finally {
-        if (!cancelled) {
-          if (import.meta.env.DEV) console.log(`[Auth] init complete in ${Date.now() - start}ms, setting loading=false`);
-          setLoading(false);
-          setCargoLoaded(true);
-        }
       }
     };
 
