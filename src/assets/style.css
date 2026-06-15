@@ -696,9 +696,53 @@ body {
     height: 100%;
     z-index: 10;
     transition: var(--transition-smooth);
+    /* Desktop: fixa no lugar, scroll interno pros membros */
+    position: sticky;
+    top: 0;
+    align-self: flex-start;
+    max-height: 100vh;
+    overflow: hidden;
 }
 .sidebar-right.hidden {
     margin-right: calc(-1 * var(--sidebar-right-width));
+}
+
+/* Header da sidebar: saudação + título da comunidade */
+.sidebar-right-header {
+    padding: 20px 20px 16px;
+    border-bottom: 1px solid var(--border-light);
+    flex-shrink: 0;
+    background-color: var(--bg-sidebar);
+    z-index: 1;
+}
+.sidebar-right-greeting {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-bottom: 10px;
+}
+.sidebar-right-hello {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+}
+.sidebar-right-name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.2;
+}
+.sidebar-right-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--accent-lilac);
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    margin-top: 4px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(192, 159, 255, 0.15);
 }
 
 /* Card Informativo da Comunidade */
@@ -867,12 +911,13 @@ body {
    RESPONSIVIDADE E ADAPTAÇÃO MOBILE
    ========================================================================== */
 @media (max-width: 992px) {
-    /* Ocultar barra lateral direita em tablets por padrão */
+    /* Mobile/tablet: sidebar vira drawer deslizante, NÃO é sticky */
     .sidebar-right {
         position: absolute;
         right: 0;
         top: 70px;
         height: calc(100% - 70px);
+        max-height: none;
         box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
     }
     .sidebar-right.hidden {

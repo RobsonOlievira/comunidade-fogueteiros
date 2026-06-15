@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/src/services/supabaseClient';
 import { useAuth } from '@/src/context/AuthContext';
-import { Loader2 } from 'lucide-react';
 
 interface SidebarRightProps {
   isHidden: boolean;
@@ -15,16 +14,11 @@ interface PerfilSidebar {
   bio: string | null
   ultimo_acesso_em: string | null
   pro: boolean
-  nivel: number
-  xp: number
-  xp_proximo_nivel: number
 }
 
 export default function SidebarRight({ isHidden }: SidebarRightProps) {
   const { user } = useAuth()
   const [perfis, setPerfis] = useState<PerfilSidebar[]>([]);
-  const [meuNivel, setMeuNivel] = useState<{ nivel: number; xp: number; xp_proximo_nivel: number; nome: string } | null>(null);
-  const [loadingNivel, setLoadingNivel] = useState(true);
 
   useEffect(() => {
     carregar();
@@ -38,42 +32,10 @@ export default function SidebarRight({ isHidden }: SidebarRightProps) {
     return () => { supabase.removeChannel(canal) };
   }, []);
 
-  useEffect(() => {
-    carregarMeuNivel()
-  }, [user?.id])
-
-  const carregarMeuNivel = async () => {
-    if (!user?.id) {
-      setMeuNivel(null)
-      setLoadingNivel(false)
-      return
-    }
-    setLoadingNivel(true)
-    try {
-      const { data } = await supabase
-        .from('perfis')
-        .select('nome, nivel, xp, xp_proximo_nivel')
-        .eq('id', user.id)
-        .maybeSingle()
-      if (data) {
-        setMeuNivel({
-          nome: data.nome || user.name || 'Você',
-          nivel: data.nivel || 1,
-          xp: data.xp || 0,
-          xp_proximo_nivel: data.xp_proximo_nivel || 100,
-        })
-      }
-    } catch (e) {
-      console.error('Erro ao carregar nível:', e)
-    } finally {
-      setLoadingNivel(false)
-    }
-  }
-
   const carregar = async () => {
     const { data } = await supabase
       .from('perfis')
-      .select('id, nome, cargo, avatar_url, bio, ultimo_acesso_em, pro, nivel, xp, xp_proximo_nivel')
+      .select('id, nome, cargo, avatar_url, bio, ultimo_acesso_em, pro')
       .order('ultimo_acesso_em', { ascending: false, nullsLast: true });
     setPerfis(data || []);
   };
@@ -92,44 +54,14 @@ export default function SidebarRight({ isHidden }: SidebarRightProps) {
   const online = perfis.filter(isOnline);
   const offline = perfis.filter(p => !isOnline(p));
 
-  const pctParaProximo = meuNivel && meuNivel.xp_proximo_nivel > 0
-    ? Math.min(100, Math.round((meuNivel.xp / meuNivel.xp_proximo_nivel) * 100))
-    : 0
-
   return (
     <aside className={`sidebar-right ${isHidden ? 'hidden' : ''}`}>
-      <div className="community-card">
-        <div className="community-banner"></div>
-        <div className="community-card-content">
-          {meuNivel ? (
-            <>
-              <h3>{meuNivel.nome}</h3>
-              <p className="community-desc">Sua jornada na comunidade Fogueteiros</p>
-              <div className="level-indicator">
-                <div className="level-header">
-                  <span className="level-title">Seu nível</span>
-                  <span className="level-val">Nv. {meuNivel.nivel}</span>
-                </div>
-                <div className="progress-bar-bg">
-                  <div className="progress-bar-fill" style={{ width: `${pctParaProximo}%` }}></div>
-                </div>
-                <span className="level-sub">
-                  {meuNivel.xp.toLocaleString('pt-BR')} / {meuNivel.xp_proximo_nivel.toLocaleString('pt-BR')} XP
-                  {pctParaProximo < 100 && ` · ${100 - pctParaProximo}% para o próximo nível ⚡`}
-                  {pctParaProximo >= 100 && ' · Nível máximo! Próximo em breve 🏆'}
-                </span>
-              </div>
-            </>
-          ) : loadingNivel ? (
-            <div className="flex items-center justify-center py-4">
-              <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
-            </div>
-          ) : (
-            <div className="text-center py-4 text-xs text-gray-500">
-              <p>Faça login pra ver seu nível</p>
-            </div>
-          )}
+      <div className="sidebar-right-header">
+        <div className="sidebar-right-greeting">
+          <span className="sidebar-right-hello">Olá,</span>
+          <span className="sidebar-right-name">{user?.name || 'Visitante'}</span>
         </div>
+        <div className="sidebar-right-title">Comunidade Olha o Foguete!</div>
       </div>
 
       <div className="members-container">
