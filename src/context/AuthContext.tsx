@@ -333,13 +333,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               new Promise((_, reject) => setTimeout(() => reject(new Error('applyUser timeout')), 15000))
             ]);
           } catch (e: any) {
+            // Don't signOut on a timeout: the onAuthStateChange handler will
+            // set the user from the same session in parallel. Logging out
+            // here would race and clear the user that was just set.
+            // Just clear local refs; the next auth event will repopulate.
             console.error('[Auth] applyUser failed/timed out:', e?.message);
-            await supabase.auth.signOut().catch(() => {});
             userIdRef.current = null;
             userDataRef.current = null;
             perfilFetchedRef.current = null;
-            setUser(null);
-            setCargo(null);
           }
         }
       } catch (err) {
