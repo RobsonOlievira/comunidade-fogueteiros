@@ -19,15 +19,18 @@ export default function Login() {
   const [ssoError, setSsoError] = React.useState('');
 
   // Where to send the user after they finish authenticating.
-  // Falls back to sessionStorage (set by ProtectedRoute) in case the
-  // router state was lost (e.g. user opened a new tab to /login).
+  // Falls back to sessionStorage (set by ProtectedRoute) and to localStorage
+  // (set by the welcome-with-magic-link edge function, since Supabase
+  // Auth strips URL fragments from the magic-link redirectTo).
   const from = (location.state as any)?.from as string | undefined
-    || (() => { try { return sessionStorage.getItem('cf_auth_redirect') || undefined; } catch { return undefined; } })();
+    || (() => { try { return sessionStorage.getItem('cf_auth_redirect') || undefined; } catch { return undefined; } })()
+    || (() => { try { return localStorage.getItem('cf_auth_redirect') || undefined; } catch { return undefined; } })();
 
   // If the user is already logged in, send them straight to the intended page
   React.useEffect(() => {
     if (user && from) {
       try { sessionStorage.removeItem('cf_auth_redirect'); } catch {}
+      try { localStorage.removeItem('cf_auth_redirect'); } catch {}
       navigate(from, { replace: true });
     }
   }, [user, from, navigate]);

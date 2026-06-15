@@ -26,12 +26,14 @@ export default function Register() {
 
   // Where the user was trying to reach before being asked to sign up.
   const from = (location.state as any)?.from as string | undefined
-    || (() => { try { return sessionStorage.getItem('cf_auth_redirect') || undefined; } catch { return undefined; } })();
+    || (() => { try { return sessionStorage.getItem('cf_auth_redirect') || undefined; } catch { return undefined; } })()
+    || (() => { try { return localStorage.getItem('cf_auth_redirect') || undefined; } catch { return undefined; } })();
 
   // If the user is already logged in, send them straight to the intended page
   React.useEffect(() => {
     if (user && from) {
       try { sessionStorage.removeItem('cf_auth_redirect'); } catch {}
+      try { localStorage.removeItem('cf_auth_redirect'); } catch {}
       navigate(from, { replace: true });
     }
   }, [user, from, navigate]);
