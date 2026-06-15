@@ -37,7 +37,7 @@ if ('serviceWorker' in navigator) {
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const location = useLocation();
-  if (import.meta.env.DEV) console.log(`[ProtectedRoute] render loading=${loading} user=${!!user} path=${location.pathname}`);
+  if (import.meta.env.DEV) console.log(`[ProtectedRoute] render loading=${loading} user=${!!user} path=${location.pathname} hash=${location.hash}`);
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -47,9 +47,12 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }
   if (!user) {
     // Persist the intended destination so Login/Register can return there
-    // after the user finishes creating their account.
-    try { sessionStorage.setItem('cf_auth_redirect', location.pathname); } catch {}
-    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+    // after the user finishes creating their account. HashRouter means the
+    // route lives in the URL fragment, so we save the hash (e.g. '#/labs')
+    // and strip the leading '#' to get the hash router path.
+    const intended = location.hash ? location.hash.replace(/^#/, '') : location.pathname;
+    try { sessionStorage.setItem('cf_auth_redirect', intended); } catch {}
+    return <Navigate to="/login" replace state={{ from: intended }} />;
   }
   return <>{children}</>;
 }

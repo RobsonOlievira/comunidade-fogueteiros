@@ -479,15 +479,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signInWithGoogle = async (origem: string = 'organico') => {
     sessionStorage.setItem('cf_origem_cadastro', origem);
-    const redirectHash = (() => {
-      try {
-        const target = sessionStorage.getItem('cf_auth_redirect');
-        return target ? '#' + target : '';
-      } catch { return ''; }
-    })();
+    // The Google OAuth provider strips the URL fragment, so passing '#/labs'
+    // in redirectTo would silently drop the path. Instead, we always send
+    // users back to the SPA root and let Login.tsx / Register.tsx's existing
+    // `cf_auth_redirect` useEffect (which reads sessionStorage on mount)
+    // navigate to the originally requested page after the session is set.
     await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: SITE_URL + (SITE_URL.endsWith('/') ? '' : '/') + redirectHash },
+      options: { redirectTo: SITE_URL + (SITE_URL.endsWith('/') ? '' : '/') },
     });
   };
 
