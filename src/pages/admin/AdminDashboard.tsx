@@ -43,9 +43,9 @@ export default function AdminDashboard() {
       { data: comentariosData },
     ] = await Promise.all([
       supabase.from('perfis').select('*').order('criado_em', { ascending: false }),
-      supabase.from('mensagens').select('autor_id'),
-      supabase.from('threads').select('autor_id'),
-      supabase.from('comentarios').select('autor_id'),
+      supabase.from('mensagens').select('autor'),
+      supabase.from('threads').select('autor'),
+      supabase.from('comentarios').select('autor'),
     ]);
 
     setPerfis(perfisData || []);
@@ -53,7 +53,7 @@ export default function AdminDashboard() {
     const countBy = (rows: any[]) => {
       const m: Record<string, number> = {};
       (rows || []).forEach((r) => {
-        if (r?.autor_id) m[r.autor_id] = (m[r.autor_id] || 0) + 1;
+        if (r?.autor) m[r.autor] = (m[r.autor] || 0) + 1;
       });
       return m;
     };

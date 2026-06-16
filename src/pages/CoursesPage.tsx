@@ -5,7 +5,7 @@ import { useAuth } from '@/src/context/AuthContext';
 import { DatabaseService } from '@/src/services/database';
 import {
   BookOpen, ChevronRight, Hash, Loader2, Sparkles, AlertCircle,
-  ShoppingCart, Edit2, X, Check
+  ShoppingCart, Edit2, X, Check, PlayCircle
 } from 'lucide-react';
 import CheckoutModal from '@/src/components/CheckoutModal';
 
@@ -43,6 +43,7 @@ export default function CoursesPage() {
   const { user } = useAuth();
   const [courses, setCourses] = useState<Course[]>([]);
   const [modulesCount, setModulesCount] = useState<Record<string, number>>({});
+  const [ownedIds, setOwnedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -56,7 +57,23 @@ export default function CoursesPage() {
 
   useEffect(() => {
     loadCourses();
-  }, []);
+    if (user?.id) loadOwnedCourses();
+  }, [user?.id]);
+
+  const loadOwnedCourses = async () => {
+    if (!user?.id) return;
+    // Get every active access for this user, then collect the produto_ids.
+    const { data, error } = await DatabaseService.getAllAcessosAtivos(user.id);
+    if (!error && data) {
+      setOwnedIds(new Set(data.map((a) => a.produto_id).filter(Boolean) as string[]));
+    }
+  };
+
+  const hasAccess = (course: Course) => {
+    // Admins/mods can always enter; otherwise check the owned set.
+    if (isAdmin) return true;
+    return !!course.produto_id && ownedIds.has(course.produto_id);
+  };
 
   const loadCourses = async () => {
     setLoading(true);
@@ -211,13 +228,24 @@ export default function CoursesPage() {
                   </Link>
 
                   <div className="px-5 pb-4 flex items-center gap-2">
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setBuyModal(course); }}
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-gradient-to-r from-primary to-accent-cyan text-white text-sm font-semibold hover:opacity-90 transition-all"
-                    >
-                      <ShoppingCart className="w-4 h-4" />
-                      Comprar
-                    </button>
+                    {hasAccess(course) ? (
+                      <Link
+                        to={`/cursos/${course.id}`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-gradient-to-r from-primary to-accent-cyan text-white text-sm font-semibold hover:opacity-90 transition-all"
+                      >
+                        <PlayCircle className="w-4 h-4" />
+                        ENTRAR NO CURSO
+                      </Link>
+                    ) : (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setBuyModal(course); }}
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-gradient-to-r from-primary to-accent-cyan text-white text-sm font-semibold hover:opacity-90 transition-all"
+                      >
+                        <ShoppingCart className="w-4 h-4" />
+                        Comprar
+                      </button>
+                    )}
                     {isAdmin && (
                       <button
                         onClick={(e) => { e.stopPropagation(); openEditDesc(course); }}

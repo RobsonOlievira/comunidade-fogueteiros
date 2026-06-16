@@ -284,6 +284,18 @@ export const DatabaseService = {
     return (count || 0) > 0;
   },
 
+  // Returns every active access (not expired) for a profile, so the
+  // Courses page can show "ENTRAR NO CURSO" for ones the user owns.
+  async getAllAcessosAtivos(perfilId: string): Promise<{ produto_id: string }[]> {
+    const { data, error } = await supabase
+      .from('acessos_cursos')
+      .select('produto_id')
+      .eq('perfil_id', perfilId)
+      .gte('expira_em', new Date().toISOString());
+    if (error) return [];
+    return (data || []) as { produto_id: string }[];
+  },
+
   async grantAcesso(perfilId: string, produtoId: string, expiraEm: string): Promise<boolean> {
     const { error } = await supabase
       .from('acessos_cursos')

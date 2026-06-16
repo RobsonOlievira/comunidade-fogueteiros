@@ -425,10 +425,10 @@ function MemberDetailModal({ member, onClose, onEdit }: { member: Perfil; onClos
   useEffect(() => {
     (async () => {
       const [m, t, c, v] = await Promise.all([
-        supabase.from('mensagens').select('*', { count: 'exact', head: true }).eq('autor_id', member.id),
-        supabase.from('threads').select('*', { count: 'exact', head: true }).eq('autor_id', member.id),
-        supabase.from('comentarios').select('*', { count: 'exact', head: true }).eq('autor_id', member.id),
-        supabase.from('votos').select('*', { count: 'exact', head: true }).eq('autor_id', member.id),
+        supabase.from('mensagens').select('*', { count: 'exact', head: true }).eq('autor', member.id),
+        supabase.from('threads').select('*', { count: 'exact', head: true }).eq('autor', member.id),
+        supabase.from('comentarios').select('*', { count: 'exact', head: true }).eq('autor', member.id),
+        supabase.from('votos').select('*', { count: 'exact', head: true }).eq('perfil_id', member.id),
       ]);
       setActivity({
         mensagens: m.count || 0,
