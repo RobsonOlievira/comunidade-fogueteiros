@@ -22,7 +22,11 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [channelDetails, setChannelDetails] = useState<ChannelItem | null>(null);
-  const [isSidebarRightHidden, setIsSidebarRightHidden] = useState(true);
+  // Open by default on desktop (>=768px), hidden on mobile.
+  const [isSidebarRightHidden, setIsSidebarRightHidden] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    return window.matchMedia('(min-width: 768px)').matches ? false : true;
+  });
   const [isSidebarLeftMobileOpen, setIsSidebarLeftMobileOpen] = useState(false);
   const [isAluno, setIsAluno] = useState<boolean | null>(null);
   const [paywallOpen, setPaywallOpen] = useState(false);
