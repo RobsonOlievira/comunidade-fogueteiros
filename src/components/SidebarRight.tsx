@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/src/services/supabaseClient';
 import { useAuth } from '@/src/context/AuthContext';
+import { Avatar } from '@/src/components/Avatar';
 
 interface SidebarRightProps {
   isHidden: boolean;
@@ -71,13 +72,12 @@ export default function SidebarRight({ isHidden }: SidebarRightProps) {
             {online.map((p) => (
               <li className="member-item" key={p.id}>
                 <div className="member-avatar-wrapper">
-                  <div className={`member-avatar ${avatarClass(p.cargo)} overflow-hidden`}>
-                    {p.avatar_url ? (
-                      <img src={p.avatar_url} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      p.nome.charAt(0).toUpperCase()
-                    )}
-                  </div>
+                  <Avatar
+                    name={p.nome}
+                    url={p.avatar_url}
+                    colorClass={`member-avatar ${avatarClass(p.cargo)}`}
+                    alt={p.nome}
+                  />
                   <div className="member-status-dot online"></div>
                 </div>
                 <div className="member-info">
@@ -103,13 +103,12 @@ export default function SidebarRight({ isHidden }: SidebarRightProps) {
             {offline.map((p) => (
               <li className="member-item offline" key={p.id}>
                 <div className="member-avatar-wrapper">
-                  <div className={`member-avatar ${avatarClass(p.cargo)} overflow-hidden`}>
-                    {p.avatar_url ? (
-                      <img src={p.avatar_url} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      p.nome.charAt(0).toUpperCase()
-                    )}
-                  </div>
+                  <Avatar
+                    name={p.nome}
+                    url={p.avatar_url}
+                    colorClass={`member-avatar ${avatarClass(p.cargo)}`}
+                    alt={p.nome}
+                  />
                   <div className="member-status-dot offline"></div>
                 </div>
                 <div className="member-info">

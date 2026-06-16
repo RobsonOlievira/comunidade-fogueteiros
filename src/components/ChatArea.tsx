@@ -1,6 +1,8 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Menu, Hash, Users, Pin, Plus, Smile, Send, Heart, Trash2 } from 'lucide-react';
 import type { ChannelItem, Message } from '@/types';
+import { usePerfis } from '@/src/hooks/usePerfis';
+import { Avatar } from '@/src/components/Avatar';
 
 interface ChatAreaProps {
   channelDetails: ChannelItem | null;
@@ -31,6 +33,7 @@ export default function ChatArea({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const isAdmin = cargo === 'admin' || cargo === 'mod';
+  const { getPerfil } = usePerfis();
 
   // Scrola APENAS o container .chat-messages (não o <main> externo).
   // scrollIntoView rolava todos os ancestrais, arrastando o .chat-header
@@ -94,11 +97,16 @@ export default function ChatArea({
       <div className="chat-messages" ref={messagesContainerRef}>
         {messages.map((msg) => {
           const badgeClass = msg.badge ? `badge-${msg.badge.toLowerCase()}` : '';
+          const perfil = getPerfil(msg.perfilId);
           return (
             <div className="message-card group" key={msg.id}>
-              <div className={`msg-avatar ${getAvatarColorClass(msg.avatarColor)}`}>
-                {msg.avatar}
-              </div>
+              <Avatar
+                name={perfil?.nome || msg.author}
+                url={perfil?.avatar_url}
+                colorClass={`msg-avatar ${getAvatarColorClass(msg.avatarColor)}`}
+                fallbackText={msg.avatar}
+                alt={perfil?.nome || msg.author}
+              />
               <div className="msg-content-wrapper">
                 <div className="msg-header">
                   <span className="msg-author">{msg.author}</span>

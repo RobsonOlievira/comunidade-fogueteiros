@@ -5,6 +5,8 @@ import { useAuth } from '@/src/context/AuthContext';
 import { GamificationService } from '@/src/services/gamificationService';
 import { ArrowUp, ArrowLeft, MessageSquare, Send, AlertCircle, Loader2 } from 'lucide-react';
 import type { Comentario } from '@/types';
+import { usePerfis } from '@/src/hooks/usePerfis';
+import { Avatar } from '@/src/components/Avatar';
 
 interface ThreadDetail {
   id: string;
@@ -37,6 +39,7 @@ export default function ThreadPage() {
   const [voted, setVoted] = useState(false);
   const [sendingComment, setSendingComment] = useState(false);
   const [error, setError] = useState('');
+  const { getPerfil } = usePerfis();
 
   useEffect(() => {
     if (!id) return;
@@ -208,13 +211,12 @@ export default function ThreadPage() {
               <h1 className="font-display text-2xl font-bold text-white mb-3">{thread.titulo}</h1>
               <p className="text-gray-400 leading-relaxed whitespace-pre-wrap">{thread.conteudo}</p>
               <div className="flex items-center gap-3 mt-4">
-                <div
-                  className={`w-8 h-8 rounded-full bg-gradient-to-br ${
-                    avatarColors[thread.cor_avatar] || 'from-primary to-purple-700'
-                  } flex items-center justify-center text-xs font-bold text-white`}
-                >
-                  {thread.avatar}
-                </div>
+                <Avatar
+                  name={getPerfil(thread.perfil_id)?.nome || thread.autor}
+                  url={getPerfil(thread.perfil_id)?.avatar_url}
+                  colorClass={`w-8 h-8 rounded-full bg-gradient-to-br ${avatarColors[thread.cor_avatar] || 'from-primary to-purple-700'} flex items-center justify-center text-xs font-bold text-white`}
+                  fallbackText={thread.avatar}
+                />
                 <div>
                   <span className="text-sm font-medium text-white">{thread.autor}</span>
                   <span className="text-xs text-gray-500 ml-2">
@@ -241,13 +243,12 @@ export default function ThreadPage() {
               className="p-4 rounded-xl border border-glass-border bg-glass"
             >
               <div className="flex gap-3">
-                <div
-                  className={`w-8 h-8 rounded-full bg-gradient-to-br ${
-                    avatarColors[comment.cor_avatar] || 'from-primary to-purple-700'
-                  } flex items-center justify-center text-xs font-bold text-white flex-shrink-0`}
-                >
-                  {comment.avatar}
-                </div>
+                <Avatar
+                  name={getPerfil(comment.perfil_id)?.nome || comment.autor}
+                  url={getPerfil(comment.perfil_id)?.avatar_url}
+                  colorClass={`w-8 h-8 rounded-full bg-gradient-to-br ${avatarColors[comment.cor_avatar] || 'from-primary to-purple-700'} flex items-center justify-center text-xs font-bold text-white flex-shrink-0`}
+                  fallbackText={comment.avatar}
+                />
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-sm font-medium text-white">{comment.autor}</span>

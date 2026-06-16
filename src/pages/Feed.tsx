@@ -5,6 +5,8 @@ import { useAuth } from '@/src/context/AuthContext';
 import { GamificationService } from '@/src/services/gamificationService';
 import { ArrowUp, MessageSquare, Sparkles, Hash, AlertCircle, Search, X } from 'lucide-react';
 import { TOPIC_TAGS } from '@/src/constants/tags';
+import { usePerfis } from '@/src/hooks/usePerfis';
+import { Avatar } from '@/src/components/Avatar';
 
 interface ThreadItem {
   id: string;
@@ -29,6 +31,7 @@ const avatarColors: Record<string, string> = {
 
 export default function Feed() {
   const { user } = useAuth();
+  const { getPerfil } = usePerfis();
   const [threads, setThreads] = useState<ThreadItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [votedThreads, setVotedThreads] = useState<Set<string>>(new Set());
@@ -274,13 +277,12 @@ export default function Feed() {
                   <p className="text-sm text-gray-500 mt-1 line-clamp-2">{thread.conteudo}</p>
                   <div className="flex items-center gap-3 mt-3 flex-wrap">
                     <div className="flex items-center gap-2">
-                      <div
-                        className={`w-6 h-6 rounded-full bg-gradient-to-br ${
-                          avatarColors[thread.cor_avatar] || 'from-primary to-purple-700'
-                        } flex items-center justify-center text-[10px] font-bold text-white`}
-                      >
-                        {thread.avatar}
-                      </div>
+                      <Avatar
+                        name={getPerfil(thread.perfil_id)?.nome || thread.autor}
+                        url={getPerfil(thread.perfil_id)?.avatar_url}
+                        colorClass={`w-6 h-6 rounded-full bg-gradient-to-br ${avatarColors[thread.cor_avatar] || 'from-primary to-purple-700'} flex items-center justify-center text-[10px] font-bold text-white`}
+                        fallbackText={thread.avatar}
+                      />
                       <span className="text-xs text-gray-400">{thread.autor}</span>
                     </div>
                     <span className="text-xs text-gray-600">.</span>
