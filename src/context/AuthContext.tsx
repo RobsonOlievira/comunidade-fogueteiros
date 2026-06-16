@@ -178,6 +178,17 @@ const ensurePerfil = async (sessionUser: any, origem: string = 'organico'): Prom
       sessionStorage.removeItem('cf_pending_cadastro_marker');
     }
 
+    // If the perfil already exists but is missing the Google avatar
+    // (because the user logged in with email/magic-link first and the
+    // avatar was never persisted), backfill it from user_metadata.
+    if (existing && !existing.avatar_url && avatarUrl) {
+      await supabase
+        .from('perfis')
+        .update({ avatar_url: avatarUrl, atualizado_em: new Date().toISOString() })
+        .eq('id', id);
+      existing.avatar_url = avatarUrl;
+    }
+
     const needsOnboarding = !existing.apelido?.trim() || !existing.telefone?.trim();
     return { needsOnboarding, apelido: existing.apelido };
   } catch (err) {
