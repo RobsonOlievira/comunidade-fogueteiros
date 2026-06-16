@@ -47,6 +47,7 @@ export default function AdminCourses() {
   const [editing, setEditing] = useState<Course | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [form, setForm] = useState<Omit<Course, 'id' | 'created_at'>>({
     user_id: null,
     name: '',
@@ -189,6 +190,48 @@ export default function AdminCourses() {
       return;
     }
     setCourses((prev) => prev.filter((c) => c.id !== id));
+  };
+
+  // Upload a cover image to Supabase Storage and update the form's
+  // image_url. The bucket is public, so the URL works directly.
+  const handleImageUpload = async (file: File) => {
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Imagem muito grande (max 5MB).');
+      return;
+    }
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      setError('Formato inválido. Use JPEG, PNG ou WebP.');
+      return;
+    }
+    setUploadingImage(true);
+    setError('');
+    try {
+      const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+      // Use a stable file name based on the course id when editing,
+      // or a random suffix when creating a new course.
+      const courseId = editing?.id || `new-${Date.now()}`;
+      const filePath = `${courseId}/cover.${ext}`;
+
+      const { error: upErr } = await supabase.storage
+        .from('course-covers')
+        .upload(filePath, file, {
+          upsert: true,
+          contentType: file.type,
+          cacheControl: '3600',
+        });
+      if (upErr) throw upErr;
+
+      const { data: pub } = supabase.storage
+        .from('course-covers')
+        .getPublicUrl(filePath);
+      setForm((f) => ({ ...f, image_url: pub.publicUrl }));
+    } catch (err: any) {
+      console.error('Upload error:', err);
+      setError('Falha no upload da imagem: ' + (err?.message || 'erro desconhecido'));
+    } finally {
+      setUploadingImage(false);
+    }
   };
 
   const reorder = async (course: Course, direction: 'up' | 'down') => {
@@ -469,13 +512,35 @@ export default function AdminCourses() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className={labelClass}>URL da Imagem de Capa</label>
+                    <label className={labelClass}>Imagem de Capa</label>
+                    {form.image_url && (
+                      <div className="mb-2">
+                        <img
+                          src={form.image_url}
+                          alt="preview"
+                          className="w-full max-h-40 object-cover rounded-lg border border-glass-border"
+                        />
+                      </div>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      disabled={uploadingImage}
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) handleImageUpload(f);
+                      }}
+                      className="block w-full text-sm text-gray-300 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-accent-lilac/15 file:text-accent-lilac file:font-semibold hover:file:bg-accent-lilac/25 file:cursor-pointer cursor-pointer"
+                    />
+                    {uploadingImage && (
+                      <p className="text-xs text-gray-500 mt-1">Enviando imagem…</p>
+                    )}
                     <input
                       type="url"
                       value={form.image_url}
                       onChange={(e) => setForm({ ...form, image_url: e.target.value })}
-                      placeholder="https://..."
-                      className={inputClass}
+                      placeholder="ou cole uma URL https://..."
+                      className={inputClass + ' mt-2'}
                     />
                   </div>
                   <div>
