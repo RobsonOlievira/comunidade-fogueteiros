@@ -53,19 +53,21 @@ const AuthContext = createContext<AuthContextType>({
   signOut: async () => {},
 });
 
-const checkAppBStudent = async (email: string): Promise<AppBStatus | null> => {
+const checkAppBStudent = async (email: string, accessToken: string): Promise<AppBStatus | null> => {
   try {
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session?.access_token) return null
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 10000)
 
     const res = await fetch(APP_B_CHECK_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${session.access_token}`,
+        Authorization: `Bearer ${accessToken}`,
       },
       body: JSON.stringify({ email }),
+      signal: controller.signal,
     })
+    clearTimeout(timeout)
 
     if (!res.ok) return null
     return await res.json() as AppBStatus
@@ -259,7 +261,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const perfilFetchedRef = React.useRef<string | null>(null);
   const applyCountRef = React.useRef(0);
 
-  const applyUser = async (sessionUser: any, checkStudent: boolean) => {
+  const applyUser = async (sessionUser: any, checkStudent: boolean, accessToken?: string) => {
     applyCountRef.current += 1;
     const cid = applyCountRef.current;
     if (import.meta.env.DEV) console.log(`[Auth] applyUser #${cid} id=${sessionUser.id?.slice(0,8)}`);
@@ -311,12 +313,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (import.meta.env.DEV) console.log(`[Auth] applyUser #${cid} SKIP fetchPerfil (already fetched)`);
     }
 
-    if (checkStudent) {
-      const status = await checkAppBStudent(sessionUser.email || '');
-      if (status?.isStudent) {
-        await syncAppBToProfile(sessionUser.id, status);
-        setAppBStatus(status);
-      }
+    // Fire-and-forget: check student status in background so it never
+    // blocks the auth initialization. The user sees the app immediately.
+    if (checkStudent && accessToken) {
+      checkAppBStudent(sessionUser.email || '', accessToken).then((status) => {
+        if (status?.isStudent) {
+          syncAppBToProfile(sessionUser.id, status);
+          setAppBStatus(status);
+        }
+      });
     }
   };
 
@@ -347,7 +352,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (session?.user) {
           try {
             await Promise.race([
-              applyUser(session.user, true),
+              applyUser(session.user, true, session.access_token),
               new Promise((_, reject) => setTimeout(() => reject(new Error('applyUser timeout')), 15000))
             ]);
           } catch (e: any) {
@@ -393,7 +398,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
           try {
             await Promise.race([
-              applyUser(session.user, true),
+              applyUser(session.user, true, session.access_token),
               new Promise((_, reject) => setTimeout(() => reject(new Error('applyUser timeout')), 15000))
             ]);
           } catch (e: any) {
@@ -402,7 +407,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } else if (event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') {
           try {
             await Promise.race([
-              applyUser(session.user, event === 'INITIAL_SESSION'),
+              applyUser(session.user, event === 'INITIAL_SESSION', session.access_token),
               new Promise((_, reject) => setTimeout(() => reject(new Error('applyUser timeout')), 15000))
             ]);
           } catch (e: any) {
@@ -410,7 +415,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         } else if (event === 'USER_UPDATED') {
           try {
-            await applyUser(session.user, false);
+            await applyUser(session.user, false, session.access_token);
           } catch {}
         }
       } else {
