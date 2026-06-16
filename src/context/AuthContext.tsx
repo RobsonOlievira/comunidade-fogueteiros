@@ -325,6 +325,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const init = async () => {
       const start = Date.now();
+      // Set loading=false ASAP so the app shell renders. The session
+      // is hydrated in the background; if it turns out the user was
+      // logged in, the SIGNED_IN event will fire and applyUser will
+      // populate the user. The splash we ship in index.html covers
+      // the gap before React mounts.
+      setLoading(false);
+
       try {
         const sessionPromise = supabase.auth.getSession();
         const timeoutPromise = new Promise<{ data: { session: null } }>((resolve) =>

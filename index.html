@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="description" content="Comunidade Olha o Foguete! Vibe Coding - O espaço definitivo para criadores e entusiastas de tecnologia impulsionados por Inteligência Artificial.">
     <meta name="theme-color" content="#339c81">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Fogueteiros">
@@ -12,15 +13,6 @@
     <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
     <link rel="manifest" href="/manifest.webmanifest">
-
-    <!-- Google Tag Manager -->
-    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-    })(window,document,'script','dataLayer','GTM-NKL8X6N4');</script>
-    <!-- End Google Tag Manager -->
-
 
     <meta property="og:title" content="Materiais Gratuitos para Vibe Coders 🚀">
     <meta property="og:description" content="Templates, prompts e recursos pra você baixar agora. Crie sua conta grátis e entre na comunidade.">
@@ -33,10 +25,12 @@
     <meta name="twitter:image" content="https://comunidade-fogueteiros.vercel.app/og-materiais.png">
 
     <title>Materiais Gratuitos — Comunidade Olha o Foguete!</title>
-    
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Rajdhani:wght@500;600;700&display=swap">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet"></noscript>
 
     <style>
         :root {
@@ -44,7 +38,7 @@
             --text-color: #f5f3ff;
         }
         html, body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
             margin: 0;
@@ -53,21 +47,85 @@
             height: 100%;
         }
         h1, h2, h3, h4, h5, h6, button, .font-display {
-            font-family: 'Rajdhani', sans-serif;
+            font-family: 'Rajdhani', 'Inter', -apple-system, sans-serif;
         }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 3px; }
         ::-webkit-scrollbar-thumb:hover { background: #8a2be2; }
+
+        #cf-boot-splash {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            background: var(--bg-color);
+            color: var(--text-color);
+            z-index: 9999;
+            transition: opacity 0.25s ease;
+            pointer-events: none;
+        }
+        #cf-boot-splash.gone { opacity: 0; }
+        #cf-boot-splash .ring {
+            width: 36px; height: 36px;
+            border: 3px solid rgba(187,159,255,0.15);
+            border-top-color: #bb9fff;
+            border-radius: 50%;
+            animation: cf-spin 0.8s linear infinite;
+        }
+        #cf-boot-splash .label {
+            font: 500 13px/1 'Inter', sans-serif;
+            letter-spacing: 0.05em;
+            color: rgba(245,243,255,0.6);
+        }
+        @keyframes cf-spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="antialiased">
-    <!-- Google Tag Manager (noscript) -->
-    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-NKL8X6N4"
-    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-    <!-- End Google Tag Manager (noscript) -->
+    <div id="cf-boot-splash" aria-hidden="true">
+        <div class="ring"></div>
+        <div class="label">CARREGANDO COMUNIDADE</div>
+    </div>
 
     <div id="root"></div>
+
     <script type="module" src="/src/main.tsx"></script>
+
+    <script>
+      // Esconde splash quando React montou
+      window.addEventListener('cf:app-ready', function () {
+        var s = document.getElementById('cf-boot-splash');
+        if (s) {
+          s.classList.add('gone');
+          setTimeout(function(){ s.parentNode && s.parentNode.removeChild(s); }, 300);
+        }
+      });
+      // Fallback de seguranca: apÃ³s 8s esconde splash mesmo se React nao sinalizou
+      setTimeout(function(){
+        window.dispatchEvent(new Event('cf:app-ready'));
+      }, 8000);
+    </script>
+
+    <!-- Google Tag Manager carregado lazy, sem bloquear render -->
+    <script>
+      (function(){
+        function loadGTM(){
+          (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+          new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+          j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+          'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+          })(window,document,'script','dataLayer','GTM-NKL8X6N4');
+        }
+        if ('requestIdleCallback' in window) {
+          requestIdleCallback(loadGTM, { timeout: 3500 });
+        } else {
+          setTimeout(loadGTM, 1500);
+        }
+      })();
+    </script>
+    <!-- End Google Tag Manager -->
 </body>
 </html>

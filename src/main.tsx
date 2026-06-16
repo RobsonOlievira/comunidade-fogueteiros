@@ -7,3 +7,10 @@ import './assets/style.css'
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <App />,
 )
+
+// Esconde splash de boot
+requestAnimationFrame(() => {
+  setTimeout(() => {
+    window.dispatchEvent(new Event('cf:app-ready'))
+  }, 50)
+})
