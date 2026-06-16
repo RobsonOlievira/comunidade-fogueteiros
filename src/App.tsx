@@ -180,9 +180,30 @@ function AppRoutes() {
           <Route path="/admin/canais" element={<AdminChannels />} />
           <Route path="/admin/downloads" element={<AdminDownloads />} />
         </Route>
-        <Route path="*" element={user ? <Navigate to="/labs" replace /> : <Navigate to="/login" replace />} />
+        <Route path="*" element={
+          // If the user is set, just go to /labs. If loading (initial
+          // mount), show a brief splash so we don't flash /login while
+          // getSession() is still resolving. If user is null AFTER
+          // loading finished, go to /login.
+          loading
+            ? <AuthSplash />
+            : user ? <Navigate to="/labs" replace /> : <Navigate to="/login" replace />
+        } />
       </Routes>
     </>
+  );
+}
+
+// Catch-all route: while the auth session is being resolved, show a
+// brief splash. This prevents the user from bouncing through /login
+// (then back to the intended page) when the magic-link session is
+// restored in the background.
+function AuthSplash() {
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-3">
+      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-accent-lilac" />
+      <p className="text-xs text-gray-500">Verificando sessão…</p>
+    </div>
   );
 }
 
