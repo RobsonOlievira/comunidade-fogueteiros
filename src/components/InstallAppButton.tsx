@@ -44,9 +44,18 @@ export default function InstallAppButton() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    if (isStandalone() || localStorage.getItem(STORAGE_KEY_INSTALLED) === '1') {
+    // Se tá rodando como app instalado (standalone) → some.
+    // Não confiamos só no localStorage, porque o user pode desinstalar
+    // o PWA e o flag continua '1'. O display-mode é a fonte da verdade.
+    if (isStandalone()) {
       setInstalled(true);
       return;
+    }
+
+    // Se já tá rodando standalone agora, marca o flag pra próxima sessão
+    // ser rápida.
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      localStorage.setItem(STORAGE_KEY_INSTALLED, '1');
     }
 
     if (localStorage.getItem(STORAGE_KEY_DISMISSED) === '1') {

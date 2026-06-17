@@ -330,12 +330,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const init = async () => {
       const start = Date.now();
-      // Set loading=false ASAP so the app shell renders. The session
-      // is hydrated in the background; if it turns out the user was
-      // logged in, the SIGNED_IN event will fire and applyUser will
-      // populate the user. The splash we ship in index.html covers
-      // the gap before React mounts.
-      setLoading(false);
+      // NÃO setamos loading=false aqui. Mantemos loading=true até o
+      // getSession() resolver E o applyUser completar. Se algo der
+      // timeout, o SIGNED_IN event do onAuthStateChange vai popular
+      // o user. O AuthSplash (no App.tsx) segura a tela durante esse
+      // período.
+      //
+      // Razão: o setLoading(false) imediato + setUser(minimal) com
+      // needsOnboarding:true fazia o OnboardingModal aparecer mesmo
+      // para users que já tinham completado o cadastro, sempre que o
+      // Supabase demorasse >15s. Resultado: usuário "vê" o popup
+      // de apelido+whatsapp a cada reload, passa por ele, e o app
+      // "se redreça" depois.
 
       try {
         const sessionPromise = supabase.auth.getSession();
@@ -356,28 +362,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               new Promise((_, reject) => setTimeout(() => reject(new Error('applyUser timeout')), 15000))
             ]);
           } catch (e: any) {
-            console.error('[Auth] applyUser failed/timed out (init):', e?.message);
-            // Não zera userIdRef — o user está autenticado. Vamos
-            // popular o user com um fallback mínimo a partir do JWT
-            // para o app shell renderizar. O SIGNED_IN event mais
-            // tarde (ou um refetch manual) vai popular o perfil completo.
-            userDataRef.current = null;
-            perfilFetchedRef.current = null;
-            if (!cancelled && !userIdRef.current) {
-              // safety: userIdRef was never set, so build a minimal user
-              // from the session so the app doesn't bounce to /login.
-              const meta = session.user.user_metadata || {};
-              const minimal = {
-                id: session.user.id,
-                email: session.user.email || '',
-                name: meta.full_name || meta.name || (session.user.email || '').split('@')[0] || 'Membro',
-                avatarUrl: meta.avatar_url || meta.picture || '',
-                apelido: undefined,
-                needsOnboarding: true,
-              } as any;
-              setUser(minimal);
-              setNeedsOnboarding(true);
-            }
+            console.error('[Auth] applyUser failed/timed out (init) — relying on SIGNED_IN event:', e?.message);
+            // Não populamos user aqui. Deixa o onAuthStateChange
+            // SIGNED_IN (que dispara logo depois) popular o user
+            // corretamente. Se nem ele popular dentro de 30s
+            // totais, o user pode ter perdido a sessão.
           }
         }
       } catch (err) {
@@ -390,6 +379,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
     };
+
+    // Safety net: se o init travar por qualquer motivo (race condition
+    // com onAuthStateChange, network nunca resolve), garante que o
+    // app não fica preso no AuthSplash pra sempre. 25s dá margem
+    // pro getSession+applyUser rolarem em paz, mas libera caso algo
+    // dê errado silenciosamente.
+    const safetyTimeout = setTimeout(() => {
+      if (!cancelled) {
+        console.warn('[Auth] Safety timeout (25s) — forcing loading=false');
+        setLoading(false);
+        setCargoLoaded(true);
+      }
+    }, 25000);
 
     init();
 
@@ -421,19 +423,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             ]);
           } catch (e: any) {
             console.error('[Auth] SIGNED_IN applyUser failed/timed out:', e?.message);
-            // Fallback: popula um user mínimo pra não voltar pro /login
-            if (!cancelled) {
-              const meta = session.user.user_metadata || {};
-              setUser({
-                id: session.user.id,
-                email: session.user.email || '',
-                name: meta.full_name || meta.name || (session.user.email || '').split('@')[0] || 'Membro',
-                avatarUrl: meta.avatar_url || meta.picture || '',
-                apelido: undefined,
-                needsOnboarding: true,
-              } as any);
-              setNeedsOnboarding(true);
-            }
+            // Sem fallback. Não setamos user nenhum pra evitar marcar
+            // needsOnboarding=true indevidamente. Se o applyUser falhou,
+            // o INITIAL_SESSION (que dispara depois) vai popular.
           }
         } else if (event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') {
           try {
@@ -465,6 +457,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return () => {
       cancelled = true;
+      clearTimeout(safetyTimeout);
       subscription.unsubscribe();
     };
   }, []);
