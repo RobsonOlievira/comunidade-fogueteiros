@@ -582,6 +582,31 @@ body {
     font-size: 0.75rem;
 }
 
+/* Feed avatar — menor, usado nos cards de thread no /feed. */
+.feed-avatar {
+    width: 24px;
+    height: 24px;
+    position: relative;
+    flex-shrink: 0;
+}
+.feed-avatar .avatar-circle {
+    font-size: 10px;
+}
+
+/* Member avatar (SidebarRight / lista de membros) — wrapper só com
+   tamanho. A cor (avatar-admin / avatar-mod / avatar-user) vai no
+   .avatar-circle interno via colorClass. */
+.member-avatar {
+    width: 32px;
+    height: 32px;
+    position: relative;
+    flex-shrink: 0;
+}
+.member-avatar .avatar-circle {
+    color: #fff;
+    font-size: 0.85rem;
+}
+
 .msg-content-wrapper {
     display: flex;
     flex-direction: column;
