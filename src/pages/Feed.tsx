@@ -280,7 +280,8 @@ export default function Feed() {
                       <Avatar
                         name={getPerfil(thread.perfil_id)?.nome || thread.autor}
                         url={getPerfil(thread.perfil_id)?.avatar_url}
-                        colorClass={`w-6 h-6 rounded-full bg-gradient-to-br ${avatarColors[thread.cor_avatar] || 'from-primary to-purple-700'} flex items-center justify-center text-[10px] font-bold text-white`}
+                        className="w-6 h-6"
+                        colorClass={`rounded-full bg-gradient-to-br ${avatarColors[thread.cor_avatar] || 'from-primary to-purple-700'} flex items-center justify-center text-[10px] font-bold text-white`}
                         fallbackText={thread.avatar}
                       />
                       <span className="text-xs text-gray-400">{thread.autor}</span>

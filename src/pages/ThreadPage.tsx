@@ -405,7 +405,8 @@ export default function ThreadPage() {
                 <Avatar
                   name={getPerfil(thread.perfil_id)?.nome || thread.autor}
                   url={getPerfil(thread.perfil_id)?.avatar_url}
-                  colorClass={`w-8 h-8 rounded-full bg-gradient-to-br ${avatarColors[thread.cor_avatar] || 'from-primary to-purple-700'} flex items-center justify-center text-xs font-bold text-white`}
+                  className="w-8 h-8"
+                  colorClass={`rounded-full bg-gradient-to-br ${avatarColors[thread.cor_avatar] || 'from-primary to-purple-700'} flex items-center justify-center text-xs font-bold text-white`}
                   fallbackText={thread.avatar}
                   isPro={getPerfil(thread.perfil_id)?.pro}
                 />
@@ -439,7 +440,8 @@ export default function ThreadPage() {
                 <Avatar
                   name={getPerfil(comment.perfil_id)?.nome || comment.autor}
                   url={getPerfil(comment.perfil_id)?.avatar_url}
-                  colorClass={`w-8 h-8 rounded-full bg-gradient-to-br ${avatarColors[comment.cor_avatar] || 'from-primary to-purple-700'} flex items-center justify-center text-xs font-bold text-white flex-shrink-0`}
+                  className="w-8 h-8"
+                  colorClass={`rounded-full bg-gradient-to-br ${avatarColors[comment.cor_avatar] || 'from-primary to-purple-700'} flex items-center justify-center text-xs font-bold text-white`}
                   fallbackText={comment.avatar}
                   isPro={getPerfil(comment.perfil_id)?.pro}
                 />
