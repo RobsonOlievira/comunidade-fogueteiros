@@ -3,6 +3,7 @@ import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/src/context/AuthContext';
 import { useTheme } from '@/src/context/ThemeContext';
 import { useAvatarUrl } from '@/src/hooks/useAvatarUrl';
+import InstallAppButton from '@/src/components/InstallAppButton';
 import {
   MessageCircle, MessageSquare, User, LogOut,
   Sun, Moon, Menu, X, Shield, Settings, BookOpen, Download, Crown
@@ -257,6 +258,11 @@ export default function MainLayout() {
                   Painel Admin
                 </Link>
               )}
+
+              {/* Install App (sempre no mobile, some depois que instala) */}
+              <div className="md:hidden">
+                <InstallAppButton />
+              </div>
 
               {/* Logout */}
               <button onClick={handleLogout} className="flex items-center gap-3 px-4 py-3 rounded-xl text-lg text-red-400 hover:bg-red-500/10 w-full">
