@@ -356,10 +356,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               new Promise((_, reject) => setTimeout(() => reject(new Error('applyUser timeout')), 15000))
             ]);
           } catch (e: any) {
-            console.error('[Auth] applyUser failed/timed out:', e?.message);
-            userIdRef.current = null;
+            console.error('[Auth] applyUser failed/timed out (init):', e?.message);
+            // Não zera userIdRef — o user está autenticado. Vamos
+            // popular o user com um fallback mínimo a partir do JWT
+            // para o app shell renderizar. O SIGNED_IN event mais
+            // tarde (ou um refetch manual) vai popular o perfil completo.
             userDataRef.current = null;
             perfilFetchedRef.current = null;
+            if (!cancelled && !userIdRef.current) {
+              // safety: userIdRef was never set, so build a minimal user
+              // from the session so the app doesn't bounce to /login.
+              const meta = session.user.user_metadata || {};
+              const minimal = {
+                id: session.user.id,
+                email: session.user.email || '',
+                name: meta.full_name || meta.name || (session.user.email || '').split('@')[0] || 'Membro',
+                avatarUrl: meta.avatar_url || meta.picture || '',
+                apelido: undefined,
+                needsOnboarding: true,
+              } as any;
+              setUser(minimal);
+              setNeedsOnboarding(true);
+            }
           }
         }
       } catch (err) {
@@ -403,6 +421,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             ]);
           } catch (e: any) {
             console.error('[Auth] SIGNED_IN applyUser failed/timed out:', e?.message);
+            // Fallback: popula um user mínimo pra não voltar pro /login
+            if (!cancelled) {
+              const meta = session.user.user_metadata || {};
+              setUser({
+                id: session.user.id,
+                email: session.user.email || '',
+                name: meta.full_name || meta.name || (session.user.email || '').split('@')[0] || 'Membro',
+                avatarUrl: meta.avatar_url || meta.picture || '',
+                apelido: undefined,
+                needsOnboarding: true,
+              } as any);
+              setNeedsOnboarding(true);
+            }
           }
         } else if (event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') {
           try {
