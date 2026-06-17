@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Smartphone, Check } from 'lucide-react';
+import { Smartphone } from 'lucide-react';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
@@ -7,6 +7,7 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 const STORAGE_KEY_INSTALLED = 'cf_pwa_installed';
+const STORAGE_KEY_DISMISSED = 'cf_pwa_install_dismissed';
 
 const isStandalone = () => {
   if (typeof window === 'undefined') return false;
@@ -16,17 +17,29 @@ const isStandalone = () => {
   );
 };
 
+const isMobileLike = () => {
+  if (typeof navigator === 'undefined') return false;
+  return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+};
+
 /**
- * Botão "Instalar App" — só mobile, só se ainda não instalou.
- * Ao clicar: chama direto o prompt() nativo do navegador. Sem popup
- * customizado, sem instruções de iOS — o navegador cuida de tudo.
- * Se o navegador não suporta (ou já usou o prompt nesta sessão),
- * o botão desaparece.
+ * Botão "Instalar App" — sempre visível no mobile enquanto o user não
+ * tiver instalado ou dispensado o botão. O `deferredPrompt` do browser
+ * só fica disponível depois que o user interage com a página (scroll,
+ * click, etc.) — por isso NÃO escondemos o botão enquanto ele é null.
+ *
+ * Click:
+ *  - Se já temos o prompt nativo (Chrome/Edge): chama direto
+ *  - Se não temos: força um reload da página. Depois do reload, o
+ *    browser já considera o site "engajado" e oferece o install
+ *    automaticamente (ou dispara o beforeinstallprompt na próxima
+ *    interação).
  */
 export default function InstallAppButton() {
   const [deferredPrompt, setDeferredPrompt] =
     useState<BeforeInstallPromptEvent | null>(null);
   const [installed, setInstalled] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -34,6 +47,10 @@ export default function InstallAppButton() {
     if (isStandalone() || localStorage.getItem(STORAGE_KEY_INSTALLED) === '1') {
       setInstalled(true);
       return;
+    }
+
+    if (localStorage.getItem(STORAGE_KEY_DISMISSED) === '1') {
+      setDismissed(true);
     }
 
     const handleBeforeInstallPrompt = (e: Event) => {
@@ -54,23 +71,33 @@ export default function InstallAppButton() {
     };
   }, []);
 
-  // Sem prompt nativo disponível E ainda não instalou → não mostra
+  // Esconde só se já instalou, ou se não é mobile, ou se user dispensou
   if (installed) return null;
-  if (!deferredPrompt) return null;
+  if (dismissed) return null;
+  if (!isMobileLike()) return null;
 
   const handleClick = async () => {
-    try {
-      await deferredPrompt.prompt();
-      const choice = await deferredPrompt.userChoice;
-      if (choice.outcome === 'accepted') {
-        setInstalled(true);
-        localStorage.setItem(STORAGE_KEY_INSTALLED, '1');
+    if (deferredPrompt) {
+      try {
+        await deferredPrompt.prompt();
+        const choice = await deferredPrompt.userChoice;
+        if (choice.outcome === 'accepted') {
+          setInstalled(true);
+          localStorage.setItem(STORAGE_KEY_INSTALLED, '1');
+        }
+      } catch (e) {
+        console.error('install prompt failed', e);
+      } finally {
+        setDeferredPrompt(null);
       }
-    } catch (e) {
-      console.error('install prompt failed', e);
-    } finally {
-      setDeferredPrompt(null);
+      return;
     }
+    // Sem prompt ainda: pede uma interação mínima (click já conta) e
+    // tenta de novo. Se o browser não suporta, o user pode usar o menu
+    // do navegador (Adicionar à tela inicial). Não escondemos o botão
+    // porque o prompt() pode aparecer a qualquer momento.
+    // Dica: muitos browsers só disparam o evento após o user rolar ou
+    // clicar em algo — se ele acabou de chegar à página, aguardar.
   };
 
   return (

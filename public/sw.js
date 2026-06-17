@@ -1,7 +1,7 @@
 // Service Worker for Comunidade Fogueteiros PWA
 // Strategy: network-first for HTML, cache-first for static assets
 
-const CACHE_VERSION = 'v7'
+const CACHE_VERSION = 'v8'
 const STATIC_CACHE = `cf-static-${CACHE_VERSION}`
 const RUNTIME_CACHE = `cf-runtime-${CACHE_VERSION}`
 
