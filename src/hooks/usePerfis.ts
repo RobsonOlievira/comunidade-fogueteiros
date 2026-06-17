@@ -6,6 +6,7 @@ export interface PerfilResumo {
   nome: string;
   cargo: string;
   avatar_url: string | null;
+  pro: boolean;
 }
 
 const STORAGE_KEY = 'cf_perfis_cache';
@@ -22,7 +23,7 @@ async function loadPerfis(): Promise<Map<string, PerfilResumo>> {
     try {
       const { data, error } = await supabase
         .from('perfis')
-        .select('id, nome, cargo, avatar_url')
+        .select('id, nome, cargo, avatar_url, pro')
         .order('nome');
       if (error) {
         console.error('[usePerfis] load error:', error.message);
@@ -35,6 +36,7 @@ async function loadPerfis(): Promise<Map<string, PerfilResumo>> {
           nome: p.nome,
           cargo: p.cargo,
           avatar_url: p.avatar_url || null,
+          pro: p.pro === true,
         });
       }
       try {

@@ -407,6 +407,7 @@ export default function ThreadPage() {
                   url={getPerfil(thread.perfil_id)?.avatar_url}
                   colorClass={`w-8 h-8 rounded-full bg-gradient-to-br ${avatarColors[thread.cor_avatar] || 'from-primary to-purple-700'} flex items-center justify-center text-xs font-bold text-white`}
                   fallbackText={thread.avatar}
+                  isPro={getPerfil(thread.perfil_id)?.pro}
                 />
                 <div>
                   <span className="text-sm font-medium text-white">{thread.autor}</span>
@@ -440,6 +441,7 @@ export default function ThreadPage() {
                   url={getPerfil(comment.perfil_id)?.avatar_url}
                   colorClass={`w-8 h-8 rounded-full bg-gradient-to-br ${avatarColors[comment.cor_avatar] || 'from-primary to-purple-700'} flex items-center justify-center text-xs font-bold text-white flex-shrink-0`}
                   fallbackText={comment.avatar}
+                  isPro={getPerfil(comment.perfil_id)?.pro}
                 />
                 <div className="flex-1">
                   {comment.replyTo && (
@@ -480,7 +482,7 @@ export default function ThreadPage() {
           ))}
         </div>
 
-        <div ref={inputWrapperRef}>
+        <div ref={inputWrapperRef} className="chat-input-wrapper">
           {replyTo && (
             <ReplyPreviewInput
               replyTo={{

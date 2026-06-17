@@ -224,6 +224,7 @@ export default function ChatArea({
                 colorClass={`msg-avatar ${getAvatarColorClass(msg.avatarColor)}`}
                 fallbackText={msg.avatar}
                 alt={perfil?.nome || msg.author}
+                isPro={perfil?.pro}
               />
               <div className="msg-content-wrapper">
                 {msg.replyTo && (
