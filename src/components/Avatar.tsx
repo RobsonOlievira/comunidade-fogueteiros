@@ -37,7 +37,7 @@ export function Avatar({ name, url, colorClass = 'color-4', className = '', alt 
 
   return (
     <div className={`avatar-with-crown ${className}`}>
-      <div className={`${colorClass} avatar-circle flex items-center justify-center font-bold select-none`}>
+      <div className={`avatar-circle ${colorClass} flex items-center justify-center font-bold select-none`}>
         {body}
       </div>
       {isPro && (
