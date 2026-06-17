@@ -1,12 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '@/src/services/supabaseClient';
 import { useAuth } from '@/src/context/AuthContext';
 import { GamificationService } from '@/src/services/gamificationService';
-import { ArrowUp, ArrowLeft, MessageSquare, Send, AlertCircle, Loader2 } from 'lucide-react';
+import { ArrowUp, ArrowLeft, MessageSquare, Send, AlertCircle, Loader2, CornerUpLeft } from 'lucide-react';
 import type { Comentario } from '@/types';
 import { usePerfis } from '@/src/hooks/usePerfis';
 import { Avatar } from '@/src/components/Avatar';
+import { ReplyPreviewInput, ReplyPreviewMessage } from '@/src/components/ReplyPreview';
+import { MessageContent } from '@/src/components/MessageContent';
+import { MentionAutocomplete, getCaretFromInput, type PickedMention } from '@/src/components/MentionAutocomplete';
+import { processarMencoes, extrairApelidos, resolverMencoes } from '@/src/services/mentionService';
 
 interface ThreadDetail {
   id: string;
@@ -35,11 +39,17 @@ export default function ThreadPage() {
   const [thread, setThread] = useState<ThreadDetail | null>(null);
   const [comments, setComments] = useState<Comentario[]>([]);
   const [newComment, setNewComment] = useState('');
+  const [caret, setCaret] = useState(0);
+  const [replyTo, setReplyTo] = useState<NonNullable<Comentario['replyTo']> | null>(null);
+  const [pendingMentions, setPendingMentions] = useState<NonNullable<Comentario['mentions']>>([]);
   const [loading, setLoading] = useState(true);
   const [voted, setVoted] = useState(false);
   const [sendingComment, setSendingComment] = useState(false);
   const [error, setError] = useState('');
   const { getPerfil } = usePerfis();
+  const commentsContainerRef = useRef<HTMLDivElement>(null);
+  const inputWrapperRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -56,11 +66,42 @@ export default function ThreadPage() {
           table: 'comentarios',
           filter: `thread_id=eq.${id}`,
         },
-        (payload) => {
-          const c = payload.new as Comentario;
+        async (payload) => {
+          const c = payload.new as any;
+          // Hidrata replyTo se houver
+          let reply: Comentario['replyTo'] = null;
+          if (c.reply_to_comentario_id) {
+            const { data: replyRow } = await supabase
+              .from('comentarios')
+              .select('id, autor, conteudo, perfil_id')
+              .eq('id', c.reply_to_comentario_id)
+              .maybeSingle();
+            if (replyRow) {
+              reply = {
+                id: String(replyRow.id),
+                autor: replyRow.autor,
+                conteudo: replyRow.conteudo,
+                perfil_id: replyRow.perfil_id,
+              };
+            }
+          }
+          const comentario: Comentario = {
+            id: c.id,
+            thread_id: c.thread_id,
+            autor: c.autor,
+            avatar: c.avatar,
+            cor_avatar: c.cor_avatar,
+            conteudo: c.conteudo,
+            upvotes: c.upvotes || 0,
+            criado_em: c.criado_em,
+            perfil_id: c.perfil_id,
+            reply_to_comentario_id: c.reply_to_comentario_id,
+            replyTo: reply,
+            mentions: Array.isArray(c.mentions) ? c.mentions : [],
+          };
           setComments((prev) => {
-            if (prev.some((x) => x.id === c.id)) return prev;
-            return [...prev, c];
+            if (prev.some((x) => x.id === comentario.id)) return prev;
+            return [...prev, comentario];
           });
         }
       )
@@ -93,7 +134,54 @@ export default function ThreadPage() {
       .eq('thread_id', id)
       .order('criado_em', { ascending: true });
     if (error) console.error('Erro ao carregar comentarios:', error);
-    if (data) setComments(data || []);
+    if (data) {
+      // Hidrata replyTo em batch
+      const replyIds = Array.from(
+        new Set(
+          (data || [])
+            .map((c: any) => c.reply_to_comentario_id)
+            .filter((rid: any) => rid != null),
+        ),
+      );
+      let replyMap = new Map<string, { id: string; autor: string; conteudo: string; perfil_id: string | null }>();
+      if (replyIds.length > 0) {
+        const { data: replyRows } = await supabase
+          .from('comentarios')
+          .select('id, autor, conteudo, perfil_id')
+          .in('id', replyIds);
+        replyMap = new Map(
+          (replyRows || []).map((r) => [
+            String(r.id),
+            {
+              id: String(r.id),
+              autor: r.autor,
+              conteudo: r.conteudo,
+              perfil_id: r.perfil_id,
+            },
+          ]),
+        );
+      }
+      const hydrated: Comentario[] = (data || []).map((c: any) => {
+        const comment: Comentario = {
+          id: c.id,
+          thread_id: c.thread_id,
+          autor: c.autor,
+          avatar: c.avatar,
+          cor_avatar: c.cor_avatar,
+          conteudo: c.conteudo,
+          upvotes: c.upvotes || 0,
+          criado_em: c.criado_em,
+          perfil_id: c.perfil_id,
+          reply_to_comentario_id: c.reply_to_comentario_id,
+          mentions: Array.isArray(c.mentions) ? c.mentions : [],
+        };
+        if (c.reply_to_comentario_id && replyMap.has(String(c.reply_to_comentario_id))) {
+          comment.replyTo = replyMap.get(String(c.reply_to_comentario_id))!;
+        }
+        return comment;
+      });
+      setComments(hydrated);
+    }
   };
 
   const handleUpvote = async () => {
@@ -124,22 +212,63 @@ export default function ThreadPage() {
       if (user?.id) GamificationService.processar();
   };
 
+  const startReply = (c: Comentario) => {
+    if (!c.perfil_id) return;
+    setReplyTo({
+      id: c.id,
+      autor: c.autor,
+      conteudo: c.conteudo,
+      perfil_id: c.perfil_id,
+    });
+    requestAnimationFrame(() => inputRef.current?.focus());
+  };
+
+  const cancelReply = () => setReplyTo(null);
+
+  const jumpToComment = useCallback((commentId: string) => {
+    const container = commentsContainerRef.current;
+    if (!container) return;
+    const el = container.querySelector<HTMLElement>(`[data-comment-id="${CSS.escape(commentId)}"]`);
+    if (!el) return;
+    const elTop = el.offsetTop;
+    container.scrollTo({ top: elTop - 12, behavior: 'smooth' });
+    el.classList.add('msg-highlight');
+    window.setTimeout(() => el.classList.remove('msg-highlight'), 1500);
+  }, []);
+
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newComment.trim() || !id) return;
     setError('');
     setSendingComment(true);
 
+    // Resolve menções finais: merge pendentes (autocomplete) + texto cru
+    let mencoesFinais: NonNullable<Comentario['mentions']> = pendingMentions || [];
+    try {
+      const apelidos = extrairApelidos(newComment);
+      const resolvidas = await resolverMencoes(apelidos);
+      const mapa = new Map<string, NonNullable<Comentario['mentions']>[number]>();
+      for (const m of mencoesFinais) mapa.set(m.perfilId, m);
+      for (const m of resolvidas) if (!mapa.has(m.perfilId)) mapa.set(m.perfilId, m);
+      mencoesFinais = Array.from(mapa.values());
+    } catch (err) {
+      console.warn('[ThreadPage] resolver menções falhou:', err);
+    }
+
+    const insertPayload: Record<string, any> = {
+      thread_id: id,
+      autor: user?.name || 'Convidado',
+      avatar: user?.name?.charAt(0).toUpperCase() || 'C',
+      cor_avatar: 'color-2',
+      perfil_id: user?.id || null,
+      conteudo: newComment.trim(),
+    };
+    if (replyTo?.id) insertPayload.reply_to_comentario_id = replyTo.id;
+    if (mencoesFinais.length > 0) insertPayload.mentions = mencoesFinais;
+
     const { data, error: insertError } = await supabase
       .from('comentarios')
-      .insert({
-        thread_id: id,
-        autor: user?.name || 'Convidado',
-        avatar: user?.name?.charAt(0).toUpperCase() || 'C',
-        cor_avatar: 'color-2',
-      perfil_id: user?.id || null,
-        conteudo: newComment.trim(),
-      })
+      .insert(insertPayload)
       .select()
       .single();
 
@@ -151,11 +280,73 @@ export default function ThreadPage() {
     }
 
     if (data) {
-      setComments((prev) => [...prev, data]);
+      const comentario: Comentario = {
+        id: data.id,
+        thread_id: data.thread_id,
+        autor: data.autor,
+        avatar: data.avatar,
+        cor_avatar: data.cor_avatar,
+        conteudo: data.conteudo,
+        upvotes: data.upvotes || 0,
+        criado_em: data.criado_em,
+        perfil_id: data.perfil_id,
+        reply_to_comentario_id: data.reply_to_comentario_id,
+        replyTo: replyTo,
+        mentions: mencoesFinais,
+      };
+      setComments((prev) => [...prev, comentario]);
       setNewComment('');
-    if (user?.id) GamificationService.processar();
+      setCaret(0);
+      setReplyTo(null);
+      setPendingMentions([]);
+
+      if (user?.id && mencoesFinais.length > 0) {
+        processarMencoes(newComment, {
+          autorId: user.id,
+          contexto: {
+            tipo: 'comentario',
+            threadId: id,
+            comentarioId: String(data.id),
+          },
+        }).catch((e) => console.warn('[ThreadPage] processarMencoes:', e));
+      }
+
+      if (user?.id) GamificationService.processar();
     }
     setSendingComment(false);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNewComment(e.target.value);
+    setCaret(getCaretFromInput(e.target));
+  };
+  const handleInputKeyUp = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    setCaret(getCaretFromInput(e.currentTarget));
+  };
+  const handleInputClick = (e: React.MouseEvent<HTMLInputElement>) => {
+    setCaret(getCaretFromInput(e.currentTarget));
+  };
+  const handlePickMention = (m: PickedMention) => {
+    const before = newComment.slice(0, m.rangeStart);
+    const after = newComment.slice(m.rangeEnd);
+    const novoTexto = before + m.insercao + after;
+    setNewComment(novoTexto);
+    const novoCaret = m.rangeStart + m.insercao.length;
+    setCaret(novoCaret);
+    if (m.perfilId && !pendingMentions?.some((x) => x.perfilId === m.perfilId)) {
+      setPendingMentions((prev) => [
+        ...(prev || []),
+        { perfilId: m.perfilId, apelido: m.apelido, nome: m.nome },
+      ]);
+    }
+    requestAnimationFrame(() => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+        try {
+          inputRef.current.setSelectionRange(novoCaret, novoCaret);
+        } catch {}
+      }
+    });
   };
 
   if (loading) {
@@ -175,7 +366,7 @@ export default function ThreadPage() {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto bg-background">
+    <div className="flex-1 overflow-y-auto bg-background" ref={commentsContainerRef}>
       <div className="max-w-3xl mx-auto p-6">
         <Link
           to="/feed"
@@ -240,7 +431,8 @@ export default function ThreadPage() {
           {comments.map((comment) => (
             <div
               key={comment.id}
-              className="p-4 rounded-xl border border-glass-border bg-glass"
+              data-comment-id={comment.id}
+              className="p-4 rounded-xl border border-glass-border bg-glass group"
             >
               <div className="flex gap-3">
                 <Avatar
@@ -250,43 +442,95 @@ export default function ThreadPage() {
                   fallbackText={comment.avatar}
                 />
                 <div className="flex-1">
+                  {comment.replyTo && (
+                    <ReplyPreviewMessage
+                      replyTo={{
+                        id: comment.replyTo.id,
+                        author: comment.replyTo.autor,
+                        text: comment.replyTo.conteudo,
+                        perfilId: comment.replyTo.perfil_id,
+                      }}
+                      onJump={jumpToComment}
+                    />
+                  )}
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-sm font-medium text-white">{comment.autor}</span>
                     <span className="text-xs text-gray-500">
                       {new Date(comment.criado_em).toLocaleDateString('pt-BR')}
                     </span>
                   </div>
-                  <p className="text-sm text-gray-400">{comment.conteudo}</p>
+                  <MessageContent
+                    text={comment.conteudo}
+                    mentions={comment.mentions}
+                    className="text-sm text-gray-400"
+                  />
+                  {comment.perfil_id && comment.perfil_id !== user?.id && (
+                    <button
+                      onClick={() => startReply(comment)}
+                      className="mt-2 inline-flex items-center gap-1 text-xs text-gray-500 hover:text-accent-lilac transition-all opacity-0 group-hover:opacity-100"
+                      title="Responder"
+                    >
+                      <CornerUpLeft className="w-3.5 h-3.5" />
+                      Responder
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
           ))}
         </div>
 
-        <form
-          onSubmit={handleSubmitComment}
-          className="flex items-center gap-3 p-3 rounded-xl border border-glass-border bg-glass"
-        >
-          <input
-            type="text"
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-            placeholder="Escreva um comentario..."
-            disabled={sendingComment}
-            className="flex-1 bg-transparent border-none outline-none text-white placeholder:text-gray-600 disabled:opacity-50"
-          />
-          <button
-            type="submit"
-            disabled={sendingComment || !newComment.trim()}
-            className="p-2 rounded-lg bg-accent-lilac hover:bg-accent-lilac-hover transition-colors disabled:opacity-50"
+        <div ref={inputWrapperRef}>
+          {replyTo && (
+            <ReplyPreviewInput
+              replyTo={{
+                id: replyTo.id,
+                author: replyTo.autor,
+                text: replyTo.conteudo,
+                perfilId: replyTo.perfil_id,
+              }}
+              onCancel={cancelReply}
+            />
+          )}
+          <form
+            onSubmit={handleSubmitComment}
+            className="flex items-center gap-3 p-3 rounded-xl border border-glass-border bg-glass"
           >
-            {sendingComment ? (
-              <Loader2 className="w-4 h-4 text-white animate-spin" />
-            ) : (
-              <Send className="w-4 h-4 text-white" />
-            )}
-          </button>
-        </form>
+            <input
+              ref={inputRef}
+              type="text"
+              value={newComment}
+              onChange={handleInputChange}
+              onKeyUp={handleInputKeyUp}
+              onClick={handleInputClick}
+              placeholder={
+                replyTo
+                  ? `Respondendo a @${replyTo.autor}...`
+                  : 'Escreva um comentario...'
+              }
+              disabled={sendingComment}
+              className="flex-1 bg-transparent border-none outline-none text-white placeholder:text-gray-600 disabled:opacity-50"
+            />
+            <button
+              type="submit"
+              disabled={sendingComment || !newComment.trim()}
+              className="p-2 rounded-lg bg-accent-lilac hover:bg-accent-lilac-hover transition-colors disabled:opacity-50"
+            >
+              {sendingComment ? (
+                <Loader2 className="w-4 h-4 text-white animate-spin" />
+              ) : (
+                <Send className="w-4 h-4 text-white" />
+              )}
+            </button>
+          </form>
+          <MentionAutocomplete
+            text={newComment}
+            caret={caret}
+            anchorRef={inputWrapperRef}
+            onPick={handlePickMention}
+            onClose={() => {}}
+          />
+        </div>
       </div>
     </div>
   );

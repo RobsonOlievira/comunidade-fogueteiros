@@ -9,6 +9,7 @@ import { useAuth } from '@/src/context/AuthContext';
 import { GamificationService } from '@/src/services/gamificationService';
 import { DatabaseService } from '@/src/services/database';
 import { Analytics } from '@/src/services/analytics';
+import { processarMencoes } from '@/src/services/mentionService';
 import type { ChannelItem, Message } from '@/types';
 
 export default function ChatPage() {
@@ -75,8 +76,25 @@ export default function ChatPage() {
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'fogueteiros', table: 'mensagens', filter: `canal_id=eq.${activeChannelId}` },
-        (payload) => {
+        async (payload) => {
           const msg = payload.new as any;
+          // Se a mensagem é reply, busca o alvo pra hidratar
+          let replyTo: Message['replyTo'] = null;
+          if (msg.reply_to_mensagem_id) {
+            const { data: replyRow } = await supabase
+              .from('mensagens')
+              .select('id, autor, texto, perfil_id')
+              .eq('id', msg.reply_to_mensagem_id)
+              .maybeSingle();
+            if (replyRow) {
+              replyTo = {
+                id: String(replyRow.id),
+                author: replyRow.autor,
+                text: replyRow.texto,
+                perfilId: replyRow.perfil_id,
+              };
+            }
+          }
           const newMessage: Message = {
             id: msg.id,
             author: msg.autor,
@@ -87,9 +105,11 @@ export default function ChatPage() {
             time: msg.horario,
             perfilId: msg.perfil_id,
             likesCount: msg.likes_count || 0,
+            replyTo,
+            mentions: Array.isArray(msg.mentions) ? msg.mentions : [],
           };
           setMessages((prev) => {
-            if (prev.some((m) => m.id === newMessage.id)) return prev;
+            if (prev.some((m) => String(m.id) === String(newMessage.id))) return prev;
             return [...prev, newMessage];
           });
         }
@@ -115,7 +135,10 @@ export default function ChatPage() {
     return () => { supabase.removeChannel(channel); };
   }, [activeChannelId, perfilId]);
 
-  const handleSendMessage = async (text: string) => {
+  const handleSendMessage = async (
+    text: string,
+    opts?: { replyTo?: Message['replyTo']; mentions?: Message['mentions'] },
+  ) => {
     const now = new Date();
     const timeString = `Hoje às ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
 
@@ -126,7 +149,9 @@ export default function ChatPage() {
       avatarColor: "color-2",
       badge: "Criador",
       text: text,
-      time: timeString
+      time: timeString,
+      replyTo: opts?.replyTo || null,
+      mentions: opts?.mentions || [],
     };
 
     const sentMessage = await DatabaseService.sendMessage(activeChannelId, {
@@ -134,7 +159,27 @@ export default function ChatPage() {
       perfilId: user?.id || undefined,
     });
     if (sentMessage) {
-      setMessages(prev => [...prev, sentMessage]);
+      // Mescla com replyTo/mentions resolvidos (banco não devolve o replyTo
+      // expandido; o objeto que mandamos tem a info que precisamos)
+      const merged: Message = {
+        ...sentMessage,
+        replyTo: opts?.replyTo || sentMessage.replyTo || null,
+        mentions: opts?.mentions || sentMessage.mentions || [],
+      };
+      setMessages(prev => [...prev, merged]);
+
+      // Dispara notificação pros mencionados (fire-and-forget)
+      if (user?.id && opts?.mentions && opts.mentions.length > 0) {
+        processarMencoes(text, {
+          autorId: user.id,
+          contexto: {
+            tipo: 'mensagem',
+            canalId: activeChannelId,
+            mensagemId: String(sentMessage.id),
+          },
+        }).catch((e) => console.warn('[ChatPage] processarMencoes:', e));
+      }
+
       if (user?.id) GamificationService.processar();
     }
   };

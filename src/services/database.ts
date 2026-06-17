@@ -1,5 +1,5 @@
 import { supabase } from './supabaseClient';
-import type { ChannelItem, Message, Download, AcessoCurso } from '@/types';
+import type { ChannelItem, Message, Download, AcessoCurso, Mencao } from '@/types';
 
 const formatTime = () => {
   const now = new Date();
@@ -34,28 +34,60 @@ export const DatabaseService = {
       return [];
     }
 
-    const messages = (data || []).map(msg => ({
-      id: msg.id,
-      author: msg.autor,
-      avatar: msg.avatar,
-      avatarColor: msg.cor_avatar,
-      badge: msg.cracha,
-      text: msg.texto,
-      time: msg.horario,
-      perfilId: msg.perfil_id,
-      likesCount: msg.likes_count || 0,
-    }));
+    const rawMessages = (data || []) as Array<any>;
+
+    // Hidrata replyTo em batch: 1 query pra buscar os alvos
+    const replyIds = Array.from(
+      new Set(
+        rawMessages
+          .map((m) => m.reply_to_mensagem_id)
+          .filter((id): id is number | string => id != null),
+      ),
+    );
+    let replyMap = new Map<string, { id: string; author: string; text: string; perfilId: string | null }>();
+    if (replyIds.length > 0) {
+      const { data: replyRows } = await supabase
+        .from('mensagens')
+        .select('id, autor, texto, perfil_id')
+        .in('id', replyIds);
+      replyMap = new Map(
+        (replyRows || []).map((r) => [
+          String(r.id),
+          { id: String(r.id), author: r.autor, text: r.texto, perfilId: r.perfil_id },
+        ]),
+      );
+    }
+
+    const messages: Message[] = rawMessages.map((msg) => {
+      const m: Message = {
+        id: msg.id,
+        author: msg.autor,
+        avatar: msg.avatar,
+        avatarColor: msg.cor_avatar,
+        badge: msg.cracha,
+        text: msg.texto,
+        time: msg.horario,
+        perfilId: msg.perfil_id,
+        likesCount: msg.likes_count || 0,
+        mentions: Array.isArray(msg.mentions) ? (msg.mentions as Mencao[]) : [],
+      };
+      const replyId = msg.reply_to_mensagem_id;
+      if (replyId != null && replyMap.has(String(replyId))) {
+        m.replyTo = replyMap.get(String(replyId))!;
+      }
+      return m;
+    });
 
     if (perfilId && messages.length > 0) {
-      const msgIds = messages.map(m => m.id);
+      const msgIds = messages.map(m => String(m.id));
       const { data: likes } = await supabase
         .from('mensagens_likes')
         .select('mensagem_id')
         .in('mensagem_id', msgIds)
         .eq('perfil_id', perfilId);
 
-      const likedIds = new Set((likes || []).map(l => l.mensagem_id));
-      messages.forEach(m => { m.likedByMe = likedIds.has(m.id); });
+      const likedIds = new Set((likes || []).map(l => String(l.mensagem_id)));
+      messages.forEach(m => { m.likedByMe = likedIds.has(String(m.id)); });
     }
 
     return messages;
@@ -84,6 +116,12 @@ export const DatabaseService = {
       horario: message.time || formatTime()
     };
     if (message.perfilId) newMessage.perfil_id = message.perfilId;
+    if (message.replyTo?.id) {
+      newMessage.reply_to_mensagem_id = message.replyTo.id;
+    }
+    if (message.mentions && message.mentions.length > 0) {
+      newMessage.mentions = message.mentions;
+    }
 
     const { data, error } = await supabase
       .from('mensagens')
@@ -106,6 +144,8 @@ export const DatabaseService = {
       time: data.horario,
       perfilId: data.perfil_id,
       likesCount: 0,
+      replyTo: message.replyTo || null,
+      mentions: message.mentions || [],
     };
   },
 

@@ -10,6 +10,12 @@ export interface ChannelItem {
   desc: string
 }
 
+export interface Mencao {
+  perfilId: string
+  apelido: string
+  nome: string
+}
+
 export interface Message {
   id: string
   author: string
@@ -21,6 +27,14 @@ export interface Message {
   perfilId?: string
   likesCount?: number
   likedByMe?: boolean
+  // Reply/mentions (migration 003)
+  replyTo?: {
+    id: string
+    author: string
+    text: string
+    perfilId?: string | null
+  } | null
+  mentions?: Mencao[]
 }
 
 export interface Perfil {
@@ -104,6 +118,15 @@ export interface Comentario {
   conteudo: string
   upvotes: number
   criado_em: string
+  // Reply/mentions (migration 003)
+  reply_to_comentario_id?: string | null
+  replyTo?: {
+    id: string
+    autor: string
+    conteudo: string
+    perfil_id?: string | null
+  } | null
+  mentions?: Mencao[]
 }
 
 export interface Download {

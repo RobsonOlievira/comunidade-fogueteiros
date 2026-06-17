@@ -967,3 +967,225 @@ body {
     from { opacity: 0; }
     to { opacity: 1; }
 }
+
+/* ==========================================================================
+   REPLY PREVIEW (card "respondendo a X")
+   ========================================================================== */
+.reply-preview-input {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    margin-bottom: 8px;
+    background: rgba(192, 159, 255, 0.08);
+    border-left: 3px solid var(--accent-lilac);
+    border-radius: 8px;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+.reply-preview-input .reply-preview-icon {
+    width: 16px;
+    height: 16px;
+    color: var(--accent-lilac);
+    flex-shrink: 0;
+}
+.reply-preview-input .reply-preview-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+}
+.reply-preview-input .reply-preview-label {
+    color: var(--text-primary);
+    font-size: 0.78rem;
+}
+.reply-preview-input .reply-preview-text {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+.reply-preview-input .reply-preview-close {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 1.2rem;
+    line-height: 1;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: var(--transition-smooth);
+}
+.reply-preview-input .reply-preview-close:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-primary);
+}
+
+.reply-preview-message {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    margin-bottom: 4px;
+    background: rgba(255, 255, 255, 0.04);
+    border-left: 2px solid var(--accent-lilac);
+    border-radius: 6px;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    text-align: left;
+    width: 100%;
+    max-width: 100%;
+    border-top: none;
+    border-right: none;
+    border-bottom: none;
+}
+.reply-preview-message:hover {
+    background: rgba(192, 159, 255, 0.08);
+    color: var(--text-secondary);
+}
+.reply-preview-message .reply-preview-icon {
+    width: 14px;
+    height: 14px;
+    color: var(--accent-lilac);
+    flex-shrink: 0;
+}
+.reply-preview-message .reply-preview-body {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+    flex: 1;
+}
+.reply-preview-message .reply-preview-label {
+    color: var(--text-primary);
+    font-size: 0.78rem;
+    font-weight: 500;
+}
+.reply-preview-message .reply-preview-text {
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+/* ==========================================================================
+   MENTION CHIPS (@apelido clicável)
+   ========================================================================== */
+.mention-chip {
+    display: inline-block;
+    background: rgba(192, 159, 255, 0.15);
+    color: var(--accent-lilac);
+    border: 1px solid rgba(192, 159, 255, 0.3);
+    border-radius: 6px;
+    padding: 1px 6px;
+    font-size: 0.85em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    text-decoration: none;
+    line-height: 1.4;
+}
+.mention-chip:hover {
+    background: rgba(192, 159, 255, 0.25);
+    border-color: var(--accent-lilac);
+    color: #fff;
+}
+.mention-unresolved {
+    color: var(--accent-lilac);
+    font-weight: 500;
+    opacity: 0.7;
+}
+
+/* ==========================================================================
+   MENTION AUTOCOMPLETE (dropdown de @)
+   ========================================================================== */
+.mention-autocomplete {
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 24px;
+    right: 24px;
+    max-width: 320px;
+    background: var(--bg-sidebar, #1a1330);
+    border: 1px solid var(--border-light);
+    border-radius: var(--border-radius-md, 8px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    overflow: hidden;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    max-height: 240px;
+    overflow-y: auto;
+}
+.mention-autocomplete-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    width: 100%;
+    text-align: left;
+    color: var(--text-primary);
+}
+.mention-autocomplete-item.is-active,
+.mention-autocomplete-item:hover {
+    background: rgba(192, 159, 255, 0.12);
+}
+.mention-autocomplete-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #c39eff, #8a2be2);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+.mention-autocomplete-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.mention-autocomplete-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+}
+.mention-autocomplete-nome {
+    font-size: 0.85rem;
+    color: var(--text-primary);
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.mention-autocomplete-apelido {
+    font-size: 0.75rem;
+    color: var(--accent-lilac);
+}
+
+/* ==========================================================================
+   MESSAGE HIGHLIGHT (quando pula pra mensagem original)
+   ========================================================================== */
+.msg-highlight {
+    animation: msgHighlight 1.5s ease-out;
+    border-radius: 8px;
+}
+@keyframes msgHighlight {
+    0% { background-color: rgba(192, 159, 255, 0.18); }
+    100% { background-color: transparent; }
+}
