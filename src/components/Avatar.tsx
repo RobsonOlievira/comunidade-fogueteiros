@@ -32,7 +32,7 @@ export function Avatar({ name, url, colorClass = 'color-4', className = '', alt 
       onError={() => setErrored(true)}
     />
   ) : (
-    <span className="w-full h-full flex items-center justify-center">{initial}</span>
+    <span>{initial}</span>
   );
 
   return (

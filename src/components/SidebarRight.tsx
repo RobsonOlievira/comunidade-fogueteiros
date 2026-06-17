@@ -75,8 +75,7 @@ export default function SidebarRight({ isHidden }: SidebarRightProps) {
                   <Avatar
                     name={p.nome}
                     url={p.avatar_url}
-                    className="member-avatar"
-                    colorClass={avatarClass(p.cargo)}
+                    colorClass={`member-avatar ${avatarClass(p.cargo)}`}
                     alt={p.nome}
                   />
                   <div className="member-status-dot online"></div>
@@ -107,8 +106,7 @@ export default function SidebarRight({ isHidden }: SidebarRightProps) {
                   <Avatar
                     name={p.nome}
                     url={p.avatar_url}
-                    className="member-avatar"
-                    colorClass={avatarClass(p.cargo)}
+                    colorClass={`member-avatar ${avatarClass(p.cargo)}`}
                     alt={p.nome}
                   />
                   <div className="member-status-dot offline"></div>
