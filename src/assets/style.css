@@ -1289,3 +1289,104 @@ body {
     top: -3px;
     right: -3px;
 }
+
+/* ==========================================================================
+   Novo Avatar (cf-avatar) — sistema robusto pra msg, member, sidebar.
+   Sempre redondo, sem seleção, com coroa opcional pro usuário Pro.
+   ========================================================================== */
+
+.cf-avatar {
+    position: relative;
+    display: inline-block;
+    flex-shrink: 0;
+    line-height: 0;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+.cf-avatar.w-6 { width: 24px; height: 24px; }
+.cf-avatar.h-6 { height: 24px; }
+.cf-avatar.w-8 { width: 32px; height: 32px; }
+.cf-avatar.h-8 { height: 32px; }
+.cf-avatar.w-10 { width: 40px; height: 40px; }
+.cf-avatar.h-10 { height: 40px; }
+.cf-avatar.w-12 { width: 48px; height: 48px; }
+.cf-avatar.h-12 { height: 48px; }
+.cf-avatar.w-16 { width: 64px; height: 64px; }
+.cf-avatar.h-16 { height: 64px; }
+
+.cf-avatar .cf-avatar-circle {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #c39eff, #8a2be2);
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.95rem;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+    user-select: none;
+    -webkit-user-select: none;
+    pointer-events: none;
+}
+
+/* Variantes de cor por cargo — aplicadas via className no caller */
+.cf-avatar .color-1 { background: linear-gradient(135deg, #c39eff, #8a2be2); color: #fff; }
+.cf-avatar .color-2 { background: linear-gradient(135deg, #00ffff, #008b8b); color: #000; }
+.cf-avatar .color-3 { background: linear-gradient(135deg, #ff007f, #8b008b); color: #fff; }
+.cf-avatar .color-4 { background: linear-gradient(135deg, #ffb300, #ff6f00); color: #000; }
+
+.cf-avatar .cf-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-user-drag: none;
+    pointer-events: none;
+    display: block;
+}
+
+.cf-avatar .cf-avatar-initial {
+    line-height: 1;
+    font-size: inherit;
+    user-select: none;
+    -webkit-user-select: none;
+    pointer-events: none;
+}
+
+.cf-avatar .cf-avatar-crown {
+    position: absolute;
+    top: -3px;
+    right: -3px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #ffd700, #ffaa00);
+    color: #1a1330;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+    border: 2px solid var(--bg-chat, #1a1330);
+    z-index: 2;
+    line-height: 0;
+    pointer-events: none;
+}
+.cf-avatar.w-6 .cf-avatar-crown,
+.cf-avatar.w-8 .cf-avatar-crown {
+    width: 14px;
+    height: 14px;
+    top: -2px;
+    right: -2px;
+    border-width: 1.5px;
+}
+.cf-avatar.w-6 .cf-avatar-crown svg,
+.cf-avatar.w-8 .cf-avatar-crown svg {
+    width: 8px;
+    height: 8px;
+}

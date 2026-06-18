@@ -223,6 +223,7 @@ export default function ChatArea({
                 url={perfil?.avatar_url}
                 className="msg-avatar"
                 colorClass={getAvatarColorClass(msg.avatarColor)}
+                size="md"
                 fallbackText={msg.avatar}
                 alt={perfil?.nome || msg.author}
                 isPro={perfil?.pro}
