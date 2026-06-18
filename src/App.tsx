@@ -58,7 +58,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 function AppRoutes() {
-  const { user, loading } = useAuth();
+  const { user, loading, phase, phaseMessage } = useAuth();
   const location = useLocation();
   const renderCountRef = React.useRef(0);
   renderCountRef.current += 1;
@@ -137,14 +137,13 @@ function AppRoutes() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-accent-lilac" />
-        {import.meta.env.DEV && (
-          <div className="fixed bottom-2 right-2 z-[9999] px-2 py-1 bg-black/80 text-white text-[10px] rounded font-mono pointer-events-none">
-            render #{renderCount} • {location.pathname} • loading
-          </div>
-        )}
-      </div>
+      <AuthSplash
+        phase={phase}
+        phaseMessage={phaseMessage}
+        renderCount={renderCount}
+        location={location}
+        stuck={stuck}
+      />
     );
   }
 
@@ -186,7 +185,7 @@ function AppRoutes() {
           // getSession() is still resolving. If user is null AFTER
           // loading finished, go to /login.
           loading
-            ? <AuthSplash />
+            ? <AuthSplash phase={phase} phaseMessage={phaseMessage} />
             : user ? <Navigate to="/labs" replace /> : <Navigate to="/login" replace />
         } />
       </Routes>
@@ -198,11 +197,28 @@ function AppRoutes() {
 // brief splash. This prevents the user from bouncing through /login
 // (then back to the intended page) when the magic-link session is
 // restored in the background.
-function AuthSplash() {
+function AuthSplash({
+  phase = 'session',
+  phaseMessage = 'Verificando sessão…',
+  renderCount,
+  location,
+  stuck = false,
+}: {
+  phase?: 'session' | 'profile' | 'ready' | 'error';
+  phaseMessage?: string;
+  renderCount?: number;
+  location?: { pathname: string };
+  stuck?: boolean;
+}) {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-3">
       <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-accent-lilac" />
-      <p className="text-xs text-gray-500">Verificando sessão…</p>
+      <p className="text-xs text-gray-500">{phaseMessage}</p>
+      {import.meta.env.DEV && renderCount !== undefined && location && (
+        <div className="fixed bottom-2 right-2 z-[9999] px-2 py-1 bg-black/80 text-white text-[10px] rounded font-mono pointer-events-none">
+          render #{renderCount} • {location.pathname} • phase={phase}{stuck ? ' • STUCK' : ''}
+        </div>
+      )}
     </div>
   );
 }

@@ -25,9 +25,21 @@ interface User {
   needsOnboarding: boolean;
 }
 
+// Fases do loading. 'session' = restaurando token, 'profile' = carregando
+// perfil do user, 'ready' = tudo carregado, 'error' = timeout/falha.
+type LoadingPhase = 'session' | 'profile' | 'ready' | 'error';
+
 interface AuthContextType {
   user: User | null;
+  // Mantemos `loading: true` enquanto não temos certeza se há user logado
+  // ou não. Isso é o que o App.tsx usa pra decidir se mostra splash ou
+  // rotas. Diferente do que era antes: agora `loading` vira false assim
+  // que a SESSION resolve (com ou sem user), e o profile carrega em
+  // background sem bloquear o app shell.
   loading: boolean;
+  // Fase granular pra mostrar feedback textual no splash.
+  phase: LoadingPhase;
+  phaseMessage: string;
   cargo: string | null;
   cargoLoaded: boolean;
   isPro: boolean;
@@ -37,11 +49,15 @@ interface AuthContextType {
   signInWithGoogle: (origem?: string) => Promise<void>;
   completeOnboarding: (apelido: string, whatsapp: string) => Promise<string | null>;
   signOut: () => Promise<void>;
+  // Permite ao usuário forçar "ir pra tela de login" se o app travou.
+  resetAuth: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
+  phase: 'session',
+  phaseMessage: 'Iniciando...',
   cargo: null,
   cargoLoaded: false,
   isPro: false,
@@ -51,6 +67,7 @@ const AuthContext = createContext<AuthContextType>({
   signInWithGoogle: async () => {},
   completeOnboarding: async () => null,
   signOut: async () => {},
+  resetAuth: async () => {},
 });
 
 const checkAppBStudent = async (email: string, accessToken: string): Promise<AppBStatus | null> => {
@@ -219,14 +236,33 @@ const buildUser = (sessionUser: any, apelido?: string, needsOnboarding = false):
   needsOnboarding,
 });
 
+const PHASE_MESSAGES: Record<LoadingPhase, string> = {
+  session: 'Verificando sessão...',
+  profile: 'Carregando perfil...',
+  ready: 'Pronto',
+  error: 'Não foi possível carregar o app',
+};
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [phase, setPhase] = useState<LoadingPhase>('session');
+  const [phaseMessage, setPhaseMessage] = useState<string>(PHASE_MESSAGES.session);
   const [cargo, setCargo] = useState<string | null>(null);
   const [cargoLoaded, setCargoLoaded] = useState(false);
   const [isPro, setIsPro] = useState(false);
   const [appBStatus, setAppBStatus] = useState<AppBStatus | null>(null);
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
+
+  // Helper pra mudar fase + log com timestamp (debug-friendly).
+  const setPhaseAndLog = (next: LoadingPhase, extra?: string) => {
+    const t = Date.now();
+    setPhase(next);
+    setPhaseMessage(PHASE_MESSAGES[next]);
+    if (import.meta.env.DEV) {
+      console.log(`[Auth] phase=${next} t=${t}${extra ? ' ' + extra : ''}`);
+    }
+  };
 
   const fetchPerfil = (userId: string) => {
     if (import.meta.env.DEV) console.log(`[Auth] fetchPerfil start userId=${userId.slice(0,8)}`);
@@ -261,6 +297,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const perfilFetchedRef = React.useRef<string | null>(null);
   const applyCountRef = React.useRef(0);
 
+  // Wrapper com timeout duro. Importante: nunca trava pra sempre.
+  const withTimeout = <T,>(promise: Promise<T>, ms: number, label: string): Promise<T> => {
+    return Promise.race([
+      promise,
+      new Promise<T>((_, reject) =>
+        setTimeout(() => reject(new Error(`${label} timeout (${ms}ms)`)), ms)
+      ),
+    ]);
+  };
+
   const applyUser = async (sessionUser: any, checkStudent: boolean, accessToken?: string) => {
     applyCountRef.current += 1;
     const cid = applyCountRef.current;
@@ -271,6 +317,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     userIdRef.current = sessionUser.id;
+
+    // Vamos para fase 'profile' — temos o user, agora carregamos o perfil
+    setPhaseAndLog('profile', `applyUser #${cid} ensurePerfil start`);
 
     const { needsOnboarding: need, apelido } = await ensurePerfil(sessionUser);
     const metaName =
@@ -330,68 +379,59 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const init = async () => {
       const start = Date.now();
-      // NÃO setamos loading=false aqui. Mantemos loading=true até o
-      // getSession() resolver E o applyUser completar. Se algo der
-      // timeout, o SIGNED_IN event do onAuthStateChange vai popular
-      // o user. O AuthSplash (no App.tsx) segura a tela durante esse
-      // período.
-      //
-      // Razão: o setLoading(false) imediato + setUser(minimal) com
-      // needsOnboarding:true fazia o OnboardingModal aparecer mesmo
-      // para users que já tinham completado o cadastro, sempre que o
-      // Supabase demorasse >15s. Resultado: usuário "vê" o popup
-      // de apelido+whatsapp a cada reload, passa por ele, e o app
-      // "se redreça" depois.
+      setPhaseAndLog('session', 'init start');
 
       try {
-        const sessionPromise = supabase.auth.getSession();
-        const timeoutPromise = new Promise<{ data: { session: null } }>((resolve) =>
-          setTimeout(() => {
-            console.warn('[Auth] getSession() timeout (15s) — assuming logged out');
-            resolve({ data: { session: null } });
-          }, 15000)
+        // Timeout agressivo pro getSession: 5s é mais que suficiente
+        // pra chamada local de localStorage. Se demorar mais, é
+        // loop/conflito de instâncias e melhor seguir sem sessão.
+        const { data: { session } } = await withTimeout(
+          supabase.auth.getSession(),
+          5000,
+          'getSession'
         );
-        const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise]);
         if (cancelled) return;
-        if (import.meta.env.DEV) console.log(`[Auth] init getSession resolved in ${Date.now() - start}ms hasUser=${!!session?.user}`);
+        if (import.meta.env.DEV) {
+          console.log(`[Auth] getSession resolved in ${Date.now() - start}ms hasUser=${!!session?.user}`);
+        }
 
         if (session?.user) {
-          try {
-            await Promise.race([
-              applyUser(session.user, true, session.access_token),
-              new Promise((_, reject) => setTimeout(() => reject(new Error('applyUser timeout')), 15000))
-            ]);
-          } catch (e: any) {
-            console.error('[Auth] applyUser failed/timed out (init) — relying on SIGNED_IN event:', e?.message);
-            // Não populamos user aqui. Deixa o onAuthStateChange
-            // SIGNED_IN (que dispara logo depois) popular o user
-            // corretamente. Se nem ele popular dentro de 30s
-            // totais, o user pode ter perdido a sessão.
+          // IMPORTANTE: liberamos o app shell IMEDIATAMENTE porque temos
+          // user válido na session. O perfil completo carrega em
+          // background. Isso elimina o "loading de 25s".
+          const minimalUser = buildUser(session.user, undefined, true);
+          if (cancelled) return;
+          setUser(minimalUser);
+          setLoading(false); // ← app shell já pode renderizar
+          if (import.meta.env.DEV) {
+            console.log(`[Auth] session phase done in ${Date.now() - start}ms, releasing shell, fetching profile in background`);
           }
-        }
-      } catch (err) {
-        console.error('[Auth] Erro na inicialização:', err);
-      } finally {
-        if (!cancelled) {
-          if (import.meta.env.DEV) console.log(`[Auth] init complete in ${Date.now() - start}ms, setting loading=false`);
+
+          // Agora carrega o perfil completo em background, sem bloquear.
+          applyUser(session.user, true, session.access_token)
+            .catch((e) => {
+              console.warn('[Auth] applyUser background failed:', e?.message);
+            })
+            .finally(() => {
+              if (!cancelled) setPhaseAndLog('ready');
+            });
+        } else {
+          // Sem sessão, vai pra tela de login
+          if (import.meta.env.DEV) {
+            console.log(`[Auth] no session, going to login in ${Date.now() - start}ms`);
+          }
           setLoading(false);
-          setCargoLoaded(true);
+          setPhaseAndLog('ready');
         }
+      } catch (err: any) {
+        console.warn('[Auth] init falhou:', err?.message);
+        if (cancelled) return;
+        // Se getSession deu timeout (5s), assumimos logged out e liberamos
+        // o app shell. O SIGNED_IN event (se vier) vai popular depois.
+        setLoading(false);
+        setPhaseAndLog('ready', 'init error → assuming logged out');
       }
     };
-
-    // Safety net: se o init travar por qualquer motivo (race condition
-    // com onAuthStateChange, network nunca resolve), garante que o
-    // app não fica preso no AuthSplash pra sempre. 25s dá margem
-    // pro getSession+applyUser rolarem em paz, mas libera caso algo
-    // dê errado silenciosamente.
-    const safetyTimeout = setTimeout(() => {
-      if (!cancelled) {
-        console.warn('[Auth] Safety timeout (25s) — forcing loading=false');
-        setLoading(false);
-        setCargoLoaded(true);
-      }
-    }, 25000);
 
     init();
 
@@ -416,29 +456,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             .eq('id', session.user.id)
             .then(() => {});
 
+          // Mesmo princípio: libera shell IMEDIATAMENTE se ainda não
+          // temos user, e carrega perfil em background.
+          if (!userIdRef.current) {
+            setUser(buildUser(session.user, undefined, true));
+            setLoading(false);
+          }
+
           try {
-            await Promise.race([
+            await withTimeout(
               applyUser(session.user, true, session.access_token),
-              new Promise((_, reject) => setTimeout(() => reject(new Error('applyUser timeout')), 15000))
-            ]);
+              8000,
+              'applyUser(SIGNED_IN)'
+            );
           } catch (e: any) {
-            console.error('[Auth] SIGNED_IN applyUser failed/timed out:', e?.message);
-            // Sem fallback. Não setamos user nenhum pra evitar marcar
-            // needsOnboarding=true indevidamente. Se o applyUser falhou,
-            // o INITIAL_SESSION (que dispara depois) vai popular.
+            console.warn('[Auth] SIGNED_IN applyUser failed/timed out:', e?.message);
+          } finally {
+            if (!cancelled) setPhaseAndLog('ready');
           }
         } else if (event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') {
-          try {
-            await Promise.race([
-              applyUser(session.user, event === 'INITIAL_SESSION', session.access_token),
-              new Promise((_, reject) => setTimeout(() => reject(new Error('applyUser timeout')), 15000))
-            ]);
-          } catch (e: any) {
-            console.error('[Auth] applyUser failed/timed out:', e?.message);
+          // INITIAL_SESSION duplica o getSession; não precisa rodar de novo.
+          // TOKEN_REFRESHED não precisa re-apply.
+          if (event === 'INITIAL_SESSION' && !userIdRef.current) {
+            try {
+              await withTimeout(
+                applyUser(session.user, event === 'INITIAL_SESSION', session.access_token),
+                8000,
+                'applyUser(INITIAL_SESSION)'
+              );
+            } catch (e: any) {
+              console.warn('[Auth] applyUser failed/timed out:', e?.message);
+            } finally {
+              if (!cancelled) setPhaseAndLog('ready');
+            }
           }
         } else if (event === 'USER_UPDATED') {
           try {
-            await applyUser(session.user, false, session.access_token);
+            await withTimeout(
+              applyUser(session.user, false, session.access_token),
+              8000,
+              'applyUser(USER_UPDATED)'
+            );
           } catch {}
         }
       } else {
@@ -457,7 +515,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return () => {
       cancelled = true;
-      clearTimeout(safetyTimeout);
       subscription.unsubscribe();
     };
   }, []);
@@ -585,10 +642,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setNeedsOnboarding(false);
   };
 
+  // Botão "tentar de novo" do splash de erro
+  const resetAuth = async () => {
+    setPhaseAndLog('session', 'resetAuth');
+    try { await supabase.auth.signOut(); } catch {}
+    setUser(null);
+    setCargo(null);
+    setCargoLoaded(false);
+    setLoading(true);
+    // Re-init
+    setTimeout(() => window.location.reload(), 100);
+  };
+
   return (
     <AuthContext.Provider value={{
-      user, loading, cargo, cargoLoaded, isPro, appBStatus, needsOnboarding,
-      signInWithMagicLink, signInWithGoogle, completeOnboarding, signOut
+      user, loading, phase, phaseMessage, cargo, cargoLoaded, isPro, appBStatus, needsOnboarding,
+      signInWithMagicLink, signInWithGoogle, completeOnboarding, signOut, resetAuth
     }}>
       {children}
     </AuthContext.Provider>

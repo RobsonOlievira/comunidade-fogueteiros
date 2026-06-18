@@ -1,13 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { Send, Eye, EyeOff, RefreshCw, CheckCircle2, AlertCircle, Users, Mail, Check, Loader2, BarChart3 } from 'lucide-react';
+import { supabase } from '@/src/services/supabaseClient';
 
 const SUPABASE_URL = 'https://ghdpmlmescgdhvrdqfiz.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_ydR0CaKAAYuztfddU9d52w_0_6GuIqX';
 const SEND_BULK_URL = `${SUPABASE_URL}/functions/v1/send-bulk-campaign`;
 const STATUS_URL = `${SUPABASE_URL}/functions/v1/campaign-status`;
-
-const supabase: SupabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 interface GroupStat {
   group_id: string;
