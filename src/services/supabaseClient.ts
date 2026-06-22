@@ -3,7 +3,12 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js'
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string
 
-const STORAGE_KEY = 'sb-ghdpmlmescgdhvrdqfiz-auth-token'
+// Storage key DIFERENTE por schema evita o warning do GoTrueClient:
+// "Multiple GoTrueClient instances detected in the same browser context"
+// (compartilhar storageKey entre clientes concorrentes causa lock contention
+// e getSession pode dar timeout de 5s).
+const STORAGE_KEY_FOGUETEIROS = 'sb-ghdpmlmescgdhvrdqfiz-auth-token'
+const STORAGE_KEY_PUBLIC = 'sb-ghdpmlmescgdhvrdqfiz-auth-token-public'
 
 declare global {
   var __cf_supabase__: SupabaseClient | undefined
@@ -14,7 +19,10 @@ function makeSupabase(schema: 'fogueteiros' | 'public'): SupabaseClient {
   return createClient(supabaseUrl, supabaseAnonKey, {
     db: { schema },
     auth: {
-      storageKey: STORAGE_KEY,
+      // Cliente "public" só é usado pra queries de leitura no schema public
+      // (perfis, courses) — não precisa de sessão própria. Mantemos o
+      // storageKey DIFERENTE pra eliminar conflito com o cliente principal.
+      storageKey: schema === 'fogueteiros' ? STORAGE_KEY_FOGUETEIROS : STORAGE_KEY_PUBLIC,
       persistSession: schema === 'fogueteiros',
       autoRefreshToken: schema === 'fogueteiros',
       detectSessionInUrl: schema === 'fogueteiros',

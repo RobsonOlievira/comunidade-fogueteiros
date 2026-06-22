@@ -191,21 +191,31 @@ const ensurePerfil = async (sessionUser: any, origem: string = 'organico'): Prom
         updates.tech_stack = pending.interests;
       }
       if (Object.keys(updates).length > 1) {
-        await supabase.from('perfis').update(updates).eq('id', id);
+        // Fire-and-forget: se travar (lock, RLS, rede), NÃO bloqueia
+        // o reconhecimento do perfil existente. Erro só polui console.
+        supabase.from('perfis').update(updates).eq('id', id).then(
+          () => { try { localStorage.removeItem('cf_pending_cadastro'); } catch {} try { sessionStorage.removeItem('cf_pending_cadastro_marker'); } catch {} },
+          (e: any) => console.warn('[Auth] pending update falhou (não-bloqueante):', e?.message),
+        );
+      } else {
+        try { localStorage.removeItem('cf_pending_cadastro'); } catch {}
+        try { sessionStorage.removeItem('cf_pending_cadastro_marker'); } catch {}
       }
-      localStorage.removeItem('cf_pending_cadastro');
-      sessionStorage.removeItem('cf_pending_cadastro_marker');
     }
 
     // If the perfil already exists but is missing the Google avatar
     // (because the user logged in with email/magic-link first and the
     // avatar was never persisted), backfill it from user_metadata.
+    // Fire-and-forget pra não travar o caminho de "user já tem cadastro".
     if (existing && !existing.avatar_url && avatarUrl) {
-      await supabase
+      supabase
         .from('perfis')
         .update({ avatar_url: avatarUrl, atualizado_em: new Date().toISOString() })
-        .eq('id', id);
-      existing.avatar_url = avatarUrl;
+        .eq('id', id)
+        .then(
+          () => { /* ok */ },
+          (e: any) => console.warn('[Auth] avatar backfill falhou (não-bloqueante):', e?.message),
+        );
     }
 
     const needsOnboarding = !existing.apelido?.trim() || !existing.telefone?.trim();
