@@ -60,15 +60,15 @@
 
 /* overflow-x no html (não só no body) é o que realmente impede scroll
    horizontal em mobile browsers — body overflow:hidden não funciona lá. */
-html {
-    overflow-x: hidden;
-    overflow-y: scroll; /* permite scroll natural mas só no eixo Y */
-}
 html, body {
     margin: 0;
     padding: 0;
     width: 100%;
-    height: 100%;
+    /* 100dvh = dynamic viewport height (corrige o bug do mobile browser
+       onde a barra de endereço some e o viewport "salta", causando
+       overflow temporário quando overflow:hidden não acompanha). */
+    height: 100dvh;
+    overflow: hidden;
 }
 
 body {
