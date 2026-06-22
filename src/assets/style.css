@@ -59,17 +59,21 @@
 }
 
 /* overflow-x no html (não só no body) é o que realmente impede scroll
-   horizontal em mobile browsers — body overflow:hidden não funciona lá. */
+   horizontal em mobile browsers — body overflow:hidden não funciona lá.
+   overflow:clip é mais forte que overflow:hidden — não cria contexto
+   de scroll e corta tudo que vaza, sem ambiguidade. */
 html, body {
     margin: 0;
     padding: 0;
     width: 100%;
-    /* 100dvh = dynamic viewport height (corrige o bug do mobile browser
-       onde a barra de endereço some e o viewport "salta", causando
-       overflow temporário quando overflow:hidden não acompanha). */
+    max-width: 100vw;       /* previne que qualquer elemento force > 100vw */
     height: 100dvh;
-    overflow: hidden;
+    overflow: clip;         /* clip > hidden — corta sem criar scroll container */
+    contain: strict;        /* isola renderização do resto da página */
 }
+
+/* O #root do React é só um wrapper — overflow:clip aqui atrapalharia
+   o flex layout interno. O html/body acima já limitam tudo. */
 
 body {
     background-color: var(--bg-app);
@@ -83,10 +87,11 @@ body {
 .app-container {
     display: flex;
     width: 100%;
+    max-width: 100%;    /* nunca excede o viewport */
     height: 100%;
     position: relative;
-    max-width: 100%;
     min-height: 0;
+    overflow: clip;      /* corta tudo que vazar de qualquer filho */
 }
 
 @media (max-width: 768px) {
