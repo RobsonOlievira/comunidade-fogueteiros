@@ -586,6 +586,7 @@ body {
     flex-direction: column;
     gap: 4px;
     flex: 1;
+    min-width: 0; /* permite encolher abaixo do tamanho mínimo do conteúdo (texto longo sem espaços) */
 }
 .msg-header {
     display: flex;
@@ -615,6 +616,8 @@ body {
     line-height: 1.5;
     color: var(--text-secondary);
     word-break: break-word;
+    overflow-wrap: break-word;
+    min-width: 0;
 }
 
 /* Área de Enviar Mensagem (Input) */
