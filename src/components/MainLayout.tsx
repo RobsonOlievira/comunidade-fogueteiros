@@ -288,7 +288,7 @@ export default function MainLayout() {
       <main
         className={`flex-1 flex flex-col min-h-0 pt-[57px] md:pt-14 ${
           isLabsPage
-            ? 'pb-[57px] md:pb-0 overflow-hidden md:overflow-y-auto'
+            ? 'pb-[57px] md:pb-0 overflow-hidden relative md:overflow-y-auto'
             : 'overflow-y-auto'
         }`}
       >

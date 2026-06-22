@@ -405,7 +405,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // IMPORTANTE: liberamos o app shell IMEDIATAMENTE porque temos
           // user válido na session. O perfil completo carrega em
           // background. Isso elimina o "loading de 25s".
-          const minimalUser = buildUser(session.user, undefined, true);
+          const minimalUser = buildUser(session.user, undefined, false);
           if (cancelled) return;
           setUser(minimalUser);
           setLoading(false); // ← app shell já pode renderizar
@@ -476,7 +476,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // Mesmo princípio: libera shell IMEDIATAMENTE se ainda não
           // temos user, e carrega perfil em background.
           if (!userIdRef.current) {
-            setUser(buildUser(session.user, undefined, true));
+            setUser(buildUser(session.user, undefined, false));
             setLoading(false);
           }
 

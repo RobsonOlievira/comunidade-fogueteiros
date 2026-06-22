@@ -68,8 +68,9 @@ html, body {
     width: 100%;
     max-width: 100vw;       /* previne que qualquer elemento force > 100vw */
     height: 100dvh;
+    overflow: hidden;       /* fallback browsers sem suporte a clip */
     overflow: clip;         /* clip > hidden — corta sem criar scroll container */
-    contain: strict;        /* isola renderização do resto da página */
+    contain: paint layout;  /* isola renderização sem size containment (evita overflow) */
 }
 
 /* O #root do React é só um wrapper — overflow:clip aqui atrapalharia
@@ -91,7 +92,13 @@ body {
     height: 100%;
     position: relative;
     min-height: 0;
-    overflow: clip;      /* corta tudo que vazar de qualquer filho */
+    overflow: hidden;    /* hidden > clip: mais compatível e clips absolutos filhos (position:relative) */
+}
+
+/* Garante que nenhum filho flex de .app-container tenha min-width > 0,
+   prevenindo que conteúdo não-quebrável force o layout além do viewport */
+.app-container > * {
+    min-width: 0;
 }
 
 @media (max-width: 768px) {
@@ -983,8 +990,7 @@ body {
         box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
     }
     .sidebar-right.hidden {
-        margin-right: 0;
-        transform: translateX(100%);
+        display: none;
     }
 }
 
