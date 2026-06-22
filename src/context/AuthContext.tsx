@@ -418,9 +418,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
 
           // Agora carrega o perfil completo em background, sem bloquear.
+          // Safety fallback: se applyUser travar por >10s (RLS, rede, lock),
+          // fechamos a modal por segurança para não bloquear o usuário.
+          let safetyTimer: ReturnType<typeof setTimeout> | undefined;
+          safetyTimer = setTimeout(() => {
+            console.warn('[Auth] applyUser safety fallback triggered — forcing modal closed');
+            setNeedsOnboarding(false);
+          }, 10000);
+
           applyUser(session.user, true, session.access_token)
+            .then(() => { if (safetyTimer) clearTimeout(safetyTimer); })
             .catch((e) => {
               console.warn('[Auth] applyUser background failed:', e?.message);
+              setNeedsOnboarding(false);
+              if (safetyTimer) clearTimeout(safetyTimer);
             })
             .finally(() => {
               if (!cancelled) setPhaseAndLog('ready');
@@ -481,6 +492,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             );
           } catch (e: any) {
             console.warn('[Auth] SIGNED_IN applyUser failed/timed out:', e?.message);
+            // Fallback de segurança: se applyUser falhou por timeout/error,
+            // fechamos a modal mesmo sem ter confirmado o perfil.
+            // O cenário "perfil existe mas está bloqueado por timeout" é pior
+            // que "mostrar comunidade sem perfil completo" — o usuário pode
+            // preencher o perfil depois na página de perfil.
+            setNeedsOnboarding(false);
           } finally {
             if (!cancelled) setPhaseAndLog('ready');
           }
@@ -496,6 +513,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               );
             } catch (e: any) {
               console.warn('[Auth] applyUser failed/timed out:', e?.message);
+              // Fallback de segurança: fecha a modal se applyUser não conseguiu
+              // rodar (evita modal travada permanentemente por timeout de rede/RLS)
+              setNeedsOnboarding(false);
             } finally {
               if (!cancelled) setPhaseAndLog('ready');
             }
@@ -507,7 +527,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               8000,
               'applyUser(USER_UPDATED)'
             );
-          } catch {}
+          } catch (e: any) {
+            console.warn('[Auth] USER_UPDATED applyUser failed/timed out:', e?.message);
+          }
         }
       } else {
         if (userIdRef.current !== null) {
