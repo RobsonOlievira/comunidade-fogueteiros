@@ -8,6 +8,24 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string
 // (compartilhar storageKey entre clientes concorrentes causa lock contention
 // e getSession pode dar timeout de 5s).
 const STORAGE_KEY_FOGUETEIROS = 'sb-ghdpmlmescgdhvrdqfiz-auth-token'
+
+// Lê a sessão diretamente do localStorage sem passar pelo cliente Supabase.
+// O supabase.auth.getSession() tenta fazer refresh de token via rede (que pode
+// ser bloqueado por AdBlock/proxy e dar timeout de 5s). Essa função é ~síncrona.
+export function getSessionFromStorage(): { access_token: string; refresh_token: string; user: any } | null {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_FOGUETEIROS)
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    // Supabase armazena { event: 'SIGNED_IN', session: {...}, ... }
+    // ou só { access_token, refresh_token, user } direto
+    const session = parsed?.session ?? parsed
+    if (session?.access_token && session?.user) return session
+    return null
+  } catch {
+    return null
+  }
+}
 const STORAGE_KEY_PUBLIC = 'sb-ghdpmlmescgdhvrdqfiz-auth-token-public'
 
 declare global {

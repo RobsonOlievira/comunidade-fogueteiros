@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '@/src/services/supabaseClient';
+import { supabase, getSessionFromStorage } from '@/src/services/supabaseClient';
 import { Analytics } from '@/src/services/analytics';
 
 const APP_B_CHECK_URL = 'https://ghdpmlmescgdhvrdqfiz.supabase.co/functions/v1/check-student-status'
@@ -392,14 +392,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setPhaseAndLog('session', 'init start');
 
       try {
-        // Timeout agressivo pro getSession: 5s é mais que suficiente
-        // pra chamada local de localStorage. Se demorar mais, é
-        // loop/conflito de instâncias e melhor seguir sem sessão.
-        const { data: { session } } = await withTimeout(
-          supabase.auth.getSession(),
-          5000,
-          'getSession'
-        );
+        // Lê a sessão diretamente do localStorage — sem rede, sem refresh
+        // de token. O supabase.auth.getSession() tenta fazer refresh via rede
+        // (pode ser bloqueado por AdBlock e dar timeout de 5s).
+        const session = getSessionFromStorage();
         if (cancelled) return;
         if (import.meta.env.DEV) {
           console.log(`[Auth] getSession resolved in ${Date.now() - start}ms hasUser=${!!session?.user}`);
