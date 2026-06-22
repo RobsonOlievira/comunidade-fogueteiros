@@ -49,7 +49,7 @@ export default function ThreadPage() {
   const { getPerfil } = usePerfis();
   const commentsContainerRef = useRef<HTMLDivElement>(null);
   const inputWrapperRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -316,16 +316,36 @@ export default function ThreadPage() {
     setSendingComment(false);
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setNewComment(e.target.value);
     setCaret(getCaretFromInput(e.target));
+    autoResize();
   };
-  const handleInputKeyUp = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleInputKeyUp = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     setCaret(getCaretFromInput(e.currentTarget));
   };
-  const handleInputClick = (e: React.MouseEvent<HTMLInputElement>) => {
+  const handleInputClick = (e: React.MouseEvent<HTMLTextAreaElement>) => {
     setCaret(getCaretFromInput(e.currentTarget));
   };
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
+      e.preventDefault();
+      const form = e.currentTarget.form;
+      if (form) form.requestSubmit();
+    }
+  };
+  const autoResize = () => {
+    const el = inputRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    const maxH = 160;
+    el.style.height = Math.min(el.scrollHeight, maxH) + 'px';
+    el.style.overflowY = el.scrollHeight > maxH ? 'auto' : 'hidden';
+  };
+  useEffect(() => {
+    autoResize();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [newComment]);
   const handlePickMention = (m: PickedMention) => {
     const before = newComment.slice(0, m.rangeStart);
     const after = newComment.slice(m.rangeEnd);
@@ -498,13 +518,13 @@ export default function ThreadPage() {
           )}
           <form
             onSubmit={handleSubmitComment}
-            className="flex items-center gap-3 p-3 rounded-xl border border-glass-border bg-glass"
+            className="flex items-end gap-3 p-3 rounded-xl border border-glass-border bg-glass"
           >
-            <input
+            <textarea
               ref={inputRef}
-              type="text"
               value={newComment}
               onChange={handleInputChange}
+              onKeyDown={handleKeyDown}
               onKeyUp={handleInputKeyUp}
               onClick={handleInputClick}
               placeholder={
@@ -513,7 +533,8 @@ export default function ThreadPage() {
                   : 'Escreva um comentario...'
               }
               disabled={sendingComment}
-              className="flex-1 bg-transparent border-none outline-none text-white placeholder:text-gray-600 disabled:opacity-50"
+              rows={1}
+              className="flex-1 bg-transparent border-none outline-none text-white placeholder:text-gray-600 disabled:opacity-50 resize-none min-w-0 chat-input-textarea"
             />
             <button
               type="submit"

@@ -116,18 +116,56 @@ export default function ChatArea({
     setPendingMentions([]);
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInputValue(e.target.value);
     setCaret(getCaretFromInput(e.target));
+    autoResize();
   };
 
-  const handleInputKeyUp = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleInputKeyUp = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     setCaret(getCaretFromInput(e.currentTarget));
   };
 
-  const handleInputClick = (e: React.MouseEvent<HTMLInputElement>) => {
+  const handleInputClick = (e: React.MouseEvent<HTMLTextAreaElement>) => {
     setCaret(getCaretFromInput(e.currentTarget));
   };
+
+  /**
+   * Enter envia a mensagem. Shift+Enter quebra a linha (padrão de chat).
+   * Sem isso, o textarea sempre quebraria linha e o usuário teria que
+   * usar um botão de envio pro mobile, que é mais fricção.
+   */
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
+      e.preventDefault();
+      // Dispara o submit do form programaticamente
+      const form = e.currentTarget.form;
+      if (form) form.requestSubmit();
+    }
+  };
+
+  /**
+   * Ajusta a altura do textarea pra caber o conteúdo (1 a ~6 linhas).
+   * Truque clássico: scrollHeight dá a altura natural, a gente reseta
+   * pra 'auto' primeiro pra deixar o browser recalcular, depois aplica.
+   * Sem isso, o textarea fica com altura fixa e overflow feio.
+   */
+  const autoResize = () => {
+    const el = inputRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    const maxH = 160; // ~6 linhas (combina com max-height do CSS)
+    el.style.height = Math.min(el.scrollHeight, maxH) + 'px';
+    el.style.overflowY = el.scrollHeight > maxH ? 'auto' : 'hidden';
+  };
+
+  // Roda autoResize quando o conteúdo muda por outros meios (ex: pick
+  // de menção insere texto via handlePickMention, que não passa pelo
+  // onChange). Também roda no mount.
+  useEffect(() => {
+    autoResize();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inputValue]);
 
   const handlePickMention = (m: PickedMention) => {
     const before = inputValue.slice(0, m.rangeStart);
@@ -294,14 +332,14 @@ export default function ChatArea({
           <ReplyPreviewInput replyTo={replyTo} onCancel={cancelReply} />
         )}
         <form className="chat-input-form" onSubmit={handleSubmit}>
-          <button type="button" className="input-action-btn" title="Anexar arquivo">
+          <button type="button" className="input-action-btn attach-btn" title="Anexar arquivo">
             <Plus />
           </button>
-          <input
+          <textarea
             ref={inputRef}
-            type="text"
             value={inputValue}
             onChange={handleInputChange}
+            onKeyDown={handleKeyDown}
             onKeyUp={handleInputKeyUp}
             onClick={handleInputClick}
             placeholder={
@@ -310,6 +348,8 @@ export default function ChatArea({
                 : `Conversar em #${channelDetails?.title || '...'}`
             }
             autoComplete="off"
+            rows={1}
+            className="chat-input-textarea"
           />
           <div className="input-tools">
             <button type="button" className="input-action-btn emoji-btn" title="Emojis">
