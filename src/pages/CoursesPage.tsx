@@ -243,7 +243,7 @@ export default function CoursesPage() {
                         className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-gradient-to-r from-primary to-accent-cyan text-white text-sm font-semibold hover:opacity-90 transition-all"
                       >
                         <ShoppingCart className="w-4 h-4" />
-                        Comprar
+                        Entrar no Curso
                       </button>
                     )}
                     {isAdmin && (

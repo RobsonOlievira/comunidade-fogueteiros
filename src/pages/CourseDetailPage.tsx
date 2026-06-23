@@ -239,7 +239,7 @@ export default function CourseDetailPage() {
                 className="w-full flex items-center justify-center gap-3 px-6 py-4 rounded-xl bg-gradient-to-r from-primary to-accent-cyan text-white font-semibold text-lg hover:opacity-90 transition-all shadow-lg shadow-primary/20"
               >
                 <ShoppingCart className="w-5 h-5" />
-                Comprar curso
+                Entrar no Curso
               </button>
             )}
           </div>

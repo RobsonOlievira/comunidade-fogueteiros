@@ -2,6 +2,13 @@ import React, { useState, useEffect } from "react";
 
 const SUPABASE_URL = "https://bgpygirvzfjvfathywjb.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJncHlnaXJ2emZqdmZhdGh5d2piIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2NTUzMjYsImV4cCI6MjA4NTIzMTMyNn0.XhISEn_lCjb_ZejanwZDE98lBDDsCI4bwHZr6bdEKCA";
+const GESTOR_SUPABASE_URL = "https://ghdpmlmescgdhvrdqfiz.supabase.co";
+const GESTOR_SUPABASE_ANON_KEY = "sb_publishable_ydR0CaKAAYuztfddU9d52w_0_6GuIqX";
+const PRODUTOS_URL = `${GESTOR_SUPABASE_URL}/rest/v1/produtos`;
+const PRODUTOS_HEADERS = {
+  apikey: GESTOR_SUPABASE_ANON_KEY,
+  Authorization: `Bearer ${GESTOR_SUPABASE_ANON_KEY}`,
+};
 const MP_PUBLIC_KEY = "APP_USR-76ab7025-3464-4e2b-b5fd-793afa73a6f0";
 const BUMP_IDS = ["antigravity", "ebook_como_vender_saas"];
 
@@ -15,6 +22,59 @@ function getUTMs() {
     utm_content: params.get("utm_content") || "",
     utm_term: params.get("utm_term") || "",
   };
+}
+
+function getMeliSessionId(): string {
+  if (typeof document === "undefined") return "";
+  const match = document.cookie.match(/(?:^|;\s*)MELI-SESSION-ID=([^;]+)/);
+  return match ? decodeURIComponent(match[1]) : "";
+}
+
+async function tokenizarCartao(input: {
+  cardNumber: string;
+  cardholderName: string;
+  expMonth: string;
+  expYear: string;
+  cvv: string;
+  cpfDigits: string;
+}): Promise<{ id: string; payment_method_id?: string; issuer_id?: number | string; message?: string }> {
+  const mp = (window as any).MercadoPago;
+  if (mp) {
+    try {
+      const inst = mp(MP_PUBLIC_KEY);
+      const tok = await inst.createCardToken({
+        cardNumber: input.cardNumber,
+        cardholderName: input.cardholderName,
+        cardExpirationMonth: String(parseInt(input.expMonth) || 12),
+        cardExpirationYear: String(parseInt(input.expYear) || new Date().getFullYear() + 1),
+        securityCode: input.cvv,
+        identificationType: "CPF",
+        identificationNumber: input.cpfDigits,
+      });
+      if (tok?.id) return tok as any;
+      console.warn("[Checkout] SDK createCardToken sem id, fallback para /v1/card_tokens", tok);
+    } catch (e) {
+      console.warn("[Checkout] SDK createCardToken falhou, fallback para /v1/card_tokens", e);
+    }
+  } else {
+    console.warn("[Checkout] window.MercadoPago indisponível, usando /v1/card_tokens direto");
+  }
+  const r = await fetch("https://api.mercadopago.com/v1/card_tokens?public_key=" + MP_PUBLIC_KEY, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      card_number: input.cardNumber,
+      cardholder: { name: input.cardholderName },
+      expiration_month: parseInt(input.expMonth) || 12,
+      expiration_year: input.expYear || String(new Date().getFullYear() + 1),
+      security_code: input.cvv,
+    }),
+  });
+  const data = await r.json();
+  if (!data?.id) {
+    throw new Error(data?.message || "Dados do cartão inválidos");
+  }
+  return data;
 }
 
 interface CheckoutModalProps {
@@ -56,6 +116,8 @@ export default function CheckoutModal({
   const [blocked, setBlocked] = useState(false);
   const [loadingLink, setLoadingLink] = useState(false);
   const [paymentLink, setPaymentLink] = useState("");
+  const [loadingProduto, setLoadingProduto] = useState(true);
+  const [produtoErro, setProdutoErro] = useState("");
 
   function getStatusDetailMessage(detail: string): string {
     const messages: Record<string, string> = {
@@ -80,7 +142,7 @@ export default function CheckoutModal({
     return messages[detail] || "Pagamento recusado. Verifique os dados e tente novamente.";
   }
 
-  const valorBase = produto?.preco || 67;
+  const valorBase = produto?.preco ?? 0;
   const valorBump = allBumps.filter(b => selectedBumps.includes(b.id)).reduce((sum, b) => sum + b.preco, 0);
   const valorTotal = valorBase + valorBump;
 
@@ -99,10 +161,22 @@ export default function CheckoutModal({
       } catch {}
     }
     try {
+      const meliSessionId = getMeliSessionId();
       const res = await fetch(`${SUPABASE_URL}/functions/v1/mp-processar-pagamento`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "apikey": SUPABASE_ANON_KEY, "Authorization": `Bearer ${SUPABASE_ANON_KEY}` },
-        body: JSON.stringify({ tipo: "criar_preferencia", curso_id: cursoId, bump_ids: selectedBumps, external_reference: ref || "direto" }),
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": SUPABASE_ANON_KEY,
+          "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+          ...(meliSessionId ? { "x-meli-session-id": meliSessionId } : {}),
+        },
+        body: JSON.stringify({
+          tipo: "criar_preferencia",
+          curso_id: cursoId,
+          bump_ids: selectedBumps,
+          external_reference: ref || "direto",
+          ...(meliSessionId ? { device_id: meliSessionId } : {}),
+        }),
       });
       const data = await res.json();
       if (data.init_point) {
@@ -243,23 +317,21 @@ export default function CheckoutModal({
           expYear = (parseInt(currentYear) + 1).toString();
         }
 
-        const tokenRes = await fetch("https://api.mercadopago.com/v1/card_tokens?public_key=" + MP_PUBLIC_KEY, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            card_number: cardNumber,
-            cardholder: {
-              name: formData.nomeCartao
-            },
-            expiration_month: parseInt(expMonth) || 12,
-            expiration_year: expYear || "27",
-            security_code: formData.cvv
-          })
-        });
-
-        const cardToken = await tokenRes.json();
+        let cardToken;
+        try {
+          cardToken = await tokenizarCartao({
+            cardNumber,
+            cardholderName: formData.nomeCartao,
+            expMonth,
+            expYear,
+            cvv: formData.cvv,
+            cpfDigits: cpf.replace(/\D/g, ""),
+          });
+        } catch (tokenErr: any) {
+          setStatus("error");
+          setErrorMsg(tokenErr?.message || "Dados do cartão inválidos. Verifique e tente novamente.");
+          return;
+        }
 
         if (!cardToken?.id) {
           setStatus("error");
@@ -299,15 +371,18 @@ export default function CheckoutModal({
         };
       }
 
+      const meliSessionId = getMeliSessionId();
       const res = await fetch(`${SUPABASE_URL}/functions/v1/mp-processar-pagamento`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "apikey": SUPABASE_ANON_KEY,
           "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+          ...(meliSessionId ? { "x-meli-session-id": meliSessionId } : {}),
         },
         body: JSON.stringify({
           ...payload,
+          ...(meliSessionId ? { device_id: meliSessionId } : {}),
           curso_id: cursoId,
           telefone: formData.telefone,
         }),
@@ -457,20 +532,26 @@ export default function CheckoutModal({
       setSelectedBumps([]);
       setAllBumps([]);
 
-      fetch(`${SUPABASE_URL}/rest/v1/produtos?id=eq.${cursoId}&select=preco,installments,nome,success_url`, {
-        headers: { "apikey": SUPABASE_ANON_KEY, "Authorization": `Bearer ${SUPABASE_ANON_KEY}` }
+      setLoadingProduto(true);
+      setProdutoErro("");
+      fetch(`${PRODUTOS_URL}?id=eq.${cursoId}&select=preco,installments,nome,success_url,imagem,descricao,preco_regular`, {
+        headers: PRODUTOS_HEADERS
       })
         .then(r => r.json())
         .then(data => {
           if (data && data[0]) {
             setProduto(data[0]);
+          } else {
+            setProdutoErro(`Produto "${cursoId}" não encontrado. Avise o suporte.`);
           }
-        });
+        })
+        .catch(() => setProdutoErro("Falha ao carregar o produto. Verifique sua conexão."))
+        .finally(() => setLoadingProduto(false));
 
       if (BUMP_IDS.length > 0) {
         const idsParam = BUMP_IDS.join(",");
-        fetch(`${SUPABASE_URL}/rest/v1/produtos?id=in.(${idsParam})&select=id,preco,nome`, {
-          headers: { "apikey": SUPABASE_ANON_KEY, "Authorization": `Bearer ${SUPABASE_ANON_KEY}` }
+        fetch(`${PRODUTOS_URL}?id=in.(${idsParam})&select=id,preco,nome,imagem,descricao`, {
+          headers: PRODUTOS_HEADERS
         })
           .then(r => r.json())
           .then(data => {
@@ -506,7 +587,45 @@ export default function CheckoutModal({
 
   if (!isOpen) return null;
 
-  const maxInstallments = produto?.installments || 3;
+  const maxInstallments = produto?.installments ?? 1;
+
+  if (loadingProduto) {
+    return (
+      <div className={containerClass} style={{ backgroundColor: 'rgba(0,0,0,0.7)' }}>
+        <div className={wrapperClass}>
+          <div className="flex flex-col items-center justify-center py-16 gap-3">
+            <div className="w-10 h-10 border-3 border-[#07b848] border-t-transparent rounded-full animate-spin" />
+            <p className="text-gray-500 text-base">Carregando produto...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (produtoErro || !produto) {
+    return (
+      <div className={containerClass} style={{ backgroundColor: 'rgba(0,0,0,0.7)' }}>
+        <div className={wrapperClass}>
+          <button onClick={onClose} className="absolute top-3 right-4 text-gray-400 hover:text-gray-600 p-1 z-10">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+          <div className="flex flex-col items-center justify-center py-16 gap-3 px-6 text-center">
+            <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#f44336" strokeWidth="2.5">
+                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-gray-900 font-bold text-xl mb-1">Produto indisponível</h3>
+              <p className="text-gray-500 text-sm">{produtoErro || "Não foi possível carregar os dados do produto."}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const containerClass = "fixed inset-0 z-[200] flex items-center justify-center p-4";
 
