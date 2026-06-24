@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Play, ExternalLink, Loader2 } from 'lucide-react';
 
+export const URL_RE = /https?:\/\/[^\s<>"]+/gi;
+
 interface VideoMeta {
   url: string;
   type: 'youtube' | 'vimeo' | 'tiktok' | 'generic';
@@ -154,7 +156,7 @@ function LinkPreviewCard({ meta }: LinkPreviewCardProps) {
         )}
         {meta.type === 'youtube' && (
           <div className="link-preview-play-badge">
-            <Play className="w-6 h-6 fill-white text-white" />
+            <Play className="w-8 h-8 fill-white text-white" />
           </div>
         )}
         {meta.type === 'vimeo' && <VimeoThumb videoId={meta.videoId!} />}
@@ -172,15 +174,13 @@ function LinkPreviewCard({ meta }: LinkPreviewCardProps) {
         {meta.title ? (
           <span className="link-preview-title">{meta.title}</span>
         ) : (
-          <span className="link-preview-title">{meta.url}</span>
+          <span className="link-preview-title link-preview-title-url">{meta.url}</span>
         )}
         <ExternalLink className="link-preview-icon w-4 h-4 flex-shrink-0" />
       </div>
     </a>
   );
 }
-
-const URL_RE = /https?:\/\/[^\s<>"]+/gi;
 
 export function extractLinks(text: string): string[] {
   const matches = text.match(URL_RE);

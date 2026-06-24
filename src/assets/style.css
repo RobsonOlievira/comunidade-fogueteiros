@@ -632,6 +632,12 @@ body {
     min-width: 0;
 }
 
+/* Container do texto da mensagem — preserva quebras de linha (\n → br) */
+.msg-text-body {
+    word-break: break-word;
+    overflow-wrap: break-word;
+}
+
 /* Área de Enviar Mensagem (Input) */
 .chat-input-wrapper {
     padding: 0 24px 24px 24px;
@@ -1463,32 +1469,35 @@ body {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    margin-top: 8px;
+    margin-top: 10px;
 }
 
 .link-preview-card {
+    /* Card full-width, thumbnail 16:9 no topo, info embaixo.
+       Layout vertical: thumbnail em cima, texto embaixo.
+       Isso dá destaque máximo ao vídeo. */
     display: flex;
-    align-items: center;
-    gap: 12px;
+    flex-direction: column;
     background: var(--bg-card);
     border: 1px solid var(--border-light);
     border-radius: 12px;
     overflow: hidden;
     text-decoration: none;
-    transition: border-color 0.2s, box-shadow 0.2s;
-    max-width: 400px;
+    transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
     cursor: pointer;
+    max-width: 480px;
 }
 
 .link-preview-card:hover {
     border-color: var(--accent-glow);
-    box-shadow: 0 0 12px rgba(51, 156, 129, 0.15);
+    box-shadow: 0 4px 20px rgba(51, 156, 129, 0.2);
+    transform: translateY(-1px);
 }
 
 .link-preview-thumb {
-    width: 120px;
-    height: 68px;
-    flex-shrink: 0;
+    /* 16:9 aspect ratio — thumbnail grande e em evidência */
+    width: 100%;
+    aspect-ratio: 16 / 9;
     background: var(--bg-chat);
     overflow: hidden;
     position: relative;
@@ -1506,22 +1515,25 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(0, 0, 0, 0.4);
-    transition: background 0.2s;
+    background: rgba(0, 0, 0, 0.35);
+    transition: background 0.2s, transform 0.15s;
 }
 
 .link-preview-card:hover .link-preview-play-badge {
-    background: rgba(0, 0, 0, 0.55);
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.link-preview-card:hover .link-preview-play-badge svg {
+    transform: scale(1.1);
 }
 
 .link-preview-info {
     flex: 1;
     min-width: 0;
-    padding: 10px 12px 10px 0;
+    padding: 10px 14px 10px;
     display: flex;
     flex-direction: column;
     gap: 4px;
-    align-items: flex-start;
 }
 
 .link-preview-site {
@@ -1533,9 +1545,9 @@ body {
 }
 
 .link-preview-title {
-    font-size: 0.8rem;
-    color: var(--text-secondary);
-    line-height: 1.3;
+    font-size: 0.85rem;
+    color: var(--text-primary);
+    line-height: 1.4;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
@@ -1543,21 +1555,14 @@ body {
     word-break: break-word;
 }
 
-.link-preview-icon {
+.link-preview-title-url {
     color: var(--text-muted);
-    flex-shrink: 0;
-    align-self: flex-end;
+    font-size: 0.78rem;
+    -webkit-line-clamp: 1;
 }
 
 @media (max-width: 480px) {
     .link-preview-card {
         max-width: 100%;
-    }
-    .link-preview-thumb {
-        width: 90px;
-        height: 52px;
-    }
-    .link-preview-info {
-        padding-right: 8px;
     }
 }
