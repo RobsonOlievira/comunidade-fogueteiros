@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Mencao } from '../../types';
+import { LinkPreviewGroup } from './LinkPreview';
 
 interface MessageContentProps {
   text: string;
@@ -16,6 +17,9 @@ const APELIDO_REGEX = /(?:^|\s)@([a-z0-9_]{3,20})/gi;
  * match de @apelido no texto cru, depois cruza com a lista de menções
  * resolvidas. Se o apelido não tiver match em `mentions`, renderiza como
  * texto (não conseguimos navegar).
+ *
+ * Também detecta links de vídeo no texto e mostra preview cards (thumbnail)
+ * para YouTube, Vimeo, TikTok e links genéricos.
  */
 export function MessageContent({ text, mentions = [], onClickMention, className }: MessageContentProps) {
   if (!text) return null;
@@ -63,28 +67,31 @@ export function MessageContent({ text, mentions = [], onClickMention, className 
   }
 
   return (
-    <span className={className}>
-      {tokens.map((tk) => {
-        if (tk.tipo === 'text') return <React.Fragment key={tk.key}>{tk.valor}</React.Fragment>;
-        if (tk.perfilId) {
+    <div className={className}>
+      <span>
+        {tokens.map((tk) => {
+          if (tk.tipo === 'text') return <React.Fragment key={tk.key}>{tk.valor}</React.Fragment>;
+          if (tk.perfilId) {
+            return (
+              <button
+                key={tk.key}
+                type="button"
+                className="mention-chip"
+                onClick={() => onClickMention?.(tk.perfilId!)}
+                title="Ir para o perfil"
+              >
+                {tk.valor}
+              </button>
+            );
+          }
           return (
-            <button
-              key={tk.key}
-              type="button"
-              className="mention-chip"
-              onClick={() => onClickMention?.(tk.perfilId!)}
-              title="Ir para o perfil"
-            >
+            <span key={tk.key} className="mention-unresolved">
               {tk.valor}
-            </button>
+            </span>
           );
-        }
-        return (
-          <span key={tk.key} className="mention-unresolved">
-            {tk.valor}
-          </span>
-        );
-      })}
-    </span>
+        })}
+      </span>
+      <LinkPreviewGroup text={text} />
+    </div>
   );
 }
