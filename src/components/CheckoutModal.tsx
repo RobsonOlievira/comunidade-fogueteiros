@@ -85,7 +85,7 @@ interface CheckoutModalProps {
 }
 
 export default function CheckoutModal({
-  isOpen,
+  isOpen = true,
   onClose,
   onSuccess,
   cursoId = "low_ticket_maia_97",
@@ -511,57 +511,65 @@ export default function CheckoutModal({
   };
 
   useEffect(() => {
-    if (isOpen) {
-      setStatus("idle");
-      setErrorMsg("");
-      setPixData(null);
-      setLeadId(null);
-      setCpf("");
-      setBoletoCode("");
-      setUltimoMetodo("");
-      setFormData({
-        nome: "",
-        email: "",
-        telefone: "",
-        numeroCartao: "",
-        nomeCartao: "",
-        validade: "",
-        cvv: "",
-        installment: "1",
-      });
-      setSelectedBumps([]);
-      setAllBumps([]);
+    if (!isOpen) return;
 
-      setLoadingProduto(true);
-      setProdutoErro("");
-      fetch(`${PRODUTOS_URL}?id=eq.${cursoId}&select=preco,installments,nome,success_url,imagem,descricao,preco_regular`, {
-        headers: PRODUTOS_HEADERS
-      })
-        .then(r => r.json())
-        .then(data => {
-          if (data && data[0]) {
-            setProduto(data[0]);
-          } else {
-            setProdutoErro(`Produto "${cursoId}" não encontrado. Avise o suporte.`);
-          }
-        })
-        .catch(() => setProdutoErro("Falha ao carregar o produto. Verifique sua conexão."))
-        .finally(() => setLoadingProduto(false));
+    setStatus("idle");
+    setErrorMsg("");
+    setPixData(null);
+    setLeadId(null);
+    setCpf("");
+    setBoletoCode("");
+    setUltimoMetodo("");
+    setFormData({
+      nome: "",
+      email: "",
+      telefone: "",
+      numeroCartao: "",
+      nomeCartao: "",
+      validade: "",
+      cvv: "",
+      installment: "1",
+    });
+    setSelectedBumps([]);
+    setAllBumps([]);
+
+    setLoadingProduto(true);
+    setProdutoErro("");
+
+    (async () => {
+      try {
+        const r = await fetch(`${PRODUTOS_URL}?id=eq.${cursoId}&select=preco,installments,nome,success_url,imagem,descricao,preco_regular`, {
+          headers: PRODUTOS_HEADERS
+        });
+        const data = await r.json();
+        if (data && data[0]) {
+          setProduto(data[0]);
+        } else {
+          setProdutoErro(`Produto "${cursoId}" não encontrado. Avise o suporte.`);
+        }
+      } catch (e) {
+        console.error("[CheckoutModal] Erro ao carregar produto:", e);
+        setProdutoErro("Falha ao carregar o produto. Verifique sua conexão.");
+      } finally {
+        setLoadingProduto(false);
+      }
 
       if (BUMP_IDS.length > 0) {
         const idsParam = BUMP_IDS.join(",");
-        fetch(`${PRODUTOS_URL}?id=in.(${idsParam})&select=id,preco,nome,imagem,descricao`, {
-          headers: PRODUTOS_HEADERS
-        })
-          .then(r => r.json())
-          .then(data => {
-            if (data && data.length > 0) {
-              setAllBumps(data);
-            }
+        try {
+          const r2 = await fetch(`${PRODUTOS_URL}?id=in.(${idsParam})&select=id,preco,nome,imagem,descricao`, {
+            headers: PRODUTOS_HEADERS
           });
+          const data2 = await r2.json();
+          if (data2 && data2.length > 0) {
+            setAllBumps(data2);
+          }
+        } catch (e) {
+          console.warn("[CheckoutModal] Bumps falharam:", e);
+        }
       }
-    }
-  }, [isOpen]);
+    })();
+  }, [isOpen, cursoId]);
 
   useEffect(() => {
     if (produto) {
@@ -587,6 +595,8 @@ export default function CheckoutModal({
 
   if (!isOpen) return null;
 
+  const containerClass = "fixed inset-0 z-[200] flex items-center justify-center p-4";
+  const wrapperClass = "bg-white rounded-2xl w-full max-w-lg overflow-hidden max-h-[85vh] flex flex-col my-auto";
   const maxInstallments = produto?.installments ?? 1;
 
   if (loadingProduto) {
@@ -626,10 +636,6 @@ export default function CheckoutModal({
       </div>
     );
   }
-
-  const containerClass = "fixed inset-0 z-[200] flex items-center justify-center p-4";
-
-  const wrapperClass = "bg-white rounded-2xl w-full max-w-lg overflow-hidden max-h-[85vh] flex flex-col my-auto";
 
   return (
     <div className={containerClass} style={{ backgroundColor: 'rgba(0,0,0,0.7)' }}>
