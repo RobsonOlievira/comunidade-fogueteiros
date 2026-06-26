@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useNavigate, useLocation } from 'react-router-dom';
 import { supabasePublic as supabase } from '@/src/services/supabaseClient';
 import { DatabaseService } from '@/src/services/database';
 import { useAuth } from '@/src/context/AuthContext';
@@ -59,6 +59,8 @@ const paletteFor = (id: string) => {
 export default function CourseDetailPage() {
   const { id } = useParams();
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [course, setCourse] = useState<Course | null>(null);
   const [modules, setModules] = useState<Module[]>([]);
   const [lessonsByModule, setLessonsByModule] = useState<Record<string, Lesson[]>>({});
@@ -235,7 +237,13 @@ export default function CourseDetailPage() {
               </button>
             ) : (
               <button
-                onClick={() => setShowCheckout(true)}
+                onClick={() => {
+                  if (!user) {
+                    navigate('/login', { state: { from: location.pathname } });
+                    return;
+                  }
+                  setShowCheckout(true);
+                }}
                 className="w-full flex items-center justify-center gap-3 px-6 py-4 rounded-xl bg-gradient-to-r from-primary to-accent-cyan text-white font-semibold text-lg hover:opacity-90 transition-all shadow-lg shadow-primary/20"
               >
                 <ShoppingCart className="w-5 h-5" />
