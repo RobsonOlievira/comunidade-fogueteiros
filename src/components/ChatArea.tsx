@@ -303,7 +303,7 @@ export default function ChatArea({
                   {msg.perfilId && msg.perfilId !== perfilId && (
                     <button
                       onClick={() => startReply(msg)}
-                      className="flex items-center gap-1 text-xs text-gray-600 hover:text-accent-lilac transition-all opacity-0 group-hover:opacity-100"
+                      className="flex items-center gap-1 text-xs font-medium text-accent-lilac hover:text-white transition-all"
                       title="Responder"
                     >
                       <CornerUpLeft className="w-3.5 h-3.5" />

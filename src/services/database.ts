@@ -1,10 +1,42 @@
 import { supabase } from './supabaseClient';
 import type { ChannelItem, Message, Download, AcessoCurso, Mencao } from '@/types';
 
-const formatTime = () => {
+/**
+ * Formata um timestamp relativo em pt-BR.
+ * - mesmo dia     → "Hoje às HH:MM"
+ * - dia anterior  → "Ontem às HH:MM"
+ * - mesmo ano     → "DD/MM às HH:MM"
+ * - outro ano     → "DD/MM/YY às HH:MM"
+ *
+ * Aceita Date, ISO string, ou null/undefined (cai no fallback de "agora").
+ */
+export const formatRelativeTime = (input?: string | Date | null): string => {
+  const date = input ? new Date(input) : new Date();
   const now = new Date();
-  return `Hoje às ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+
+  const hh = date.getHours().toString().padStart(2, '0');
+  const mm = date.getMinutes().toString().padStart(2, '0');
+
+  const isSameDay = (a: Date, b: Date) =>
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate();
+
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+
+  if (isSameDay(date, now)) return `Hoje às ${hh}:${mm}`;
+  if (isSameDay(date, yesterday)) return `Ontem às ${hh}:${mm}`;
+
+  const dd = date.getDate().toString().padStart(2, '0');
+  const mo = (date.getMonth() + 1).toString().padStart(2, '0');
+  if (date.getFullYear() === now.getFullYear()) return `${dd}/${mo} às ${hh}:${mm}`;
+  const yy = date.getFullYear().toString().slice(-2);
+  return `${dd}/${mo}/${yy} às ${hh}:${mm}`;
 };
+
+// Mantido por retrocompatibilidade — usa a hora atual.
+const formatTime = () => formatRelativeTime(new Date());
 
 export const DatabaseService = {
   async getChannels(): Promise<ChannelItem[]> {

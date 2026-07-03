@@ -491,7 +491,7 @@ export default function ThreadPage() {
                   {comment.perfil_id && comment.perfil_id !== user?.id && (
                     <button
                       onClick={() => startReply(comment)}
-                      className="mt-2 inline-flex items-center gap-1 text-xs text-gray-500 hover:text-accent-lilac transition-all opacity-0 group-hover:opacity-100"
+                      className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-accent-lilac hover:text-white transition-all"
                       title="Responder"
                     >
                       <CornerUpLeft className="w-3.5 h-3.5" />

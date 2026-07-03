@@ -166,9 +166,11 @@ export default function Login() {
                       <p className="text-gray-400 text-sm">Digite seu email da Tesseract</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 bg-glass border border-glass-border rounded-xl px-4 py-3 focus-within:border-accent-lilac transition-colors mb-3">
+                  <label htmlFor="sso-email" className="flex items-center gap-3 bg-glass border border-glass-border rounded-xl px-4 py-3 focus-within:border-accent-lilac transition-colors mb-3 cursor-text">
                     <Mail className="w-5 h-5 text-gray-500" />
                     <input
+                      id="sso-email"
+                      name="email"
                       type="email"
                       value={ssoEmail}
                       onChange={e => setSsoEmail(e.target.value)}
@@ -177,7 +179,7 @@ export default function Login() {
                       onKeyDown={e => { if (e.key === 'Enter' && !ssoLoading) handleSso(); }}
                       autoFocus
                     />
-                  </div>
+                  </label>
                   {ssoError && <p className="text-red-400 text-sm mb-3">{ssoError}</p>}
                   <button
                     onClick={handleSso}
@@ -198,10 +200,12 @@ export default function Login() {
 
             <form onSubmit={handleMagicLink} className="space-y-4">
               <div>
-                <label className="block text-sm text-gray-400 mb-1.5">Email</label>
+                <label htmlFor="magic-email" className="block text-sm text-gray-400 mb-1.5">Email</label>
                 <div className="flex items-center gap-3 bg-glass border border-glass-border rounded-xl px-4 py-3 focus-within:border-accent-lilac transition-colors">
                   <Mail className="w-5 h-5 text-gray-500" />
                   <input
+                    id="magic-email"
+                    name="email"
                     type="email"
                     value={email}
                     onChange={e => setEmail(e.target.value)}

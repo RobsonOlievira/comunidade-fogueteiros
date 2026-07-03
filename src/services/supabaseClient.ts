@@ -3,6 +3,48 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js'
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string
 
+// =====================================================================
+// WORKAROUND: clock skew do servidor Supabase
+// =====================================================================
+// Projeto ghdpmlmescgdhvrdqfiz: medido em 2026-07-03 que o header `Date`
+// do servidor auth retorna ~13s no futuro do relógio UTC real. Isso faz
+// o auth-js emitir console.warn "Session as retrieved from URL was issued
+// in the future? Check the device clock for skew" quando o iat do JWT é
+// comparado com Date.now() do cliente.
+//
+// O check é puramente `console.warn` (não throw) no auth-js atual, então
+// a sessão É salva normalmente — esse warning é cosmético. Mas polui o
+// console e confunde quem está debugando. Silenciamos esse caso e
+// loggamos uma vez em DEV com a diferença real pra referência.
+//
+// Remover quando o Supabase sincronizar o NTP do projeto (ticket aberto).
+// =====================================================================
+;(function suppressClockSkewWarning() {
+  if (typeof console === 'undefined') return
+  const origWarn = console.warn.bind(console)
+  let loggedOnce = false
+  console.warn = (...args: unknown[]) => {
+    const msg = args[0]
+    if (typeof msg === 'string' && msg.includes('Session as retrieved from URL was issued in the future')) {
+      if (!loggedOnce && import.meta.env?.DEV) {
+        loggedOnce = true
+        const issuedAt = args[1]
+        const timeNow = args[3]
+        const skewSec =
+          typeof issuedAt === 'number' && typeof timeNow === 'number'
+            ? Math.round((issuedAt as number) - (timeNow as number))
+            : '?'
+        console.info(
+          `[supabaseClient] Supabase server clock skew: ~${skewSec}s no futuro. ` +
+          `Warning silenciado (cosmético). Ticket aberto para Supabase resync.`
+        )
+      }
+      return
+    }
+    origWarn(...(args as []))
+  }
+})()
+
 // Storage key DIFERENTE por schema evita o warning do GoTrueClient:
 // "Multiple GoTrueClient instances detected in the same browser context"
 // (compartilhar storageKey entre clientes concorrentes causa lock contention

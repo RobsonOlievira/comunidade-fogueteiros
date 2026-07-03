@@ -7,7 +7,7 @@ import AlunosPaywall from '@/src/components/AlunosPaywall';
 import { supabase } from '@/src/services/supabaseClient';
 import { useAuth } from '@/src/context/AuthContext';
 import { GamificationService } from '@/src/services/gamificationService';
-import { DatabaseService } from '@/src/services/database';
+import { DatabaseService, formatRelativeTime } from '@/src/services/database';
 import { Analytics } from '@/src/services/analytics';
 import { processarMencoes } from '@/src/services/mentionService';
 import type { ChannelItem, Message } from '@/types';
@@ -140,7 +140,7 @@ export default function ChatPage() {
     opts?: { replyTo?: Message['replyTo']; mentions?: Message['mentions'] },
   ) => {
     const now = new Date();
-    const timeString = `Hoje às ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+    const timeString = formatRelativeTime(now);
 
     const messagePayload: Message = {
       id: Date.now(),
