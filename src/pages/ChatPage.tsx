@@ -102,7 +102,7 @@ export default function ChatPage() {
             avatarColor: msg.cor_avatar,
             badge: msg.cracha,
             text: msg.texto,
-            time: msg.horario,
+            time: formatRelativeTime(msg.criado_em),
             perfilId: msg.perfil_id,
             likesCount: msg.likes_count || 0,
             replyTo,
