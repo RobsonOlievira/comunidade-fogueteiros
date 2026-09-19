@@ -7,6 +7,7 @@ import { ReplyPreviewInput, ReplyPreviewMessage } from '@/src/components/ReplyPr
 import { MessageContent } from '@/src/components/MessageContent';
 import { MentionAutocomplete, getCaretFromInput, type PickedMention } from '@/src/components/MentionAutocomplete';
 import { extrairApelidos, resolverMencoes } from '@/src/services/mentionService';
+import AdUnit from '@/src/components/AdUnit';
 
 interface ChatAreaProps {
   channelDetails: ChannelItem | null;
@@ -247,81 +248,85 @@ export default function ChatArea({
       </header>
 
       <div className="chat-messages" ref={messagesContainerRef}>
-        {messages.map((msg) => {
+        {messages.map((msg, idx) => {
           const badgeClass = msg.badge ? `badge-${msg.badge.toLowerCase()}` : '';
           const perfil = getPerfil(msg.perfilId);
           return (
-            <div
-              className="message-card group"
-              key={msg.id}
-              data-msg-id={msg.id}
-            >
-              <Avatar
-                name={perfil?.nome || msg.author}
-                url={perfil?.avatar_url}
-                className="msg-avatar"
-                colorClass={getAvatarColorClass(msg.avatarColor)}
-                size="md"
-                fallbackText={msg.avatar}
-                alt={perfil?.nome || msg.author}
-                isPro={perfil?.pro}
-              />
-              <div className="msg-content-wrapper">
-                {msg.replyTo && (
-                  <ReplyPreviewMessage
-                    replyTo={msg.replyTo}
-                    onJump={jumpToMessage}
-                  />
-                )}
-                <div className="msg-header">
-                  <span className="msg-author">{msg.author}</span>
-                  {msg.badge && (
-                    <span className={`msg-badge ${badgeClass}`}>
-                      {msg.badge}
-                    </span>
-                  )}
-                  <span className="msg-time">{msg.time}</span>
-                </div>
-                <MessageContent
-                  text={msg.text}
-                  mentions={msg.mentions}
-                  className="msg-text"
+            <React.Fragment key={msg.id}>
+              <div
+                className="message-card group"
+                data-msg-id={msg.id}
+              >
+                <Avatar
+                  name={perfil?.nome || msg.author}
+                  url={perfil?.avatar_url}
+                  className="msg-avatar"
+                  colorClass={getAvatarColorClass(msg.avatarColor)}
+                  size="md"
+                  fallbackText={msg.avatar}
+                  alt={perfil?.nome || msg.author}
+                  isPro={perfil?.pro}
                 />
-                <div className="flex items-center gap-2 mt-1">
-                  <button
-                    onClick={() => msg.likedByMe ? onUnlikeMessage(msg.id) : onLikeMessage(msg.id)}
-                    className={`flex items-center gap-1 text-xs transition-all ${
-                      msg.likedByMe
-                        ? 'text-accent-lilac'
-                        : 'text-gray-600 hover:text-gray-400'
-                    }`}
-                    title={msg.likedByMe ? 'Descurtir' : 'Curtir'}
-                  >
-                    <Heart className={`w-3.5 h-3.5 ${msg.likedByMe ? 'fill-accent-lilac' : ''}`} />
-                    {msg.likesCount ? <span>{msg.likesCount}</span> : null}
-                  </button>
-                  {msg.perfilId && msg.perfilId !== perfilId && (
-                    <button
-                      onClick={() => startReply(msg)}
-                      className="flex items-center gap-1 text-xs font-medium text-accent-lilac hover:text-white transition-opacity"
-                      title="Responder"
-                    >
-                      <CornerUpLeft className="w-3.5 h-3.5" />
-                      Responder
-                    </button>
+                <div className="msg-content-wrapper">
+                  {msg.replyTo && (
+                    <ReplyPreviewMessage
+                      replyTo={msg.replyTo}
+                      onJump={jumpToMessage}
+                    />
                   )}
-                  {(isAdmin || msg.perfilId === perfilId) && (
+                  <div className="msg-header">
+                    <span className="msg-author">{msg.author}</span>
+                    {msg.badge && (
+                      <span className={`msg-badge ${badgeClass}`}>
+                        {msg.badge}
+                      </span>
+                    )}
+                    <span className="msg-time">{msg.time}</span>
+                  </div>
+                  <MessageContent
+                    text={msg.text}
+                    mentions={msg.mentions}
+                    className="msg-text"
+                  />
+                  <div className="flex items-center gap-2 mt-1">
                     <button
-                      onClick={() => onDeleteMessage(msg.id)}
-                      className="flex items-center gap-1 text-xs text-gray-600 hover:text-red-400 transition-all opacity-0 group-hover:opacity-100"
-                      title="Excluir mensagem"
+                      onClick={() => msg.likedByMe ? onUnlikeMessage(msg.id) : onLikeMessage(msg.id)}
+                      className={`flex items-center gap-1 text-xs transition-all ${
+                        msg.likedByMe
+                          ? 'text-accent-lilac'
+                          : 'text-gray-600 hover:text-gray-400'
+                      }`}
+                      title={msg.likedByMe ? 'Descurtir' : 'Curtir'}
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      <Heart className={`w-3.5 h-3.5 ${msg.likedByMe ? 'fill-accent-lilac' : ''}`} />
+                      {msg.likesCount ? <span>{msg.likesCount}</span> : null}
                     </button>
-                  )}
+                    {msg.perfilId && msg.perfilId !== perfilId && (
+                      <button
+                        onClick={() => startReply(msg)}
+                        className="flex items-center gap-1 text-xs font-medium text-accent-lilac hover:text-white transition-opacity"
+                        title="Responder"
+                      >
+                        <CornerUpLeft className="w-3.5 h-3.5" />
+                        Responder
+                      </button>
+                    )}
+                    {(isAdmin || msg.perfilId === perfilId) && (
+                      <button
+                        onClick={() => onDeleteMessage(msg.id)}
+                        className="flex items-center gap-1 text-xs text-gray-600 hover:text-red-400 transition-all opacity-0 group-hover:opacity-100"
+                        title="Excluir mensagem"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
+              {(idx + 1) % 12 === 0 && (
+                <AdUnit slot="chatInfeed" className="mx-auto w-full max-w-[420px] py-2" />
+              )}
+            </React.Fragment>
           );
         })}
         <div ref={messagesEndRef} />

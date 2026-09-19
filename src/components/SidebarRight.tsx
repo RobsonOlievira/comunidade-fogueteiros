@@ -3,6 +3,7 @@ import { supabase } from '@/src/services/supabaseClient';
 import { fetchAllRows } from '@/src/services/fetchAllRows';
 import { useAuth } from '@/src/context/AuthContext';
 import { Avatar } from '@/src/components/Avatar';
+import AdUnit from '@/src/components/AdUnit';
 
 interface SidebarRightProps {
   isHidden: boolean;
@@ -136,6 +137,9 @@ export default function SidebarRight({ isHidden }: SidebarRightProps) {
             ))}
           </ul>
         </div>
+      </div>
+      <div className="px-3 pt-4">
+        <AdUnit slot="sidebarBottom" className="rounded-xl overflow-hidden" />
       </div>
     </aside>
   );

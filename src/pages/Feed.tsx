@@ -7,6 +7,7 @@ import { ArrowUp, MessageSquare, Sparkles, Hash, AlertCircle, Search, X } from '
 import { TOPIC_TAGS } from '@/src/constants/tags';
 import { usePerfis } from '@/src/hooks/usePerfis';
 import { Avatar } from '@/src/components/Avatar';
+import AdUnit from '@/src/components/AdUnit';
 
 interface ThreadItem {
   id: string;
@@ -248,87 +249,89 @@ export default function Feed() {
               </button>
             </div>
           )}
-          {filteredThreads.map((thread) => (
-            <Link
-              key={thread.id}
-              to={`/thread/${thread.id}`}
-              className="block p-4 rounded-xl border border-glass-border bg-glass hover:bg-white/[0.03] transition-all group"
-            >
-              <div className="flex gap-4">
-                <div className="flex flex-col items-center gap-1 min-w-[48px]">
-                  <button
-                    onClick={(e) => handleUpvote(thread.id, e)}
-                    className="p-1.5 rounded-lg hover:bg-accent-lilac/10 transition-colors"
-                  >
-                    <ArrowUp
-                      className={`w-4 h-4 transition-colors ${
-                        votedThreads.has(thread.id)
-                          ? 'text-accent-lilac'
-                          : 'text-gray-500 group-hover:text-accent-lilac'
-                      }`}
-                    />
-                  </button>
-                  <span className="text-sm font-semibold text-gray-300">{thread.upvotes || 0}</span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h2 className="font-display text-lg font-semibold text-white group-hover:text-accent-lilac transition-colors truncate">
-                    {thread.titulo}
-                  </h2>
-                  <p className="text-sm text-gray-500 mt-1 line-clamp-2">{thread.conteudo}</p>
-                  <div className="flex items-center gap-3 mt-3 flex-wrap">
-                    <div className="flex items-center gap-2">
-                      <Avatar
-                        name={getPerfil(thread.perfil_id)?.nome || thread.autor}
-                        url={getPerfil(thread.perfil_id)?.avatar_url}
-                        size="xs"
-                        colorClass={`bg-gradient-to-br ${avatarColors[thread.cor_avatar] || 'from-primary to-purple-700'}`}
-                        fallbackText={thread.avatar}
-                        isPro={getPerfil(thread.perfil_id)?.pro}
+          {filteredThreads.map((thread, idx) => (
+            <React.Fragment key={thread.id}>
+              <Link
+                to={`/thread/${thread.id}`}
+                className="block p-4 rounded-xl border border-glass-border bg-glass hover:bg-white/[0.03] transition-all group"
+              >
+                <div className="flex gap-4">
+                  <div className="flex flex-col items-center gap-1 min-w-[48px]">
+                    <button
+                      onClick={(e) => handleUpvote(thread.id, e)}
+                      className="p-1.5 rounded-lg hover:bg-accent-lilac/10 transition-colors"
+                    >
+                      <ArrowUp
+                        className={`w-4 h-4 transition-colors ${
+                          votedThreads.has(thread.id)
+                            ? 'text-accent-lilac'
+                            : 'text-gray-500 group-hover:text-accent-lilac'
+                        }`}
                       />
-                      <span className="text-xs text-gray-400">{thread.autor}</span>
+                    </button>
+                    <span className="text-sm font-semibold text-gray-300">{thread.upvotes || 0}</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h2 className="font-display text-lg font-semibold text-white group-hover:text-accent-lilac transition-colors truncate">
+                      {thread.titulo}
+                    </h2>
+                    <p className="text-sm text-gray-500 mt-1 line-clamp-2">{thread.conteudo}</p>
+                    <div className="flex items-center gap-3 mt-3 flex-wrap">
+                      <div className="flex items-center gap-2">
+                        <Avatar
+                          name={getPerfil(thread.perfil_id)?.nome || thread.autor}
+                          url={getPerfil(thread.perfil_id)?.avatar_url}
+                          size="xs"
+                          colorClass={`bg-gradient-to-br ${avatarColors[thread.cor_avatar] || 'from-primary to-purple-700'}`}
+                          fallbackText={thread.avatar}
+                          isPro={getPerfil(thread.perfil_id)?.pro}
+                        />
+                        <span className="text-xs text-gray-400">{thread.autor}</span>
+                      </div>
+                      <span className="text-xs text-gray-600">.</span>
+                      <div className="flex items-center gap-1 text-xs text-gray-500">
+                        <MessageSquare className="w-3.5 h-3.5" />
+                        {thread.num_comentarios || 0}
+                      </div>
+                      <span className="text-xs text-gray-600">.</span>
+                      <span className="text-xs text-gray-500">
+                        {new Date(thread.criado_em).toLocaleDateString('pt-BR')}
+                      </span>
+                      {thread.tags && thread.tags.length > 0 && (
+                        <>
+                          <span className="text-xs text-gray-600">.</span>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <Hash className="w-3 h-3 text-gray-600" />
+                            {thread.tags.map((tag, i) => {
+                              const isActive = activeTags.includes(tag);
+                              return (
+                                <span
+                                  key={i}
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    toggleTag(tag);
+                                  }}
+                                  className={
+                                    'text-xs px-2 py-0.5 rounded-full cursor-pointer transition-colors ' +
+                                    (isActive
+                                      ? 'bg-accent-lilac/30 text-accent-lilac'
+                                      : 'bg-accent-lilac/10 text-accent-lilac hover:bg-accent-lilac/20')
+                                  }
+                                >
+                                  {tag}
+                                </span>
+                              );
+                            })}
+                          </div>
+                        </>
+                      )}
                     </div>
-                    <span className="text-xs text-gray-600">.</span>
-                    <div className="flex items-center gap-1 text-xs text-gray-500">
-                      <MessageSquare className="w-3.5 h-3.5" />
-                      {thread.num_comentarios || 0}
-                    </div>
-                    <span className="text-xs text-gray-600">.</span>
-                    <span className="text-xs text-gray-500">
-                      {new Date(thread.criado_em).toLocaleDateString('pt-BR')}
-                    </span>
-                    {thread.tags && thread.tags.length > 0 && (
-                      <>
-                        <span className="text-xs text-gray-600">.</span>
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <Hash className="w-3 h-3 text-gray-600" />
-                          {thread.tags.map((tag, i) => {
-                            const isActive = activeTags.includes(tag);
-                            return (
-                              <span
-                                key={i}
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  toggleTag(tag);
-                                }}
-                                className={
-                                  'text-xs px-2 py-0.5 rounded-full cursor-pointer transition-colors ' +
-                                  (isActive
-                                    ? 'bg-accent-lilac/30 text-accent-lilac'
-                                    : 'bg-accent-lilac/10 text-accent-lilac hover:bg-accent-lilac/20')
-                                }
-                              >
-                                {tag}
-                              </span>
-                            );
-                          })}
-                        </div>
-                      </>
-                    )}
                   </div>
                 </div>
-              </div>
-            </Link>
+              </Link>
+              {(idx + 1) % 5 === 0 && <AdUnit slot="forumInfeed" />}
+            </React.Fragment>
           ))}
         </div>
       </div>
