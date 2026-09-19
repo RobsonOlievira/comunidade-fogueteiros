@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/src/services/supabaseClient';
+import { fetchAllRows } from '@/src/services/fetchAllRows';
 import {
   Users, UserPlus, Activity, MessageCircle, MessageSquare, FileText,
   Award, TrendingUp, Hash, Clock, Sparkles
@@ -37,12 +38,14 @@ export default function AdminDashboard() {
   const loadAll = async () => {
     setLoading(true);
     const [
-      { data: perfisData },
+      perfisData,
       { data: mensagensData },
       { data: threadsData },
       { data: comentariosData },
     ] = await Promise.all([
-      supabase.from('perfis').select('*').order('criado_em', { ascending: false }),
+      fetchAllRows<Perfil>((from, to) =>
+        supabase.from('perfis').select('*').order('criado_em', { ascending: false }).range(from, to)
+      ),
       supabase.from('mensagens').select('autor'),
       supabase.from('threads').select('autor'),
       supabase.from('comentarios').select('autor'),

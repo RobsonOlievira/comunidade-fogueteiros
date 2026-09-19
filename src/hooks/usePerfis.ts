@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/src/services/supabaseClient';
+import { fetchAllRows } from '@/src/services/fetchAllRows';
 
 export interface PerfilResumo {
   id: string;
@@ -21,12 +22,17 @@ async function loadPerfis(): Promise<Map<string, PerfilResumo>> {
 
   inflight = (async () => {
     try {
-      const { data, error } = await supabase
-        .from('perfis')
-        .select('id, nome, cargo, avatar_url, pro')
-        .order('nome');
-      if (error) {
-        console.error('[usePerfis] load error:', error.message);
+      let data: PerfilResumo[] | null = null;
+      try {
+        data = await fetchAllRows<PerfilResumo>((from, to) =>
+          supabase
+            .from('perfis')
+            .select('id, nome, cargo, avatar_url, pro')
+            .order('nome')
+            .range(from, to)
+        );
+      } catch (err) {
+        console.error('[usePerfis] load error:', (err as { message?: string })?.message || err);
         return cache?.data || new Map();
       }
       const map = new Map<string, PerfilResumo>();

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/src/services/supabaseClient';
+import { fetchAllRows } from '@/src/services/fetchAllRows';
 import { useAuth } from '@/src/context/AuthContext';
 import { Avatar } from '@/src/components/Avatar';
 
@@ -34,11 +35,19 @@ export default function SidebarRight({ isHidden }: SidebarRightProps) {
   }, []);
 
   const carregar = async () => {
-    const { data } = await supabase
-      .from('perfis')
-      .select('id, nome, cargo, avatar_url, bio, ultimo_acesso_em, pro')
-      .order('ultimo_acesso_em', { ascending: false, nullsLast: true });
-    setPerfis(data || []);
+    try {
+      const data = await fetchAllRows<PerfilSidebar>((from, to) =>
+        supabase
+          .from('perfis')
+          .select('id, nome, cargo, avatar_url, bio, ultimo_acesso_em, pro')
+          .order('ultimo_acesso_em', { ascending: false, nullsLast: true })
+          .range(from, to)
+      );
+      setPerfis(data || []);
+    } catch (err) {
+      console.error('[SidebarRight] load error:', err);
+      setPerfis([]);
+    }
   };
 
   const isOnline = (p: PerfilSidebar) => {

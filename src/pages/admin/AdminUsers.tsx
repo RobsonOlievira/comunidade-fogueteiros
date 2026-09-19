@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/src/services/supabaseClient';
+import { fetchAllRows } from '@/src/services/fetchAllRows';
 import {
   Search, User, ChevronUp, ChevronDown, Filter, X,
   Edit2, MessageCircle, FileText, MessageSquare, Award, Clock, Hash,
@@ -57,11 +58,19 @@ export default function AdminUsers() {
 
   const loadPerfis = async () => {
     setLoading(true);
-    const { data } = await supabase
-      .from('perfis')
-      .select('*')
-      .order('criado_em', { ascending: false });
-    setPerfis(data || []);
+    try {
+      const data = await fetchAllRows<Perfil>((from, to) =>
+        supabase
+          .from('perfis')
+          .select('*')
+          .order('criado_em', { ascending: false })
+          .range(from, to)
+      );
+      setPerfis(data || []);
+    } catch (err) {
+      console.error('[AdminUsers] load error:', err);
+      setPerfis([]);
+    }
     setLoading(false);
   };
 
