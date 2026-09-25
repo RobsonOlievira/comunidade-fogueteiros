@@ -79,6 +79,10 @@ function makeSupabase(schema: 'fogueteiros' | 'public'): SupabaseClient {
   return createClient(supabaseUrl, supabaseAnonKey, {
     db: { schema },
     auth: {
+      // PKCE: o auth-js gera code_challenge em signInWithOtp/signInWithOAuth
+      // e guarda o verifier no storage. Funciona em qualquer GoTrue 2.x,
+      // independente do flow_type/site_url configurados no dashboard.
+      flowType: 'pkce',
       // Cliente "public" só é usado pra queries de leitura no schema public
       // (perfis, courses) — não precisa de sessão própria. Mantemos o
       // storageKey DIFERENTE pra eliminar conflito com o cliente principal.

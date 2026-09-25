@@ -19,9 +19,8 @@ export default function Login() {
   const [ssoError, setSsoError] = React.useState('');
 
   // Where to send the user after they finish authenticating.
-  // Falls back to sessionStorage (set by ProtectedRoute) and to localStorage
-  // (set by the welcome-with-magic-link edge function, since Supabase
-  // Auth strips URL fragments from the magic-link redirectTo).
+  // Falls back to sessionStorage (set by ProtectedRoute) and to a
+  // localStorage copy (legacy, kept for compatibility).
   const from = (location.state as any)?.from as string | undefined
     || (() => { try { return sessionStorage.getItem('cf_auth_redirect') || undefined; } catch { return undefined; } })()
     || (() => { try { return localStorage.getItem('cf_auth_redirect') || undefined; } catch { return undefined; } })();
