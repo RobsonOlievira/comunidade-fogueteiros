@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase, getSessionFromStorage } from '@/src/services/supabaseClient';
+import { consumeAuthTokenHashFromUrl } from '@/src/services/authConfirm';
 import { Analytics } from '@/src/services/analytics';
 
 const APP_B_CHECK_URL = 'https://ghdpmlmescgdhvrdqfiz.supabase.co/functions/v1/check-student-status'
@@ -392,6 +393,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setPhaseAndLog('session', 'init start');
 
       try {
+        // Antes de ler a sessão: se a URL traz um `token_hash` (link do
+        // e-mail de boas-vindas), fecha o login via verifyOtp. Isso só
+        // acontece no clique do link — em qualquer outro boot retorna na
+        // hora. Precisa vir ANTES de getSessionFromStorage porque é o
+        // verifyOtp que grava a sessão no storage.
+        await consumeAuthTokenHashFromUrl();
+
         // Lê a sessão diretamente do localStorage — sem rede, sem refresh
         // de token. O supabase.auth.getSession() tenta fazer refresh via rede
         // (pode ser bloqueado por AdBlock e dar timeout de 5s).
