@@ -1,5 +1,4 @@
 ﻿import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { consumeAuthTokenHashEarly } from '@/src/services/authConfirmEarly'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string
@@ -100,7 +99,6 @@ export const supabase: SupabaseClient = (() => {
     return (globalThis as any).__cf_supabase__
   }
   const client = makeSupabase('fogueteiros')
-  void consumeAuthTokenHashEarly(client).catch((e) => console.error('[authConfirmEarly] init error', e))
   if (typeof globalThis !== 'undefined') {
     ;(globalThis as any).__cf_supabase__ = client
   }
@@ -117,6 +115,7 @@ export const supabasePublic: SupabaseClient = (() => {
   }
   return client
 })()
+
 
 
 
