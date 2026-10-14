@@ -1,4 +1,5 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js'
+﻿import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { consumeAuthTokenHashEarly } from '@/src/services/authConfirmEarly'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string
@@ -7,15 +8,15 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string
 // WORKAROUND: clock skew do servidor Supabase
 // =====================================================================
 // Projeto ghdpmlmescgdhvrdqfiz: medido em 2026-07-03 que o header `Date`
-// do servidor auth retorna ~13s no futuro do relógio UTC real. Isso faz
+// do servidor auth retorna ~13s no futuro do relÃ³gio UTC real. Isso faz
 // o auth-js emitir console.warn "Session as retrieved from URL was issued
-// in the future? Check the device clock for skew" quando o iat do JWT é
+// in the future? Check the device clock for skew" quando o iat do JWT Ã©
 // comparado com Date.now() do cliente.
 //
-// O check é puramente `console.warn` (não throw) no auth-js atual, então
-// a sessão É salva normalmente — esse warning é cosmético. Mas polui o
-// console e confunde quem está debugando. Silenciamos esse caso e
-// loggamos uma vez em DEV com a diferença real pra referência.
+// O check Ã© puramente `console.warn` (nÃ£o throw) no auth-js atual, entÃ£o
+// a sessÃ£o Ã‰ salva normalmente â€” esse warning Ã© cosmÃ©tico. Mas polui o
+// console e confunde quem estÃ¡ debugando. Silenciamos esse caso e
+// loggamos uma vez em DEV com a diferenÃ§a real pra referÃªncia.
 //
 // Remover quando o Supabase sincronizar o NTP do projeto (ticket aberto).
 // =====================================================================
@@ -36,7 +37,7 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string
             : '?'
         console.info(
           `[supabaseClient] Supabase server clock skew: ~${skewSec}s no futuro. ` +
-          `Warning silenciado (cosmético). Ticket aberto para Supabase resync.`
+          `Warning silenciado (cosmÃ©tico). Ticket aberto para Supabase resync.`
         )
       }
       return
@@ -51,16 +52,16 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string
 // e getSession pode dar timeout de 5s).
 const STORAGE_KEY_FOGUETEIROS = 'sb-ghdpmlmescgdhvrdqfiz-auth-token'
 
-// Lê a sessão diretamente do localStorage sem passar pelo cliente Supabase.
+// LÃª a sessÃ£o diretamente do localStorage sem passar pelo cliente Supabase.
 // O supabase.auth.getSession() tenta fazer refresh de token via rede (que pode
-// ser bloqueado por AdBlock/proxy e dar timeout de 5s). Essa função é ~síncrona.
+// ser bloqueado por AdBlock/proxy e dar timeout de 5s). Essa funÃ§Ã£o Ã© ~sÃ­ncrona.
 export function getSessionFromStorage(): { access_token: string; refresh_token: string; user: any } | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY_FOGUETEIROS)
     if (!raw) return null
     const parsed = JSON.parse(raw)
     // Supabase armazena { event: 'SIGNED_IN', session: {...}, ... }
-    // ou só { access_token, refresh_token, user } direto
+    // ou sÃ³ { access_token, refresh_token, user } direto
     const session = parsed?.session ?? parsed
     if (session?.access_token && session?.user) return session
     return null
@@ -83,8 +84,8 @@ function makeSupabase(schema: 'fogueteiros' | 'public'): SupabaseClient {
       // e guarda o verifier no storage. Funciona em qualquer GoTrue 2.x,
       // independente do flow_type/site_url configurados no dashboard.
       flowType: 'pkce',
-      // Cliente "public" só é usado pra queries de leitura no schema public
-      // (perfis, courses) — não precisa de sessão própria. Mantemos o
+      // Cliente "public" sÃ³ Ã© usado pra queries de leitura no schema public
+      // (perfis, courses) â€” nÃ£o precisa de sessÃ£o prÃ³pria. Mantemos o
       // storageKey DIFERENTE pra eliminar conflito com o cliente principal.
       storageKey: schema === 'fogueteiros' ? STORAGE_KEY_FOGUETEIROS : STORAGE_KEY_PUBLIC,
       persistSession: schema === 'fogueteiros',
@@ -99,6 +100,7 @@ export const supabase: SupabaseClient = (() => {
     return (globalThis as any).__cf_supabase__
   }
   const client = makeSupabase('fogueteiros')
+  void consumeAuthTokenHashEarly(client).catch((e) => console.error('[authConfirmEarly] init error', e))
   if (typeof globalThis !== 'undefined') {
     ;(globalThis as any).__cf_supabase__ = client
   }
@@ -115,3 +117,7 @@ export const supabasePublic: SupabaseClient = (() => {
   }
   return client
 })()
+
+
+
+
